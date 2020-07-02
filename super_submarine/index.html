@@ -1,0 +1,326 @@
+<html>
+
+	<head>
+		<title>super submarine!</title>
+		
+		<script src='https://cdnjs.cloudflare.com/ajax/libs/three.js/108/three.min.js'></script>
+		<script src='GLTFLoader.js'></script>
+		<script src="https://code.jquery.com/jquery-3.4.1.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script>
+		<script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js" integrity="sha256-VazP97ZCwtekAsvgPBSUwPFKdrwD3unUfSGVYrahUqU=" crossorigin="anonymous"></script>
+	
+	</head>
+	
+	<style>
+		canvas{
+			border: 1px solid #000;
+		}
+		#container {
+			width: 800px;
+			height: 800px;
+		}
+	</style>
+	
+	<body>
+		<div id='container'>
+		</div>
+	</body>
+
+	<script type="module">
+	//import { Water } from '/node_modules/three/examples/jsm/objects/Water.js';
+	// https://forums.ogre3d.org/viewtopic.php?t=47645
+	let rotation = 0;
+	
+	// https://stemkoski.github.io/Three.js/Shader-Animate.html
+	var waterShader = {
+	
+		vertexShader: [
+			'varying vec2 vUv;',
+			'void main(){',
+			'   vUv = uv;',
+			'   gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );}'
+		].join('\n'),
+		
+		fragmentShader: [
+			'uniform sampler2D baseTexture;',
+			'uniform float baseSpeed;',
+			'uniform sampler2D noiseTexture;',
+			'uniform float noiseScale;',
+			'uniform float alpha;',
+			'uniform float time;',
+			'varying vec2 vUv;',
+			'void main() {',
+			'	vec2 uvTimeShift = vUv + vec2( -0.7, 1.2 ) * time * baseSpeed;'	,
+			'	vec4 noiseGeneratorTimeShift = texture2D( noiseTexture, uvTimeShift );',
+			'	vec2 uvNoiseTimeShift = vUv + noiseScale * vec2( noiseGeneratorTimeShift.r, noiseGeneratorTimeShift.b );',
+			'	vec4 baseColor = texture2D( baseTexture, uvNoiseTimeShift );',
+			'	baseColor.a = alpha;',
+			'	gl_FragColor = baseColor;}',
+		].join('\n')
+	}
+
+	// https://github.com/evanw/webgl-water
+	// https://github.com/donmccurdy/three-gltf-viewer/blob/master/src/viewer.js
+	var el = document.getElementById("container");
+    const fov = 60;
+    const defaultCamera = new THREE.PerspectiveCamera(fov, el.clientWidth / el.clientHeight, 0.01, 1000);
+	
+	const container = document.querySelector('#container');
+	const renderer = new THREE.WebGLRenderer();
+	renderer.shadowMap.enabled = true;
+	
+	const camera = defaultCamera;
+	camera.position.set(0,2,0);
+	
+	const scene = new THREE.Scene();
+	scene.background = new THREE.Color(0xffffff);	
+	scene.add(camera);
+
+	let loader = new THREE.GLTFLoader();
+	let spotLight = new THREE.PointLight(0xffffff, 1, 100); //new THREE.SpotLight( 0xffffff );
+	spotLight.position.set(0, 5, -25);
+
+	spotLight.castShadow = true;
+	spotLight.shadow.mapSize.width = 512;
+	spotLight.shadow.mapSize.height = 512;
+	spotLight.shadow.camera.near = 10;
+	spotLight.shadow.camera.far = 100;
+	spotLight.shadow.camera.fov = 30;
+
+	scene.add(spotLight);
+	
+	let loadedModels = [];
+		
+	let raycaster = new THREE.Raycaster();
+	let mouse = new THREE.Vector2(-1, -1);
+
+	function getModel(modelFilePath, side, name){
+		return new Promise((resolve, reject) => {
+			loader.load(
+				modelFilePath,
+				function(gltf){
+					gltf.scene.traverse((child) => {
+						if(child.type === "Mesh"){
+						
+							let material = child.material;
+							let geometry = child.geometry;
+							let obj = new THREE.Mesh(geometry, material);
+							
+							obj.scale.x = child.scale.x * 20;
+							obj.scale.y = child.scale.y * 20;
+							obj.scale.z = child.scale.z * 20;
+							obj.rotateOnAxis(new THREE.Vector3(0,1,0), Math.PI / 2); // note this on object's local axis! so when you rotate, the axes change (i.e. x becomes z)
+							//obj.rotateOnAxis(new THREE.Vector3(0,0,1), Math.PI / 2);
+						
+							obj.side = side; // player or enemy mesh?
+							obj.name = name;
+							resolve(obj);
+						}
+					});
+				},
+				// called while loading is progressing
+				function(xhr){
+					console.log( (xhr.loaded / xhr.total * 100) + '% loaded' );
+				},
+				// called when loading has errors
+				function(error){
+					console.log( 'An error happened' );
+					console.log(error);
+				}
+			);
+		});
+	}
+	
+	var newSphere = createSphereWireframe({}, {});
+	scene.add(newSphere);
+	var newSphere2 = createSphereWireframe({x: 5, y: 6, z: -45}, {});
+	scene.add(newSphere2);
+
+	// https://threejs.org/docs/#api/en/textures/Texture
+	// create a mesh, apply ocean shader on it 
+	loadedModels.push(getModel('old battleship models/submarine1.glb', 'player', 'p1'));
+	loadedModels.push(getModel('old battleship models/battleship2.glb', 'player2', 'p2'));
+	let theMesh = null;
+	Promise.all(loadedModels).then((objects) => {
+		objects.forEach((mesh) => {
+			if(mesh.name === "p2"){
+				mesh.position.set(-15, 8, -50);
+			}else{
+				theMesh = mesh;
+				mesh.position.set(0, 0, -10);
+			}
+			
+			mesh.castShadow = true;
+			mesh.receiveShadow = true;
+			scene.add(mesh);
+			renderer.render(scene, camera);
+		})
+	});
+	
+	function createSphereWireframe(position, params){
+		var geometry = new THREE.SphereGeometry(4, 8, 6, 0, 6.3, 0, 3.1);
+		var material = new THREE.MeshBasicMaterial({color: 0x3333ff});
+		var sphere = new THREE.LineSegments(new THREE.WireframeGeometry(geometry)); // new THREE.Mesh(geometry, material)
+		var x = position.x || 0;
+		var y = position.y || 8;
+		var z = position.z || -25;
+		sphere.position.set(x, y, z);
+		return sphere;
+	}
+	
+	renderer.setSize(el.clientWidth, el.clientHeight);	
+	container.appendChild(renderer.domElement);
+	
+
+	var clock = new THREE.Clock();
+	
+	function animate(){
+		requestAnimationFrame(animate);
+		renderer.render(scene, camera);
+		update();
+	}
+	
+
+
+	function update(){
+		// https://github.com/stemkoski/stemkoski.github.com/blob/master/Three.js/Chase-Camera.html
+		// http://stemkoski.github.io/Three.js/Chase-Camera.html
+		window.addEventListener('keydown', event => {
+			if(event.keyCode === 87){
+				// w key press
+				var forwardVec = new THREE.Vector3();
+				theMesh.getWorldDirection(forwardVec);
+				
+				// the sub's forward vector is perpendicular from what it should be 
+				// a rotation to the left of 90 deg should do the trick
+				// i.e. because by default moving by the forward vector makes the sub move right
+				// rotating that vector left should make it point through the nose of the sub
+				// also, rotation about the y-axis
+				var angle = Math.PI / 2;
+				var axis = new THREE.Vector3(0, 1, 0);
+				forwardVec.applyAxisAngle(axis, angle);
+				
+				forwardVec.multiplyScalar(0.001);
+				camera.position.add(forwardVec);
+				theMesh.position.add(forwardVec);
+				//console.log(forwardVec);
+
+			}else if(event.keyCode === 83){
+				// go backwards (S)
+				var forwardVec = new THREE.Vector3();
+				theMesh.getWorldDirection(forwardVec);
+		
+				var angle = -(Math.PI / 2); // since we're going backwards
+				var axis = new THREE.Vector3(0, 1, 0);
+				forwardVec.applyAxisAngle(axis, angle);
+				forwardVec.multiplyScalar(0.001); 
+		
+				camera.position.add(forwardVec);
+				theMesh.position.add(forwardVec);
+				
+			}else if(event.keyCode === 65){
+				// go left (A)
+				// NEED TO CLAMP ANGLE
+				// rotate the sub and the camera appropriately
+				var sec = clock.getDelta();
+				var rotationAngle = (Math.PI / 2) * sec * .5;
+				var axis = new THREE.Vector3(0, 1, 0);
+				theMesh.rotateOnAxis(axis, rotationAngle);
+				camera.rotateOnAxis(axis, rotationAngle);
+				
+				// then translate the camera so it stays behind the sub
+				var forwardVec = new THREE.Vector3();
+				theMesh.getWorldDirection(forwardVec);
+				var angle = Math.PI / 2;
+				var axis = new THREE.Vector3(0, 1, 0);
+				forwardVec.applyAxisAngle(axis, angle);
+				
+				var newPos = new THREE.Vector3(forwardVec.x, forwardVec.y, forwardVec.z);
+				camera.position.x = theMesh.position.x + (newPos.x * -10);
+				camera.position.z = theMesh.position.z + (newPos.z * -10);
+				
+
+			}else if(event.keyCode === 68){
+				// go right (D)
+				// NEED TO CLAMP ANGLE
+				var sec = clock.getDelta();
+				var rotationAngle = (Math.PI / 2) * sec *.5;
+				var axis = new THREE.Vector3(0, 1, 0);
+				theMesh.rotateOnAxis(axis, -rotationAngle);
+				camera.rotateOnAxis(axis, -rotationAngle);
+				
+				// then translate the camera so it stays behind the sub
+				var forwardVec = new THREE.Vector3();
+				theMesh.getWorldDirection(forwardVec);
+				var angle = Math.PI / 2;
+				var axis = new THREE.Vector3(0, 1, 0);
+				forwardVec.applyAxisAngle(axis, angle);
+				
+				var newPos = new THREE.Vector3(forwardVec.x, forwardVec.y, forwardVec.z);
+				camera.position.x = theMesh.position.x + (newPos.x * -10);
+				camera.position.z = theMesh.position.z + (newPos.z * -10);
+			
+			}else if(event.keyCode === 81){
+				// rotate left (Q)
+				var sec = clock.getDelta();
+				var rotationAngle = (Math.PI / 2) * sec;
+				var axis = new THREE.Vector3(1, 0, 0);
+				var axis2 = new THREE.Vector3(0, 0, 1);
+				theMesh.rotateOnAxis(axis, -rotationAngle);
+				camera.rotateOnAxis(axis2, rotationAngle); // camera axis is not the same as the object here! x and z have been swapped?
+				
+				// then translate the camera so it stays behind the sub
+				var forwardVec = new THREE.Vector3();
+				theMesh.getWorldDirection(forwardVec);
+				var angle = Math.PI / 2;
+				if(angle < 0){
+					angle *= -1;
+				}
+				var axis = new THREE.Vector3(1, 0, 0);
+				forwardVec.applyAxisAngle(axis, angle);
+						
+				var newPos = new THREE.Vector3(forwardVec.x, forwardVec.y, forwardVec.z);
+				//console.log(newPos);
+				//camera.position.x = theMesh.position.x + (newPos.x * 10);
+				camera.position.z = theMesh.position.x + (newPos.z * 5);
+				
+				
+			}else if(event.keyCode === 69){
+				// rotate right (E)
+				var sec = clock.getDelta();
+				var rotationAngle = (Math.PI / 2) * sec;
+				var axis = new THREE.Vector3(1, 0, 0);
+				var axis2 = new THREE.Vector3(0, 0, 1);
+				theMesh.rotateOnAxis(axis, rotationAngle);
+				camera.rotateOnAxis(axis2, -rotationAngle); // camera axis is not the same as the object here! x and z have been swapped?
+				
+			}else if(event.keyCode === 38){
+				// rotate up (note that we're rotating on the mesh's axis. its axes might be configured weird)
+				// the forward vector for the mesh might be backwards and perpendicular to the front of the sub
+				// up arrow key
+				// NEED TO CLAMP ANGLE
+				var sec = clock.getDelta();
+				var rotationAngle = (Math.PI / 2) * sec;
+				var axis = new THREE.Vector3(0, 0, 1);
+				var axis2 = new THREE.Vector3(1, 0, 0);
+				theMesh.rotateOnAxis(axis, rotationAngle);	
+				camera.rotateOnAxis(axis2, rotationAngle); // camera axis is not the same as the object here! x and z have been swapped?
+				
+			}else if(event.keyCode === 40){
+				// down arrow key
+				// CLAMP ANGLE!
+				var sec = clock.getDelta();
+				var rotationAngle = (Math.PI / 2) * sec;
+				var axis = new THREE.Vector3(0, 0, 1);
+				var axis2 = new THREE.Vector3(1, 0, 0);
+				theMesh.rotateOnAxis(axis, -rotationAngle);	
+				camera.rotateOnAxis(axis2, -rotationAngle); // camera axis is not the same as the object here! x and z have been swapped?
+			}
+			
+		});
+	}
+	
+	animate();
+
+	</script>
+
+</html>
