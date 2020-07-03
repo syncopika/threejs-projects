@@ -7,6 +7,7 @@
 		<script src='GLTFLoader.js'></script>
 		<script src="https://code.jquery.com/jquery-3.4.1.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script>
 		<script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js" integrity="sha256-VazP97ZCwtekAsvgPBSUwPFKdrwD3unUfSGVYrahUqU=" crossorigin="anonymous"></script>
+		<script src="threex.keyboardstate.js"></script>
 	
 	</head>
 	
@@ -14,8 +15,8 @@
 		canvas{
 			border: 1px solid #000;
 		}
-		#container {
-			width: 800px;
+		#container{
+			width: 1200px;
 			height: 800px;
 		}
 	</style>
@@ -63,10 +64,12 @@
 	var el = document.getElementById("container");
     const fov = 60;
     const defaultCamera = new THREE.PerspectiveCamera(fov, el.clientWidth / el.clientHeight, 0.01, 1000);
-	
+	var keyboard = new THREEx.KeyboardState();
 	const container = document.querySelector('#container');
 	const renderer = new THREE.WebGLRenderer();
 	renderer.shadowMap.enabled = true;
+	renderer.setSize(el.clientWidth, el.clientHeight);	
+	container.appendChild(renderer.domElement);
 	
 	const camera = defaultCamera;
 	camera.position.set(0,2,0);
@@ -76,22 +79,22 @@
 	scene.add(camera);
 
 	let loader = new THREE.GLTFLoader();
-	let spotLight = new THREE.PointLight(0xffffff, 1, 100); //new THREE.SpotLight( 0xffffff );
-	spotLight.position.set(0, 5, -25);
-
-	spotLight.castShadow = true;
-	spotLight.shadow.mapSize.width = 512;
-	spotLight.shadow.mapSize.height = 512;
-	spotLight.shadow.camera.near = 10;
-	spotLight.shadow.camera.far = 100;
-	spotLight.shadow.camera.fov = 30;
-
-	scene.add(spotLight);
+	let pointLight = new THREE.PointLight(0xffffff, 1, 0); //new THREE.pointLight( 0xffffff );
+	pointLight.position.set(0, 10, -35);
+	pointLight.castShadow = true;
+	pointLight.shadow.mapSize.width = 512;
+	pointLight.shadow.mapSize.height = 512;
+	pointLight.shadow.camera.near = 10;
+	pointLight.shadow.camera.far = 100;
+	pointLight.shadow.camera.fov = 30;
+	scene.add(pointLight);
+	
+	const clock = new THREE.Clock();
+	var sec = clock.getDelta();
+	var moveDistance = 60 * sec;
+	var rotationAngle = (Math.PI / 2) * sec;
 	
 	let loadedModels = [];
-		
-	let raycaster = new THREE.Raycaster();
-	let mouse = new THREE.Vector2(-1, -1);
 
 	function getModel(modelFilePath, side, name){
 		return new Promise((resolve, reject) => {
@@ -108,8 +111,7 @@
 							obj.scale.x = child.scale.x * 20;
 							obj.scale.y = child.scale.y * 20;
 							obj.scale.z = child.scale.z * 20;
-							obj.rotateOnAxis(new THREE.Vector3(0,1,0), Math.PI / 2); // note this on object's local axis! so when you rotate, the axes change (i.e. x becomes z)
-							//obj.rotateOnAxis(new THREE.Vector3(0,0,1), Math.PI / 2);
+							obj.rotateOnAxis(new THREE.Vector3(0,1,0), Math.PI / 2);
 						
 							obj.side = side; // player or enemy mesh?
 							obj.name = name;
@@ -123,7 +125,7 @@
 				},
 				// called when loading has errors
 				function(error){
-					console.log( 'An error happened' );
+					console.log('An error happened');
 					console.log(error);
 				}
 			);
@@ -139,7 +141,7 @@
 	// create a mesh, apply ocean shader on it 
 	loadedModels.push(getModel('old battleship models/submarine1.glb', 'player', 'p1'));
 	loadedModels.push(getModel('old battleship models/battleship2.glb', 'player2', 'p2'));
-	let theMesh = null;
+	let thePlayer = null;
 	Promise.all(loadedModels).then((objects) => {
 		objects.forEach((mesh) => {
 			if(mesh.name === "p2"){
@@ -150,9 +152,11 @@
 				// https://stackoverflow.com/questions/59446956/how-can-i-change-the-position-of-an-imported-model-in-three-js
 				var group = new THREE.Group();
 				group.add(mesh);
-				theMesh = group; //mesh;
+				thePlayer = group;
 				mesh = group;
 				mesh.position.set(0, 0, -10);
+				
+				animate();
 			}
 			
 			mesh.castShadow = true;
@@ -171,18 +175,6 @@
 		var z = position.z || -25;
 		sphere.position.set(x, y, z);
 		return sphere;
-	}
-	
-	renderer.setSize(el.clientWidth, el.clientHeight);	
-	container.appendChild(renderer.domElement);
-	
-
-	var clock = new THREE.Clock();
-	
-	function animate(){
-		requestAnimationFrame(animate);
-		renderer.render(scene, camera);
-		update();
 	}
 	
 	//https://stackoverflow.com/questions/38305408/threejs-get-center-of-object
@@ -207,16 +199,12 @@
 	
 	function drawForwardVector(mesh){
 		var forwardVec = new THREE.Vector3();
-		//mesh.getWorldDirection(forwardVec);
-		forwardVec.applyQuaternion(theMesh.quaternion);
-		
+		forwardVec.applyQuaternion(mesh.quaternion);
 		
 		// create a vector 
 		var point1 = getCenter(mesh); //new THREE.Vector3(forwardVec.x, forwardVec.y, forwardVec.z);
 		var point2 = new THREE.Vector3(forwardVec.x, forwardVec.y, forwardVec.z); 
 		point2.multiplyScalar(2);
-		//console.log(point1);
-		//onsole.log(point2);
 		
 		var points = [point1, point2];
 		
@@ -224,93 +212,74 @@
 		var geometry = new THREE.BufferGeometry().setFromPoints(points);
 		var line = new THREE.Line(geometry, material);
 		scene.add(line);
-		//renderer.render(scene, camera);
 	}
-
 
 	function update(){
 		// https://github.com/stemkoski/stemkoski.github.com/blob/master/Three.js/Chase-Camera.html
 		// http://stemkoski.github.io/Three.js/Chase-Camera.html
-
+		sec = clock.getDelta();
+		moveDistance = 20 * sec;
+		rotationAngle = (Math.PI / 2) * sec;
 		
-		window.addEventListener('keydown', event => {
+		if(keyboard.pressed("W")){
+			thePlayer.translateZ(-moveDistance);
+		}
 		
-			var sec = clock.getDelta();
-			var moveDistance = 20 * sec;
-			var rotationAngle = (Math.PI / 2) * sec;
+		if(keyboard.pressed("S")){
+			thePlayer.translateZ(moveDistance);
+		}
 		
+		if(keyboard.pressed("A")){
+			// rotate the sub and the camera appropriately
+			var axis = new THREE.Vector3(0, 1, 0);
+			thePlayer.rotateOnAxis(axis, rotationAngle);
+		}
 		
-			if(event.keyCode === 87){
-				// w key press
-				theMesh.translateZ(-moveDistance);
-			}
-			
-			if(event.keyCode === 83){
-				// go backwards (S)
-				theMesh.translateZ(moveDistance);
-			}
-			
-			if(event.keyCode === 65){
-				// go left (A)
-				// NEED TO CLAMP ANGLE
-				// rotate the sub and the camera appropriately
-				var axis = new THREE.Vector3(0, 1, 0);
-				theMesh.rotateOnAxis(axis, rotationAngle);
-				//camera.rotateOnAxis(axis, rotationAngle);
-			}
-			
-			if(event.keyCode === 68){
-				// go right (D)
-				// NEED TO CLAMP ANGLE
-				var axis = new THREE.Vector3(0, 1, 0);
-				theMesh.rotateOnAxis(axis, -rotationAngle);
-				//camera.rotateOnAxis(axis, -rotationAngle);
-			}
-			
-			if(event.keyCode === 81){
-				// rotate left (Q)
-				var axis = new THREE.Vector3(0, 0, 1);
-				theMesh.rotateOnAxis(axis, rotationAngle);
-				//camera.rotateOnAxis(axis, rotationAngle);
-			}
-			
-			if(event.keyCode === 69){
-				// rotate right (E)
-				var axis = new THREE.Vector3(0, 0, 1);
-				theMesh.rotateOnAxis(axis, -rotationAngle);
-				//camera.rotateOnAxis(axis, -rotationAngle); // camera axis is not the same as the object here! x and z have been swapped?
-			}
-			
-			if(event.keyCode === 38){
-				// rotate up (note that we're rotating on the mesh's axis. its axes might be configured weird)
-				// the forward vector for the mesh might be backwards and perpendicular to the front of the sub
-				// up arrow key
-				// NEED TO CLAMP ANGLE
-				var axis = new THREE.Vector3(1, 0, 0);
-				theMesh.rotateOnAxis(axis, rotationAngle);	
-				//camera.rotateOnAxis(axis, rotationAngle); // camera axis is not the same as the object here! x and z have been swapped?
-			}
-			
-			if(event.keyCode === 40){
-				// down arrow key
-				// CLAMP ANGLE!
-				var axis = new THREE.Vector3(1, 0, 0);
-				theMesh.rotateOnAxis(axis, -rotationAngle);	
-				//camera.rotateOnAxis(axis, -rotationAngle); // camera axis is not the same as the object here! x and z have been swapped?
-			}
-			
-			// setting offset to THREE.Vector3(0, 5, 5) looks good for 1st person view :D
-			var relCameraOffset = new THREE.Vector3(0, 3, 15);
-			var cameraOffset = relCameraOffset.applyMatrix4(theMesh.matrixWorld);
-			camera.position.x = cameraOffset.x;
-			camera.position.y = cameraOffset.y;
-			camera.position.z = cameraOffset.z;
-			camera.lookAt(theMesh.position);
-			
-		});
+		if(keyboard.pressed("D")){
+			var axis = new THREE.Vector3(0, 1, 0);
+			thePlayer.rotateOnAxis(axis, -rotationAngle);
+		}
+		
+		if(keyboard.pressed("Q")){
+			var axis = new THREE.Vector3(0, 0, 1);
+			thePlayer.rotateOnAxis(axis, rotationAngle);
+		}
+		
+		if(keyboard.pressed("E")){
+			var axis = new THREE.Vector3(0, 0, 1);
+			thePlayer.rotateOnAxis(axis, -rotationAngle);
+		}
+		
+		if(keyboard.pressed("up")){
+			// rotate up (note that we're rotating on the mesh's axis. its axes might be configured weird)
+			// the forward vector for the mesh might be backwards and perpendicular to the front of the sub
+			// up arrow key
+			// NEED TO CLAMP ANGLE
+			var axis = new THREE.Vector3(1, 0, 0);
+			thePlayer.rotateOnAxis(axis, rotationAngle);
+		}
+		
+		if(keyboard.pressed("down")){
+			// down arrow key
+			// CLAMP ANGLE!
+			var axis = new THREE.Vector3(1, 0, 0);
+			thePlayer.rotateOnAxis(axis, -rotationAngle);
+		}
+		
+		// setting offset to THREE.Vector3(0, 5, 5) looks good for 1st person view :D
+		var relCameraOffset = new THREE.Vector3(0, 3, 12);
+		var cameraOffset = relCameraOffset.applyMatrix4(thePlayer.matrixWorld);
+		camera.position.x = cameraOffset.x;
+		camera.position.y = cameraOffset.y;
+		camera.position.z = cameraOffset.z;
+		camera.lookAt(thePlayer.position);
 	}
 	
-	animate();
+	function animate(){
+		requestAnimationFrame(animate);
+		renderer.render(scene, camera);
+		update();
+	}
 
 	</script>
 
