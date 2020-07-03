@@ -145,7 +145,13 @@
 			if(mesh.name === "p2"){
 				mesh.position.set(-15, 8, -50);
 			}else{
-				theMesh = mesh;
+				// the local axis of the imported mesh is a bit weird and not consistent with the world axis. so, to fix that,
+				// put it in a group object and just control the group object! the mesh is also just orientated properly initially when placed in the group.
+				// https://stackoverflow.com/questions/59446956/how-can-i-change-the-position-of-an-imported-model-in-three-js
+				var group = new THREE.Group();
+				group.add(mesh);
+				theMesh = group; //mesh;
+				mesh = group;
 				mesh.position.set(0, 0, -10);
 			}
 			
@@ -179,141 +185,150 @@
 		update();
 	}
 	
+	//https://stackoverflow.com/questions/38305408/threejs-get-center-of-object
+	function getCenter(mesh){
+		var mid = new THREE.Vector3();
+		var geometry = mesh.geometry;
+		
+		geometry.computeBoundingBox();
+		mid.x = (geometry.boundingBox.max.x + geometry.boundingBox.min.x)/2;
+		mid.y = (geometry.boundingBox.max.y + geometry.boundingBox.min.y)/2;
+		mid.z = (geometry.boundingBox.max.z + geometry.boundingBox.min.z)/2;
+		
+		mesh.localToWorld(mid);
+		return mid;
+	}
+	
+	function drawForwardVector(mesh){
+		var forwardVec = new THREE.Vector3();
+		//mesh.getWorldDirection(forwardVec);
+		forwardVec.applyQuaternion(theMesh.quaternion);
+		
+		
+		// create a vector 
+		var point1 = getCenter(mesh); //new THREE.Vector3(forwardVec.x, forwardVec.y, forwardVec.z);
+		var point2 = new THREE.Vector3(forwardVec.x, forwardVec.y, forwardVec.z); 
+		point2.multiplyScalar(2);
+		//console.log(point1);
+		//onsole.log(point2);
+		
+		var points = [point1, point2];
+		
+		var material = new THREE.LineBasicMaterial({color: 0x0000ff});
+		var geometry = new THREE.BufferGeometry().setFromPoints(points);
+		var line = new THREE.Line(geometry, material);
+		scene.add(line);
+		//renderer.render(scene, camera);
+	}
 
 
 	function update(){
 		// https://github.com/stemkoski/stemkoski.github.com/blob/master/Three.js/Chase-Camera.html
 		// http://stemkoski.github.io/Three.js/Chase-Camera.html
+		var sec = clock.getDelta();
+		var moveDistance = 0.25 * sec;
+		var rotationAngle = (Math.PI / 2) * sec;
+		
 		window.addEventListener('keydown', event => {
 			if(event.keyCode === 87){
 				// w key press
-				var forwardVec = new THREE.Vector3();
-				theMesh.getWorldDirection(forwardVec);
+				theMesh.translateZ(-moveDistance);
+				camera.translateZ(-moveDistance);
 				
-				// the sub's forward vector is perpendicular from what it should be 
-				// a rotation to the left of 90 deg should do the trick
-				// i.e. because by default moving by the forward vector makes the sub move right
-				// rotating that vector left should make it point through the nose of the sub
-				// also, rotation about the y-axis
-				var angle = Math.PI / 2;
-				var axis = new THREE.Vector3(0, 1, 0);
-				forwardVec.applyAxisAngle(axis, angle);
-				
-				forwardVec.multiplyScalar(0.001);
-				camera.position.add(forwardVec);
-				theMesh.position.add(forwardVec);
-				//console.log(forwardVec);
-
 			}else if(event.keyCode === 83){
 				// go backwards (S)
-				var forwardVec = new THREE.Vector3();
-				theMesh.getWorldDirection(forwardVec);
-		
-				var angle = -(Math.PI / 2); // since we're going backwards
-				var axis = new THREE.Vector3(0, 1, 0);
-				forwardVec.applyAxisAngle(axis, angle);
-				forwardVec.multiplyScalar(0.001); 
-		
-				camera.position.add(forwardVec);
-				theMesh.position.add(forwardVec);
+				theMesh.translateZ(moveDistance);
+				camera.translateZ(moveDistance);
 				
 			}else if(event.keyCode === 65){
 				// go left (A)
 				// NEED TO CLAMP ANGLE
 				// rotate the sub and the camera appropriately
-				var sec = clock.getDelta();
-				var rotationAngle = (Math.PI / 2) * sec * .5;
 				var axis = new THREE.Vector3(0, 1, 0);
-				theMesh.rotateOnAxis(axis, rotationAngle);
-				camera.rotateOnAxis(axis, rotationAngle);
+				theMesh.rotateOnAxis(axis, rotationAngle/100);
+				camera.rotateOnAxis(axis, rotationAngle/100);
 				
 				// then translate the camera so it stays behind the sub
 				var forwardVec = new THREE.Vector3();
 				theMesh.getWorldDirection(forwardVec);
-				var angle = Math.PI / 2;
-				var axis = new THREE.Vector3(0, 1, 0);
-				forwardVec.applyAxisAngle(axis, angle);
-				
+
 				var newPos = new THREE.Vector3(forwardVec.x, forwardVec.y, forwardVec.z);
-				camera.position.x = theMesh.position.x + (newPos.x * -10);
-				camera.position.z = theMesh.position.z + (newPos.z * -10);
-				
+				camera.position.x = theMesh.position.x + (newPos.x * 10);
+				camera.position.z = theMesh.position.z + (newPos.z * 10);
 
 			}else if(event.keyCode === 68){
 				// go right (D)
 				// NEED TO CLAMP ANGLE
-				var sec = clock.getDelta();
-				var rotationAngle = (Math.PI / 2) * sec *.5;
 				var axis = new THREE.Vector3(0, 1, 0);
-				theMesh.rotateOnAxis(axis, -rotationAngle);
-				camera.rotateOnAxis(axis, -rotationAngle);
+				theMesh.rotateOnAxis(axis, -rotationAngle/100);
+				camera.rotateOnAxis(axis, -rotationAngle/100);
 				
 				// then translate the camera so it stays behind the sub
 				var forwardVec = new THREE.Vector3();
 				theMesh.getWorldDirection(forwardVec);
-				var angle = Math.PI / 2;
-				var axis = new THREE.Vector3(0, 1, 0);
-				forwardVec.applyAxisAngle(axis, angle);
-				
+
 				var newPos = new THREE.Vector3(forwardVec.x, forwardVec.y, forwardVec.z);
-				camera.position.x = theMesh.position.x + (newPos.x * -10);
-				camera.position.z = theMesh.position.z + (newPos.z * -10);
-			
+				camera.position.x = theMesh.position.x + (newPos.x * 10);
+				camera.position.z = theMesh.position.z + (newPos.z * 10);
+
 			}else if(event.keyCode === 81){
 				// rotate left (Q)
-				var sec = clock.getDelta();
-				var rotationAngle = (Math.PI / 2) * sec;
-				var axis = new THREE.Vector3(1, 0, 0);
-				var axis2 = new THREE.Vector3(0, 0, 1);
-				theMesh.rotateOnAxis(axis, -rotationAngle);
-				camera.rotateOnAxis(axis2, rotationAngle); // camera axis is not the same as the object here! x and z have been swapped?
+				var axis = new THREE.Vector3(0, 0, 1);
+				theMesh.rotateOnAxis(axis, rotationAngle/100);
+				camera.rotateOnAxis(axis, rotationAngle/100);
 				
 				// then translate the camera so it stays behind the sub
 				var forwardVec = new THREE.Vector3();
-				theMesh.getWorldDirection(forwardVec);
-				var angle = Math.PI / 2;
-				if(angle < 0){
-					angle *= -1;
-				}
-				var axis = new THREE.Vector3(1, 0, 0);
-				forwardVec.applyAxisAngle(axis, angle);
-						
+				theMesh.getWorldDirection(forwardVec);						
 				var newPos = new THREE.Vector3(forwardVec.x, forwardVec.y, forwardVec.z);
-				//console.log(newPos);
-				//camera.position.x = theMesh.position.x + (newPos.x * 10);
-				camera.position.z = theMesh.position.x + (newPos.z * 5);
 				
-				
+				camera.position.z = theMesh.position.z + (newPos.z * 10);
+
 			}else if(event.keyCode === 69){
 				// rotate right (E)
-				var sec = clock.getDelta();
-				var rotationAngle = (Math.PI / 2) * sec;
-				var axis = new THREE.Vector3(1, 0, 0);
-				var axis2 = new THREE.Vector3(0, 0, 1);
-				theMesh.rotateOnAxis(axis, rotationAngle);
-				camera.rotateOnAxis(axis2, -rotationAngle); // camera axis is not the same as the object here! x and z have been swapped?
+				var axis = new THREE.Vector3(0, 0, 1);
+				theMesh.rotateOnAxis(axis, -rotationAngle/100);
+				camera.rotateOnAxis(axis, -rotationAngle/100); // camera axis is not the same as the object here! x and z have been swapped?
+				
+				var forwardVec = new THREE.Vector3();
+				theMesh.getWorldDirection(forwardVec);						
+				var newPos = new THREE.Vector3(forwardVec.x, forwardVec.y, forwardVec.z);
+				
+				camera.position.z = theMesh.position.z + (newPos.z * 10);
 				
 			}else if(event.keyCode === 38){
 				// rotate up (note that we're rotating on the mesh's axis. its axes might be configured weird)
 				// the forward vector for the mesh might be backwards and perpendicular to the front of the sub
 				// up arrow key
 				// NEED TO CLAMP ANGLE
-				var sec = clock.getDelta();
-				var rotationAngle = (Math.PI / 2) * sec;
-				var axis = new THREE.Vector3(0, 0, 1);
-				var axis2 = new THREE.Vector3(1, 0, 0);
-				theMesh.rotateOnAxis(axis, rotationAngle);	
-				camera.rotateOnAxis(axis2, rotationAngle); // camera axis is not the same as the object here! x and z have been swapped?
+				var axis = new THREE.Vector3(1, 0, 0);
+				theMesh.rotateOnAxis(axis, rotationAngle/100);	
+				camera.rotateOnAxis(axis, rotationAngle/100); // camera axis is not the same as the object here! x and z have been swapped?
+
+				var forwardVec = new THREE.Vector3();
+				theMesh.getWorldDirection(forwardVec);						
+				var newPos = new THREE.Vector3(forwardVec.x, forwardVec.y, forwardVec.z);
 				
+				newPos.multiplyScalar(5);
+				camera.position.x = newPos.x;
+				camera.position.y = newPos.y;
+				camera.position.z = newPos.z;
+
 			}else if(event.keyCode === 40){
 				// down arrow key
 				// CLAMP ANGLE!
-				var sec = clock.getDelta();
-				var rotationAngle = (Math.PI / 2) * sec;
-				var axis = new THREE.Vector3(0, 0, 1);
-				var axis2 = new THREE.Vector3(1, 0, 0);
-				theMesh.rotateOnAxis(axis, -rotationAngle);	
-				camera.rotateOnAxis(axis2, -rotationAngle); // camera axis is not the same as the object here! x and z have been swapped?
+				var axis = new THREE.Vector3(1, 0, 0);
+				theMesh.rotateOnAxis(axis, -rotationAngle/100);	
+				camera.rotateOnAxis(axis, -rotationAngle/100); // camera axis is not the same as the object here! x and z have been swapped?
+				
+				var forwardVec = new THREE.Vector3();
+				theMesh.getWorldDirection(forwardVec);						
+				var newPos = new THREE.Vector3(forwardVec.x, forwardVec.y, forwardVec.z);
+				
+				newPos.multiplyScalar(5);
+				camera.position.x = newPos.x;
+				camera.position.y = newPos.y;
+				camera.position.z = newPos.z;
 			}
 			
 		});
