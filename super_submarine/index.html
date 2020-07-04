@@ -59,6 +59,36 @@
 		return forwardVec;
 	}
 	
+	function checkCollision(mesh, raycaster){
+		var top = new THREE.Vector3(0, 1, 0);
+		var bottom = new THREE.Vector3(0, -1, 0);
+		var left = new THREE.Vector3(-1, 0, 0);
+		var right = new THREE.Vector3(1, 0, 0);
+		var front = new THREE.Vector3(0, 0, -1);
+		var back = new THREE.Vector3(0, 0, 1);
+		var dirToCheck = [
+			top,
+			bottom,
+			left,
+			right,
+			front,
+			back
+		];
+		var objCenter = getCenter(mesh);
+		
+		//raycaster.set(objCenter, top);
+		for(var i = 0; i < dirToCheck.length; i++){
+			var dir = dirToCheck[i];
+			raycaster.set(objCenter, dir);
+			var intersects = raycaster.intersectObjects(scene.children);
+			for(var j = 0; j < intersects.length; j++){
+				//console.log("object collided! direction: " + dir.x + ", " + dir.y + ", " + dir.z);
+				return true;
+			}
+		}
+		return false;
+	}
+	
 	function drawForwardVector(mesh){
 		var forwardVec = new THREE.Vector3();
 		forwardVec.applyQuaternion(mesh.quaternion);
@@ -74,6 +104,20 @@
 		var geometry = new THREE.BufferGeometry().setFromPoints(points);
 		var line = new THREE.Line(geometry, material);
 		scene.add(line);
+	}
+	
+	function createSpotlight(){
+		var spotlight = new THREE.SpotLight(0xffffff, 1.8, 50, 0.35, 1.0, 1.2);
+		spotlight.castShadow = true;
+		
+		spotlight.shadow.mapSize.width = 20;
+		spotlight.shadow.mapSize.height = 20;
+		
+		spotlight.shadow.camera.near = 10;
+		spotlight.shadow.camera.far = 20;
+		spotlight.shadow.camera.fov = 10;
+		
+		return spotlight;
 	}
 	
 	//import { Water } from '/node_modules/three/examples/jsm/objects/Water.js';
@@ -109,10 +153,10 @@
 
 	// https://github.com/evanw/webgl-water
 	// https://github.com/donmccurdy/three-gltf-viewer/blob/master/src/viewer.js
-	var el = document.getElementById("container");
+	const el = document.getElementById("container");
     const fov = 60;
     const defaultCamera = new THREE.PerspectiveCamera(fov, el.clientWidth / el.clientHeight, 0.01, 1000);
-	var keyboard = new THREEx.KeyboardState();
+	const keyboard = new THREEx.KeyboardState();
 	const container = document.querySelector('#container');
 	const renderer = new THREE.WebGLRenderer();
 	renderer.shadowMap.enabled = true;
@@ -125,8 +169,10 @@
 	const scene = new THREE.Scene();
 	scene.background = new THREE.Color(0xffffff);	
 	scene.add(camera);
+	
+	const raycaster = new THREE.Raycaster();
 
-	let loader = new THREE.GLTFLoader();
+	const loader = new THREE.GLTFLoader();
 	let pointLight = new THREE.PointLight(0xffffff, 1, 0); //new THREE.pointLight( 0xffffff );
 	pointLight.position.set(0, 10, -35);
 	pointLight.castShadow = true;
@@ -138,9 +184,9 @@
 	scene.add(pointLight);
 	
 	const clock = new THREE.Clock();
-	var sec = clock.getDelta();
-	var moveDistance = 60 * sec;
-	var rotationAngle = (Math.PI / 2) * sec;
+	let sec = clock.getDelta();
+	let moveDistance = 60 * sec;
+	let rotationAngle = (Math.PI / 2) * sec;
 	
 	let loadedModels = [];
 
@@ -153,6 +199,7 @@
 						if(child.type === "Mesh"){
 						
 							let material = child.material;
+							console.log(material)
 							let geometry = child.geometry;
 							let obj = new THREE.Mesh(geometry, material);
 							
@@ -211,13 +258,32 @@
 				thePlayer = group;
 				mesh = group;
 				mesh.position.set(0, 0, -10);
+				mesh.originalColor = group.children[0].material; // this should only be temporary
+				//console.log(group.children[0].material);
 				
-				// give the submarine a spotlight? for now just a dummy object 
-				var spotlight = createSphereWireframe({}, {});
+				// give the submarine a spotlight
+				// the spotlight should be facing downwards!
+				var spotlight = createSpotlight(); //createSphereWireframe({}, {});
 				thePlayer.spotlight = spotlight;
 				thePlayer.spotlightVisible = false;
 				spotlight.visible = false;
 				scene.add(spotlight);
+				
+				keyboard.domElement.addEventListener("keydown", (evt) => {
+					// this is supposed to turn on headlights for the sub?
+					if(keyboard.eventMatches(evt, "X")){
+						// we do this stuff here instead of update because on keyup, the state of key X in the keyboard object gets reset to false, 
+						// which we don't want (since we're trying to set a state)
+						if(!thePlayer.spotlightVisible){
+							thePlayer.spotlightVisible = true;
+							thePlayer.spotlight.visible = true;
+						}else{
+							// make sure spotlight is not visible
+							thePlayer.spotlight.visible = false;
+							thePlayer.spotlightVisible = false;
+						}
+					}
+				});
 				
 				animate();
 			}
@@ -235,6 +301,8 @@
 		rotationAngle = (Math.PI / 2) * sec;
 		
 		if(keyboard.pressed("W")){
+			// note that this gets called several times with one key press!
+			// I think it's because update() in requestAnimationFrames gets called quite a few times per second
 			thePlayer.translateZ(-moveDistance);
 		}
 		
@@ -279,28 +347,25 @@
 			thePlayer.rotateOnAxis(axis, -rotationAngle);
 		}
 		
-		// this is supposed to turn on headlights for the sub?
-		if(keyboard.pressed("X")){
-			if(!thePlayer.spotlightVisible){
-				thePlayer.spotlightVisible = true;
-			}else{
-				thePlayer.spotlightVisible = false;
-				
-				// make sure spotlight is not visible
-				thePlayer.spotlight.visible = false;
-			}
-		}
-		
+		// make sure sub spotlight stays with the sub
 		if(thePlayer.spotlightVisible){
 			// make sure the spotlight is visible
 			var spotlight = thePlayer.spotlight;
 			var pos = getCenter(thePlayer.children[0]); // the submarine's group obj should only have 1 child
-			console.log(pos);
 			spotlight.position.x = pos.x;
 			spotlight.position.y = pos.y;
 			spotlight.position.z = pos.z;
-			spotlight.visible = true;
 		}
+		
+		/* check for collision?
+		// check top, left, right, bottom, front, back? 
+		var hasCollision = checkCollision(thePlayer.children[0], raycaster);
+		if(hasCollision){
+			thePlayer.children[0].material.color.set(0xff0000);
+		}else{
+			thePlayer.children[0].material.color.set(thePlayer.originalColor);
+		}*/
+		
 		
 		// how about first-person view?
 		var relCameraOffset = new THREE.Vector3(0, 3, 12);

@@ -25,5 +25,25 @@ http://stemkoski.github.io/Three.js/Chase-Camera.html
 threex keyboard from Jerome Etienne to help with key bindings is super awesome as well
 https://github.com/jeromeetienne/threex.keyboardstate
 
+other stuff ---------------
 https://stackoverflow.com/questions/38305408/threejs-get-center-of-object
 https://stackoverflow.com/questions/11473755/how-to-detect-collision-in-three-js
+
+interesting idea: 
+https://gamedev.stackexchange.com/questions/35013/how-to-handle-3d-collisions-using-raycasting-with-a-reflection-vector
+
+user a height map for terrain? 
+https://stackoverflow.com/questions/15687678/issue-with-terrain-collision-using-three-js
+
+keydown firing multiple times (i.e. for key X) even though I press it only once: 
+https://stackoverflow.com/questions/23386127/keydown-fires-multiple-times-before-keyup
+
+
+to do ---------------
+- clamp angles? or not. it's your choice really.
+- collision detection
+- item collection
+- submarine spotlight - needs to point forward (and downward a bit)
+- health bar
+- trackball rotation
+- rocks, seaweed, animals (i.e. sharks?)
