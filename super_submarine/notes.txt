@@ -18,7 +18,7 @@ references:
 if imported models are being difficult to orientate a certain way, just put them in a group object: 
 https://stackoverflow.com/questions/59446956/how-can-i-change-the-position-of-an-imported-model-in-three-js
 
-Dr. Stemkowski's work is extremely helpful!
+Dr. Stemkoski's work is extremely helpful!
 https://github.com/stemkoski/stemkoski.github.com/blob/master/Three.js/Chase-Camera.html
 http://stemkoski.github.io/Three.js/Chase-Camera.html
 
@@ -26,3 +26,4 @@ threex keyboard from Jerome Etienne to help with key bindings is super awesome a
 https://github.com/jeromeetienne/threex.keyboardstate
 
 https://stackoverflow.com/questions/38305408/threejs-get-center-of-object
+https://stackoverflow.com/questions/11473755/how-to-detect-collision-in-three-js
