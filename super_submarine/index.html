@@ -76,14 +76,16 @@
 		];
 		var objCenter = getCenter(mesh);
 		
-		//raycaster.set(objCenter, top);
 		for(var i = 0; i < dirToCheck.length; i++){
 			var dir = dirToCheck[i];
 			raycaster.set(objCenter, dir);
 			var intersects = raycaster.intersectObjects(scene.children);
 			for(var j = 0; j < intersects.length; j++){
-				//console.log("object collided! direction: " + dir.x + ", " + dir.y + ", " + dir.z);
-				return true;
+				//console.log(intersects[j]);
+				if(objCenter.distanceTo(intersects[j].point) < 2.0){
+					//console.log("object collided! direction: " + dir.x + ", " + dir.y + ", " + dir.z);
+					return true;
+				}
 			}
 		}
 		return false;
@@ -261,6 +263,11 @@
 				mesh.originalColor = group.children[0].material; // this should only be temporary
 				//console.log(group.children[0].material);
 				
+				// alternate materials used for the sub depending on condition 
+				var hitMaterial = new THREE.MeshBasicMaterial({color: 0xff0000});
+				mesh.hitMaterial = hitMaterial;
+				mesh.originalMaterial = mesh.children[0].material;
+				
 				// give the submarine a spotlight
 				// the spotlight should be facing downwards!
 				var spotlight = createSpotlight(); //createSphereWireframe({}, {});
@@ -357,15 +364,14 @@
 			spotlight.position.z = pos.z;
 		}
 		
-		/* check for collision?
+		// check for collision?
 		// check top, left, right, bottom, front, back? 
 		var hasCollision = checkCollision(thePlayer.children[0], raycaster);
 		if(hasCollision){
-			thePlayer.children[0].material.color.set(0xff0000);
+			thePlayer.children[0].material = thePlayer.hitMaterial;
 		}else{
-			thePlayer.children[0].material.color.set(thePlayer.originalColor);
-		}*/
-		
+			thePlayer.children[0].material = thePlayer.originalMaterial;
+		}
 		
 		// how about first-person view?
 		var relCameraOffset = new THREE.Vector3(0, 3, 12);
