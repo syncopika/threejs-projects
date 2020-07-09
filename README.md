@@ -1,3 +1,3 @@
 # threejs-projects
 small projects using three.js    
-syncopika.github.io/threejs-projects/
+https://syncopika.github.io/threejs-projects/
