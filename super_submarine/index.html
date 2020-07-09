@@ -239,6 +239,7 @@
 	loadedModels.push(getModel('models/submarine1.glb', 'player', 'p1'));
 	loadedModels.push(getModel('models/battleship2.glb', 'player2', 'p2'));
 	loadedModels.push(getModel('models/oceanfloor.glb', 'none', 'bg'));
+	loadedModels.push(getModel('models/whale-shark-1.glb', 'none', 'npc'));
 	let thePlayer = null;
 	
 	Promise.all(loadedModels).then((objects) => {
@@ -252,6 +253,9 @@
 			}else if(mesh.name === "bg"){
 				// ocean floor
 				mesh.position.set(0, -20, 0);
+			}else if(mesh.name === "npc"){
+				// whale shark
+				mesh.position.set(-80, 10, -120);
 			}else{
 				// the local axis of the imported mesh is a bit weird and not consistent with the world axis. so, to fix that,
 				// put it in a group object and just control the group object! the mesh is also just orientated properly initially when placed in the group.
