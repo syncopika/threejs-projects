@@ -25,6 +25,8 @@ function getCenter(mesh){
 	return mid;
 }
 
+// https://stackoverflow.com/questions/14813902/three-js-get-the-direction-in-which-the-camera-is-looking
+// https://stackoverflow.com/questions/25224153/how-can-i-get-the-normalized-vector-of-the-direction-an-object3d-is-facing
 function getForward(mesh){
 	var forwardVec = new THREE.Vector3();
 	mesh.getWorldDirection(forwardVec);	
@@ -221,7 +223,9 @@ loadedModels.push(getModel('models/submarine1.glb', 'player', 'p1'));
 loadedModels.push(getModel('models/battleship2.glb', 'player2', 'p2'));
 loadedModels.push(getModel('models/oceanfloor.glb', 'none', 'bg'));
 loadedModels.push(getModel('models/whale-shark-final.glb', 'none', 'npc'));
+loadedModels.push(getModel('models/dangerous-capsule-edit-final.glb', 'none', 'goalObject'));
 let thePlayer = null;
+let theNpc = null;
 
 Promise.all(loadedModels).then((objects) => {
 	objects.forEach((mesh) => {
@@ -240,6 +244,13 @@ Promise.all(loadedModels).then((objects) => {
 			mesh.scale.x /= 2;
 			mesh.scale.y /= 2;
 			mesh.scale.z /= 2;
+			theNpc = mesh;
+		}else if(mesh.name === "goalObject"){
+			mesh.position.set(-100, -18.2, -100);
+			mesh.rotation.y = Math.PI / 6;
+			mesh.scale.x /= 2;
+			mesh.scale.y /= 2;
+			mesh.scale.z /= 2;			
 		}else{
 			// the local axis of the imported mesh is a bit weird and not consistent with the world axis. so, to fix that,
 			// put it in a group object and just control the group object! the mesh is also just orientated properly initially when placed in the group.
@@ -264,11 +275,24 @@ Promise.all(loadedModels).then((objects) => {
 			spotlight.visible = false;
 			scene.add(spotlight);
 			
+			// make a dummy 3d object for the spotlight to track.
+			// this 3d object will always be slightly ahead and below of the submarine's nose
+			// can't think of any other way to get the spotlight to point below and forward of the submarine atm
+			// can I position the dummy object relative to the group and have its position stay consistent with 
+			// any movement? for now I'm going to try to reposition the spotlight target based on the group's
+			// forward vector.
+			var spotlightTarget = new THREE.Object3D();
+			group.add(spotlightTarget);
+			
+			scene.add(spotlightTarget);
+			spotlight.target = spotlightTarget;
+			
 			keyboard.domElement.addEventListener("keydown", (evt) => {
 				// this is supposed to turn on headlights for the sub?
 				if(keyboard.eventMatches(evt, "X")){
 					// we do this stuff here instead of update because on keyup, the state of key X in the keyboard object gets reset to false, 
 					// which we don't want (since we're trying to set a state)
+
 					if(!thePlayer.spotlightVisible){
 						thePlayer.spotlightVisible = true;
 						thePlayer.spotlight.visible = true;
@@ -290,11 +314,27 @@ Promise.all(loadedModels).then((objects) => {
 	})
 });
 
+let t = 0;
 function update(){
 	sec = clock.getDelta();
 	moveDistance = 20 * sec;
 	rotationAngle = (Math.PI / 2) * sec;
 	var changeCameraView = false;
+	//console.log(rotationAngle);
+	//console.log(Math.cos(rotationAngle));
+	t += 0.006;
+	
+	// move the whale shark in a circle
+	// to get it to rotate in a realistic manner as well, I think I have to 
+	// do something a bit more complicated? I forgot what I did in my graphics course :(
+	if(theNpc){
+		var x = theNpc.position.x;
+		var z = theNpc.position.z;
+		var newX = x + (8*Math.cos(t))/10;
+		var newZ = z + (8*Math.sin(t))/10;
+		theNpc.position.set(newX, theNpc.position.y, newZ);
+	}
+	
 	
 	if(keyboard.pressed("shift")){
 		changeCameraView = true;
@@ -349,9 +389,18 @@ function update(){
 	
 	// make sure sub spotlight stays with the sub
 	if(thePlayer.spotlightVisible){
-		// make sure the spotlight is visible
+		// reposition spotlight target so that it's slightly below 
+		// and forward relative to the front of the sub
+		var subForward = getForward(thePlayer); 
+		
+		var x = thePlayer.position.x - (subForward.x * 2);
+		var y = thePlayer.position.y - 3;
+		var z = thePlayer.position.z - (subForward.z * 2);
+		
+		thePlayer.spotlight.target.position.set(x, y, z);
+		
 		var spotlight = thePlayer.spotlight;
-		var pos = getCenter(thePlayer.children[0]); // the submarine's group obj should only have 1 child
+		var pos = getCenter(thePlayer.children[0]);
 		spotlight.position.x = pos.x;
 		spotlight.position.y = pos.y;
 		spotlight.position.z = pos.z;
