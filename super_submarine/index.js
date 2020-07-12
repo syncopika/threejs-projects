@@ -1,5 +1,45 @@
 // super submarine!
 
+
+function setupDisarmMessage(canvas){
+	var canvasPos = canvas.getBoundingClientRect();
+	var disarmMessageText = "hold space to disarm the dangerous capsule";
+	var disarmMessage = document.createElement('h3');
+	
+	disarmMessage.id = "disarmMessage";
+	disarmMessage.style.fontFamily = 'monospace';
+	disarmMessage.style.position = 'absolute';
+	disarmMessage.style.color = '#fff';
+	disarmMessage.style.zIndex = 100;
+	disarmMessage.textContent = disarmMessageText;
+	disarmMessage.style.display = 'none';
+	
+	canvas.parentNode.appendChild(disarmMessage);
+	return disarmMessage;
+}
+
+
+function toggleDisarmMessage(canvas, showMessage){
+	
+	var message = document.getElementById("disarmMessage");
+	if(!message){
+		return;
+	}
+	
+	if(!showMessage){
+		message.style.display = 'none';
+	}else{
+		// make sure message shows up in right place
+		var canvasPos = canvas.getBoundingClientRect();
+		var x = canvasPos.left;
+		var y = canvasPos.top;
+		
+		message.style.left = (x + Math.round(.40 * canvasPos.width)) + "px";
+		message.style.top = (y + Math.round(.80 * canvasPos.height)) + "px";
+		message.style.display = 'block';
+	}
+}
+
 function createSphereWireframe(position, params){
 	var geometry = new THREE.SphereGeometry(4, 8, 6, 0, 6.3, 0, 3.1);
 	var material = new THREE.MeshBasicMaterial({color: 0x3333ff});
@@ -55,9 +95,27 @@ function checkCollision(mesh, raycaster){
 		raycaster.set(objCenter, dir);
 		var intersects = raycaster.intersectObjects(scene.children);
 		for(var j = 0; j < intersects.length; j++){
-			//console.log(intersects[j]);
 			if(objCenter.distanceTo(intersects[j].point) < 2.0){
 				//console.log("object collided! direction: " + dir.x + ", " + dir.y + ", " + dir.z);
+				return true;
+			}
+		}
+	}
+	return false;
+}
+
+// source = position of source obj, dir = direction vector
+function checkCapsuleHit(source, dir, raycaster){
+	raycaster.set(source, dir);
+	var intersects = raycaster.intersectObjects(scene.children);
+	for(var i = 0; i < intersects.length; i++){
+		var target = intersects[i];
+		//console.log(target);
+		//console.log(source.distanceTo(target.point));
+		if(target.object.name === "goalObject"){
+			var inRange = source.distanceTo(target.point) > 7.0 && source.distanceTo(target.point) < 12.0;
+			if(inRange){
+				//console.log("hit capsule!");
 				return true;
 			}
 		}
@@ -142,6 +200,8 @@ renderer.shadowMap.enabled = true;
 renderer.setSize(el.clientWidth, el.clientHeight);	
 container.appendChild(renderer.domElement);
 
+setupDisarmMessage(document.getElementsByTagName('canvas')[0]);
+
 //https://threejs.org/docs/#examples/en/controls/OrbitControls
 // or this?: https://github.com/mrdoob/three.js/blob/dev/examples/jsm/controls/TrackballControls.js
 //const controls = new OrbitControls(defaultCamera, renderer.domElement);
@@ -170,8 +230,7 @@ let moveDistance = 60 * sec;
 let rotationAngle = (Math.PI / 2) * sec;
 
 // need to keep some state 
-const state = {
-}
+const state = {};
 
 let loadedModels = [];
 
@@ -226,6 +285,7 @@ loadedModels.push(getModel('models/whale-shark-final.glb', 'none', 'npc'));
 loadedModels.push(getModel('models/dangerous-capsule-edit-final.glb', 'none', 'goalObject'));
 let thePlayer = null;
 let theNpc = null;
+let capsuleToDisarm = null;
 
 Promise.all(loadedModels).then((objects) => {
 	objects.forEach((mesh) => {
@@ -250,7 +310,9 @@ Promise.all(loadedModels).then((objects) => {
 			mesh.rotation.y = Math.PI / 6;
 			mesh.scale.x /= 2;
 			mesh.scale.y /= 2;
-			mesh.scale.z /= 2;			
+			mesh.scale.z /= 2;
+
+			capsuleToDisarm = mesh;
 		}else{
 			// the local axis of the imported mesh is a bit weird and not consistent with the world axis. so, to fix that,
 			// put it in a group object and just control the group object! the mesh is also just orientated properly initially when placed in the group.
@@ -300,6 +362,9 @@ Promise.all(loadedModels).then((objects) => {
 						// make sure spotlight is not visible
 						thePlayer.spotlight.visible = false;
 						thePlayer.spotlightVisible = false;
+						
+						// hide capsule disarm message if it was showing
+						toggleDisarmMessage(document.getElementsByTagName('canvas')[0], false);
 					}
 				}
 			});
@@ -392,18 +457,29 @@ function update(){
 		// reposition spotlight target so that it's slightly below 
 		// and forward relative to the front of the sub
 		var subForward = getForward(thePlayer); 
+		var spotlight = thePlayer.spotlight;
 		
 		var x = thePlayer.position.x - (subForward.x * 2);
 		var y = thePlayer.position.y - 3;
 		var z = thePlayer.position.z - (subForward.z * 2);
 		
-		thePlayer.spotlight.target.position.set(x, y, z);
+		spotlight.target.position.set(x, y, z);
 		
-		var spotlight = thePlayer.spotlight;
 		var pos = getCenter(thePlayer.children[0]);
 		spotlight.position.x = pos.x;
 		spotlight.position.y = pos.y;
 		spotlight.position.z = pos.z;
+		
+		// see if the spotlight hits the dangerous capsule
+		var source = spotlight.position;
+		var target = spotlight.target.position;
+		var dir = (new THREE.Vector3(target.x - source.x, target.y - source.y, target.z - source.z)).normalize();
+
+		if(checkCapsuleHit(source, dir, raycaster)){
+			toggleDisarmMessage(document.getElementsByTagName('canvas')[0], true);
+		}else{
+			toggleDisarmMessage(document.getElementsByTagName('canvas')[0], false);
+		}
 	}
 	
 	// check for collision?
