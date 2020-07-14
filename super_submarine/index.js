@@ -193,7 +193,58 @@ const defaultCamera = new THREE.PerspectiveCamera(fov, el.clientWidth / el.clien
 const keyboard = new THREEx.KeyboardState();
 const container = document.querySelector('#container');
 const raycaster = new THREE.Raycaster();
-const loader = new THREE.GLTFLoader();
+const loadingManager = new THREE.LoadingManager();
+
+// https://stackoverflow.com/questions/35575065/how-to-make-a-loading-screen-in-three-js
+loadingManager.onStart = (url, itemsLoaded, itemsTotal) => {
+	let container = document.getElementById("container");
+	let containerDimensions = container.getBoundingClientRect();
+	
+	let loadingBar = document.createElement("div");
+	let loadingBarContainer = document.createElement("div");
+	
+	loadingBarContainer.id = 'loadingBarContainer';
+	loadingBarContainer.style.width = '200px';
+	loadingBarContainer.style.backgroundColor = '#fff';
+	loadingBarContainer.style.height = '20px';
+	loadingBarContainer.style.textAlign = 'center';
+	loadingBarContainer.style.position = 'absolute';
+	loadingBarContainer.style.zIndex = 100;
+	
+	let x = containerDimensions.left;
+	let y = containerDimensions.top;
+	let left = (x + Math.round(.40 * containerDimensions.width)) + "px";
+	let top = (y + Math.round(.50 * containerDimensions.height)) + "px";
+	loadingBarContainer.style.left = left;
+	loadingBarContainer.style.top = top;
+	
+	loadingBar.id = 'loadingBar';
+	loadingBar.style.position = 'absolute';
+	loadingBar.style.width = '0px';
+	loadingBar.style.height = '20px';
+	loadingBar.style.zIndex = 100;
+	loadingBar.style.backgroundColor = "00ff00";
+	
+	loadingBarContainer.appendChild(loadingBar);
+	container.appendChild(loadingBarContainer);
+}
+
+loadingManager.onLoad = () => {
+	document.getElementById("container").removeChild(
+		document.getElementById("loadingBarContainer")
+	);
+}
+
+loadingManager.onProgress = (url, itemsLoaded, itemsTotal) => {
+	let bar = document.getElementById("loadingBar");
+	bar.style.width = (parseInt(bar.parentNode.style.width) * (itemsLoaded/itemsTotal)) + 'px';
+}
+
+loadingManager.onError = (url) => {
+	console.log("there was an error loading :(");
+}
+
+const loader = new THREE.GLTFLoader(loadingManager);
 
 const renderer = new THREE.WebGLRenderer();
 renderer.shadowMap.enabled = true;
