@@ -1,6 +1,6 @@
 // super submarine!
 
-
+// create the message that shows when the player is within range to disarm the dangerous capsule
 function setupDisarmMessage(canvas){
 	var canvasPos = canvas.getBoundingClientRect();
 	var disarmMessageText = "hold space to disarm the dangerous capsule";
@@ -18,7 +18,7 @@ function setupDisarmMessage(canvas){
 	return disarmMessage;
 }
 
-
+// show/hide the message the allows the player to disarm the dangerous capsule
 function toggleDisarmMessage(canvas, showMessage){
 	
 	var message = document.getElementById("disarmMessage");
@@ -104,6 +104,7 @@ function checkCollision(mesh, raycaster){
 	return false;
 }
 
+// check if spotlight hits the dangerous capsule
 // source = position of source obj, dir = direction vector
 function checkCapsuleHit(source, dir, raycaster){
 	raycaster.set(source, dir);
@@ -154,36 +155,6 @@ function createSpotlight(){
 	return spotlight;
 }
 
-//import { Water } from '/node_modules/three/examples/jsm/objects/Water.js';
-// https://forums.ogre3d.org/viewtopic.php?t=47645
-
-// https://stemkoski.github.io/Three.js/Shader-Animate.html
-var waterShader = {
-
-	vertexShader: [
-		'varying vec2 vUv;',
-		'void main(){',
-		'   vUv = uv;',
-		'   gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );}'
-	].join('\n'),
-	
-	fragmentShader: [
-		'uniform sampler2D baseTexture;',
-		'uniform float baseSpeed;',
-		'uniform sampler2D noiseTexture;',
-		'uniform float noiseScale;',
-		'uniform float alpha;',
-		'uniform float time;',
-		'varying vec2 vUv;',
-		'void main() {',
-		'	vec2 uvTimeShift = vUv + vec2( -0.7, 1.2 ) * time * baseSpeed;'	,
-		'	vec4 noiseGeneratorTimeShift = texture2D( noiseTexture, uvTimeShift );',
-		'	vec2 uvNoiseTimeShift = vUv + noiseScale * vec2( noiseGeneratorTimeShift.r, noiseGeneratorTimeShift.b );',
-		'	vec4 baseColor = texture2D( baseTexture, uvNoiseTimeShift );',
-		'	baseColor.a = alpha;',
-		'	gl_FragColor = baseColor;}',
-	].join('\n')
-}
 
 // https://github.com/evanw/webgl-water
 // https://github.com/donmccurdy/three-gltf-viewer/blob/master/src/viewer.js
@@ -195,15 +166,12 @@ const container = document.querySelector('#container');
 const raycaster = new THREE.Raycaster();
 const loadingManager = new THREE.LoadingManager();
 
-// https://stackoverflow.com/questions/35575065/how-to-make-a-loading-screen-in-three-js
-loadingManager.onStart = (url, itemsLoaded, itemsTotal) => {
-	let container = document.getElementById("container");
-	let containerDimensions = container.getBoundingClientRect();
-	
-	let loadingBar = document.createElement("div");
+// create a general progress bar
+function createProgressBar(name, barColor, filled=false){
 	let loadingBarContainer = document.createElement("div");
+	let loadingBar = document.createElement("div");
 	
-	loadingBarContainer.id = 'loadingBarContainer';
+	loadingBarContainer.id = name + 'BarContainer';
 	loadingBarContainer.style.width = '200px';
 	loadingBarContainer.style.backgroundColor = '#fff';
 	loadingBarContainer.style.height = '20px';
@@ -211,21 +179,65 @@ loadingManager.onStart = (url, itemsLoaded, itemsTotal) => {
 	loadingBarContainer.style.position = 'absolute';
 	loadingBarContainer.style.zIndex = 100;
 	
-	let x = containerDimensions.left;
-	let y = containerDimensions.top;
-	let left = (x + Math.round(.40 * containerDimensions.width)) + "px";
-	let top = (y + Math.round(.50 * containerDimensions.height)) + "px";
-	loadingBarContainer.style.left = left;
-	loadingBarContainer.style.top = top;
+	loadingBar.id = name + "Bar";
 	
-	loadingBar.id = 'loadingBar';
-	loadingBar.style.position = 'absolute';
-	loadingBar.style.width = '0px';
+	if(filled){
+		loadingBar.style.width = '200px';
+	}else{
+		loadingBar.style.width = '0px';
+	}
+	
 	loadingBar.style.height = '20px';
 	loadingBar.style.zIndex = 100;
-	loadingBar.style.backgroundColor = "00ff00";
+	loadingBar.style.backgroundColor = barColor; //"#00ff00";
 	
 	loadingBarContainer.appendChild(loadingBar);
+	return loadingBarContainer;
+}
+
+
+// set up health bar 
+function createHealthBar(){
+	let container = document.getElementById("container");
+	let containerDimensions = container.getBoundingClientRect();
+	let left = (containerDimensions.left + Math.round(.05 * containerDimensions.width)) + "px";
+	let top = (containerDimensions.top + Math.round(.05 * containerDimensions.height)) + "px";
+	let healthBarContainer = createProgressBar("health", "#00ff00", true);
+	healthBarContainer.style.border = "1px solid #000";
+	healthBarContainer.style.left = left;
+	healthBarContainer.style.top = top;
+	container.appendChild(healthBarContainer);
+}
+
+// progress bar for disarming the dangerous capsule
+function createDisarmProgressBar(){
+	let container = document.getElementById("container");
+	let containerDimensions = container.getBoundingClientRect();
+	let left = (containerDimensions.left + Math.round(.40 * containerDimensions.width)) + "px";
+	let top = (containerDimensions.top + Math.round(.50 * containerDimensions.height)) + "px";
+	
+	let disarmProgressBarContainer = createProgressBar("disarm", "#ff0000", false);
+	disarmProgressBarContainer.style.border = "1px solid #000";
+	disarmProgressBarContainer.style.left = left;
+	disarmProgressBarContainer.style.top = top;
+	
+	// only show when player is in range of capsule and pressing spacebar
+	disarmProgressBarContainer.style.display = 'none';
+	
+	container.appendChild(disarmProgressBarContainer);
+}
+
+
+// https://stackoverflow.com/questions/35575065/how-to-make-a-loading-screen-in-three-js
+loadingManager.onStart = (url, itemsLoaded, itemsTotal) => {
+	// set up a loading bar
+	let container = document.getElementById("container");
+	let containerDimensions = container.getBoundingClientRect();
+	let left = (containerDimensions.left + Math.round(.40 * containerDimensions.width)) + "px";
+	let top = (containerDimensions.top + Math.round(.50 * containerDimensions.height)) + "px";
+	let loadingBarContainer = createProgressBar("loading", "#00ff00");
+	loadingBarContainer.style.left = left;
+	loadingBarContainer.style.top = top;
 	container.appendChild(loadingBarContainer);
 }
 
@@ -420,6 +432,12 @@ Promise.all(loadedModels).then((objects) => {
 				}
 			});
 			
+			// add the player's health bar 
+			createHealthBar();
+			
+			// set up the progress bar to be used for disarming the dangerous capsule 
+			createDisarmProgressBar();
+			
 			animate();
 		}
 		
@@ -431,6 +449,7 @@ Promise.all(loadedModels).then((objects) => {
 });
 
 let t = 0;
+let lastTime = clock.getDelta();
 function update(){
 	sec = clock.getDelta();
 	moveDistance = 20 * sec;
@@ -528,6 +547,30 @@ function update(){
 
 		if(checkCapsuleHit(source, dir, raycaster)){
 			toggleDisarmMessage(document.getElementsByTagName('canvas')[0], true);
+			
+			var disarmProgress = document.getElementById("disarmBarContainer");
+			var progressBar = disarmProgress.children[0];
+			if(keyboard.pressed("space")){
+				disarmProgress.style.display = "block";
+				var currWidth = parseInt(progressBar.style.width);
+				var fullWidth = parseInt(disarmProgress.style.width);
+
+				if(lastTime === 0){
+					lastTime = clock.getElapsedTime();
+				}
+				
+				var currTime = clock.getElapsedTime();
+				if(currWidth < fullWidth && (currTime - lastTime) > 0.5){
+					var newWidth = Math.min(currWidth + 50, fullWidth);
+					progressBar.style.width = newWidth + "px";
+					lastTime = currTime;
+				}
+			}else{
+				disarmProgress.style.display = "none";
+				progressBar.style.width = "0px"; // reset to 0 width
+				lastTime = 0;
+			}
+			
 		}else{
 			toggleDisarmMessage(document.getElementsByTagName('canvas')[0], false);
 		}
