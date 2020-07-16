@@ -117,11 +117,11 @@ function checkCapsuleHit(source, dir, raycaster){
 			var inRange = source.distanceTo(target.point) > 7.0 && source.distanceTo(target.point) < 12.0;
 			if(inRange){
 				//console.log("hit capsule!");
-				return true;
+				return target.object;
 			}
 		}
 	}
-	return false;
+	return null;
 }
 
 function drawForwardVector(mesh){
@@ -245,6 +245,12 @@ loadingManager.onLoad = () => {
 	document.getElementById("container").removeChild(
 		document.getElementById("loadingBarContainer")
 	);
+	
+	// add the player's health bar 
+	createHealthBar();
+	
+	// set up the progress bar to be used for disarming the dangerous capsule 
+	createDisarmProgressBar();
 }
 
 loadingManager.onProgress = (url, itemsLoaded, itemsTotal) => {
@@ -376,6 +382,7 @@ Promise.all(loadedModels).then((objects) => {
 			mesh.scale.z /= 2;
 
 			capsuleToDisarm = mesh;
+			capsuleToDisarm.disarmed = false;
 		}else{
 			// the local axis of the imported mesh is a bit weird and not consistent with the world axis. so, to fix that,
 			// put it in a group object and just control the group object! the mesh is also just orientated properly initially when placed in the group.
@@ -431,12 +438,6 @@ Promise.all(loadedModels).then((objects) => {
 					}
 				}
 			});
-			
-			// add the player's health bar 
-			createHealthBar();
-			
-			// set up the progress bar to be used for disarming the dangerous capsule 
-			createDisarmProgressBar();
 			
 			animate();
 		}
@@ -544,12 +545,14 @@ function update(){
 		var source = spotlight.position;
 		var target = spotlight.target.position;
 		var dir = (new THREE.Vector3(target.x - source.x, target.y - source.y, target.z - source.z)).normalize();
+		var capsuleHit = checkCapsuleHit(source, dir, raycaster);
 
-		if(checkCapsuleHit(source, dir, raycaster)){
+		if(capsuleHit && !capsuleHit.disarmed){
 			toggleDisarmMessage(document.getElementsByTagName('canvas')[0], true);
 			
 			var disarmProgress = document.getElementById("disarmBarContainer");
 			var progressBar = disarmProgress.children[0];
+			
 			if(keyboard.pressed("space")){
 				disarmProgress.style.display = "block";
 				var currWidth = parseInt(progressBar.style.width);
@@ -564,6 +567,11 @@ function update(){
 					var newWidth = Math.min(currWidth + 50, fullWidth);
 					progressBar.style.width = newWidth + "px";
 					lastTime = currTime;
+				}else if(currWidth >= fullWidth){
+					// disarm successful!
+					disarmProgress.style.display = "none";
+					capsuleHit.disarmed = true;
+					toggleDisarmMessage(document.getElementsByTagName('canvas')[0], false);
 				}
 			}else{
 				disarmProgress.style.display = "none";
