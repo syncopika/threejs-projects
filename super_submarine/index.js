@@ -552,6 +552,7 @@ function update(){
 			
 			var disarmProgress = document.getElementById("disarmBarContainer");
 			var progressBar = disarmProgress.children[0];
+			var congratsMsg;
 			
 			if(keyboard.pressed("space")){
 				disarmProgress.style.display = "block";
@@ -572,6 +573,20 @@ function update(){
 					disarmProgress.style.display = "none";
 					capsuleHit.disarmed = true;
 					toggleDisarmMessage(document.getElementsByTagName('canvas')[0], false);
+					
+					congratsMsg = document.createElement("h3");
+					congratsMsg.style.position = "absolute";
+					congratsMsg.style.top = disarmProgress.style.top;
+					congratsMsg.style.left = disarmProgress.style.left;
+					congratsMsg.style.fontFamily = "monospace";
+					congratsMsg.style.color = "#fff";
+					congratsMsg.textContent = "nice! you disarmed the dangerous capsule!";	
+					congratsMsg.style.display = "block";
+					disarmProgress.parentNode.appendChild(congratsMsg);
+					
+					setTimeout(function(){
+						congratsMsg.style.display = "none";
+					}, 2000); // show congrats msg for only 2 sec
 				}
 			}else{
 				disarmProgress.style.display = "none";
