@@ -125,10 +125,11 @@ function checkCapsuleHit(source, dir, raycaster){
 }
 
 function drawForwardVector(mesh){
-	var forwardVec = new THREE.Vector3();
-	forwardVec.applyQuaternion(mesh.quaternion);
 	
-	// create a vector 
+	var forwardVec = getForward(mesh); //new THREE.Vector3();
+	//forwardVec.applyQuaternion(mesh.quaternion);
+	
+	// create a vector
 	var point1 = getCenter(mesh); //new THREE.Vector3(forwardVec.x, forwardVec.y, forwardVec.z);
 	var point2 = new THREE.Vector3(forwardVec.x, forwardVec.y, forwardVec.z); 
 	point2.multiplyScalar(2);
@@ -369,7 +370,10 @@ Promise.all(loadedModels).then((objects) => {
 			mesh.position.set(0, -20, 0);
 		}else if(mesh.name === "npc"){
 			// whale shark
-			mesh.position.set(-80, 2, -120);
+			var sharkGroup = new THREE.Group();
+			sharkGroup.add(mesh);
+			mesh = sharkGroup;
+			mesh.position.set(-10, 2, -120);
 			mesh.scale.x /= 2;
 			mesh.scale.y /= 2;
 			mesh.scale.z /= 2;
@@ -393,6 +397,9 @@ Promise.all(loadedModels).then((objects) => {
 			mesh.position.set(0, 0, -10);
 			mesh.originalColor = group.children[0].material; // this should only be temporary
 			//console.log(group.children[0].material);
+			
+			// set player health
+			thePlayer.health = 100;
 			
 			// alternate materials used for the sub depending on condition 
 			var hitMaterial = new THREE.MeshBasicMaterial({color: 0xff0000});
@@ -458,19 +465,37 @@ function update(){
 	var changeCameraView = false;
 	//console.log(rotationAngle);
 	//console.log(Math.cos(rotationAngle));
-	t += 0.006;
+	t += 0.007;
 	
 	// move the whale shark in a circle
 	// to get it to rotate in a realistic manner as well, I think I have to 
 	// do something a bit more complicated? I forgot what I did in my graphics course :(
 	if(theNpc){
+		
+		// hmm so this is kinda weird? it looks like the forward vector is always pointing
+		// towards the origin (0,0,0). so it's not really a forward vector but maybe it can be helpful?
+		
+		// my thinking here is that, assuming this 'forward' vector keeps pointing to the origin,
+		// I can just get the perpendicular vector of that by rotating it 90 deg to get the tangent vector
+		// of the circular path (and so I can make the npc point along the tangent).
+		
+		// looks like I kinda have that working with this code, except lookAt might not be the best thing to do.
+		// it's still not quite right cause now it looks like the npc is always drifting a bit (but it does do 
+		// this particularly cool drift/turn thing somehwere along the path).
+		
+		// perhaps a spline path would be better?
+		
 		var x = theNpc.position.x;
 		var z = theNpc.position.z;
-		var newX = x + (8*Math.cos(t))/10;
-		var newZ = z + (8*Math.sin(t))/10;
+		var newX = x + (8*Math.cos(t))/15;
+		var newZ = z + (8*Math.sin(t))/15;
 		theNpc.position.set(newX, theNpc.position.y, newZ);
+		
+		var forwardVec = getForward(theNpc);
+		forwardVec.sub(theNpc.position);
+		var vecToRotateTo = forwardVec.clone().applyAxisAngle(new THREE.Vector3(0,1,0), (Math.PI/2));
+		theNpc.lookAt(vecToRotateTo);
 	}
-	
 	
 	if(keyboard.pressed("shift")){
 		changeCameraView = true;
@@ -602,9 +627,26 @@ function update(){
 	// check for collision?
 	// check top, left, right, bottom, front, back? 
 	var hasCollision = checkCollision(thePlayer.children[0], raycaster);
-	if(hasCollision){
+	if(!thePlayer.isCollided && hasCollision){
 		thePlayer.children[0].material = thePlayer.hitMaterial;
+
+		// decrement player health
+		thePlayer.health -= 20;
+		thePlayer.isCollided = true;
+
+		if(thePlayer.health >= 0){
+			var currHealthBarVal = parseInt(document.getElementById("healthBar").style.width);
+			document.getElementById("healthBar").style.width = (200*(thePlayer.health/100)) + "px"; // 200 == default width of the health bar in px
+		}else{
+			// player dead? or just respawn?
+			//document.getElementById("disarmMessage").textContent = "hmm you've appeared to lost too much health so the mothership is calling you back.";
+			//document.getElementById("disarmMessage").style.display = "block";
+		}
+	}else if(hasCollision && thePlayer.isCollided){
+		// leave collision material on but don't keep decrementing health if staying in collided position
+		thePlayer.isCollided = true;
 	}else{
+		thePlayer.isCollided = false;
 		thePlayer.children[0].material = thePlayer.originalMaterial;
 	}
 	

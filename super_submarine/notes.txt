@@ -38,6 +38,9 @@ https://stackoverflow.com/questions/15687678/issue-with-terrain-collision-using-
 keydown firing multiple times (i.e. for key X) even though I press it only once: 
 https://stackoverflow.com/questions/23386127/keydown-fires-multiple-times-before-keyup
 
+oooh good resource:
+https://threejsfundamentals.org/threejs/lessons/threejs-scenegraph.html
+
 
 to do ---------------
 - clamp angles? or not. it's your choice really.

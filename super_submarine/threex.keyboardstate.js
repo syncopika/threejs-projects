@@ -136,6 +136,7 @@ THREEx.KeyboardState.prototype.pressed	= function(keyDesc){
  * @return {Boolean}         true if the event match keyDesc, false otherwise
  */
 THREEx.KeyboardState.prototype.eventMatches = function(event, keyDesc) {
+	event.preventDefault(); // edit: syncopika - avoid auto scroll with spacebar, for example
 	var aliases	= THREEx.KeyboardState.ALIAS
 	var aliasKeys	= Object.keys(aliases)
 	var keys	= keyDesc.split("+")
