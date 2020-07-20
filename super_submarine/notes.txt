@@ -25,6 +25,9 @@ http://stemkoski.github.io/Three.js/Chase-Camera.html
 threex keyboard from Jerome Etienne to help with key bindings is super awesome as well
 https://github.com/jeromeetienne/threex.keyboardstate
 
+loading/progress bar
+https://stackoverflow.com/questions/35575065/how-to-make-a-loading-screen-in-three-js
+
 other stuff ---------------
 https://stackoverflow.com/questions/38305408/threejs-get-center-of-object
 https://stackoverflow.com/questions/11473755/how-to-detect-collision-in-three-js

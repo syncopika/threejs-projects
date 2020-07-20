@@ -1,0 +1,14 @@
+airshow!
+
+I love airshows and military aircraft. the one featured here is an f-18. hopefully I will build some more military aircraft to assemble
+some static displays! :D
+
+todo:
+- get a runway, a hangar, better lighting + clouds
+- basic f-18 animations like:
+	- flaps
+	- rudders
+	- landing gear deploy/retraction on key press
+- takeoff/landing logic??
+- make more planes for static displays! 
+	-ideas: c-17, c-5, f-15, f-16, c-130, f-14 (even though retired lol), f-22, f-35, av-8b, p-8, tanks are good too
