@@ -45,7 +45,7 @@ function checkCollision(mesh, raycaster){
 		raycaster.set(objCenter, dir);
 		var intersects = raycaster.intersectObjects(scene.children);
 		for(var j = 0; j < intersects.length; j++){
-			if(objCenter.distanceTo(intersects[j].point) < 2.0){
+			if(objCenter.distanceTo(intersects[j].point) < 1.0){
 				//console.log("object collided! direction: " + dir.x + ", " + dir.y + ", " + dir.z);
 				return true;
 			}
@@ -200,9 +200,9 @@ function getModel(modelFilePath, side, name){
 						if(name === "bg"){
 							// TODO: having trouble scaling the runway :/
 							// for now use the ocean floor 
-							obj.scale.x = child.scale.x * 20;
-							obj.scale.y = child.scale.y * 20;
-							obj.scale.z = child.scale.z * 20;
+							obj.scale.x = child.scale.x * 10;
+							obj.scale.y = child.scale.y * 10;
+							obj.scale.z = child.scale.z * 10;
 							//obj.rotateOnAxis(new THREE.Vector3(0,1,0), Math.PI);
 						}else{
 							// jet needs to be rotated 180 deg. -_-
@@ -232,7 +232,7 @@ function getModel(modelFilePath, side, name){
 
 // https://threejs.org/docs/#api/en/textures/Texture
 // create a mesh, apply ocean shader on it 
-loadedModels.push(getModel('models/oceanfloor.glb', 'none', 'bg'));
+loadedModels.push(getModel('models/airshow-bg-test.glb', 'none', 'bg'));
 loadedModels.push(getModel('models/f-18hornet-edit.glb', 'player', 'p1'));
 
 let thePlayer = null;
@@ -243,7 +243,7 @@ Promise.all(loadedModels).then((objects) => {
 		if(mesh.name === "bg"){
 			// runway
 			//mesh.position.set(0, -10, -50);
-			mesh.position.set(0, -20, 0);
+			mesh.position.set(0, 0, 0);
 		}else if(mesh.name === "npc"){
 			// npcs?
 		}else{
@@ -253,7 +253,7 @@ Promise.all(loadedModels).then((objects) => {
 			group.add(mesh);
 			thePlayer = group;
 			mesh = group;
-			mesh.position.set(0, 0, -50);
+			mesh.position.set(0, 1, -50);
 			mesh.originalColor = group.children[0].material; // this should only be temporary
 			
 			// alternate materials used for the sub depending on condition 
@@ -303,14 +303,16 @@ function update(){
 		thePlayer.rotateOnAxis(axis, -rotationAngle);
 	}
 	
-	if(keyboard.pressed("Q")){
+	if(keyboard.pressed("Q") && thePlayer.position.y > 6.0){
 		// notice we're not rotating about the group mesh, but the child 
 		// mesh of the group, which is actually the jet mesh!
-		var axis = new THREE.Vector3(0, 0, -1);
-		thePlayer.children[0].rotateOnAxis(axis, rotationAngle);
+		// if you try to move in all sorts of directions, after a while
+		// the camera gets off center and axes seem to get messed up :/
+		var axis = new THREE.Vector3(0, 0, 1);
+		thePlayer.children[0].rotateOnAxis(axis, -rotationAngle);
 	}
 	
-	if(keyboard.pressed("E")){
+	if(keyboard.pressed("E") && thePlayer.position.y > 6.0){
 		var axis = new THREE.Vector3(0, 0, 1);
 		thePlayer.children[0].rotateOnAxis(axis, rotationAngle);
 	}
