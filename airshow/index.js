@@ -238,19 +238,31 @@ loadedModels.push(getModel('models/f-18hornet-edit.glb', 'player', 'p1'));
 let thePlayer = null;
 let theNpc = null;
 
+let bgAxesHelper;
+let playerAxesHelper;
+let playerGroupAxesHelper;
+
 Promise.all(loadedModels).then((objects) => {
 	objects.forEach((mesh) => {
 		if(mesh.name === "bg"){
 			// runway
 			//mesh.position.set(0, -10, -50);
 			mesh.position.set(0, 0, 0);
+			bgAxesHelper = new THREE.AxesHelper(10);
+			mesh.add(bgAxesHelper);
 		}else if(mesh.name === "npc"){
 			// npcs?
 		}else{
 			// the local axis of the imported mesh is a bit weird and not consistent with the world axis. so, to fix that,
 			// put it in a group object and just control the group object! the mesh is also just orientated properly initially when placed in the group.
+			playerAxesHelper = new THREE.AxesHelper(10);
+			mesh.add(playerAxesHelper);
+			
 			var group = new THREE.Group();
 			group.add(mesh);
+			playerGroupAxesHelper = new THREE.AxesHelper(8);
+			group.add(playerGroupAxesHelper);
+			
 			thePlayer = group;
 			mesh = group;
 			mesh.position.set(0, 1, -50);
@@ -355,6 +367,9 @@ function update(){
 	camera.position.y = cameraOffset.y;
 	camera.position.z = cameraOffset.z;
 	camera.lookAt(thePlayer.position);
+	
+	// hmm can we take the player's rotation (since it's the group's rotation) and just apply 
+	// it to the camera? just make sure the camera is behind the player. (instead of using lookAt)
 
 }
 

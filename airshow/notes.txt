@@ -3,6 +3,18 @@ airshow!
 I love airshows and military aircraft. the one featured here is an f-18. hopefully I will build some more military aircraft to assemble
 some static displays! :D
 
+
+notes:
+- so when the f-18 controlled by the user reaches some vertical angle, the camera changes and if the rotation is correct, 
+  the axes can 'flip' and so normal control is inverted. (rotation meaning you align the local f-18 axes with the group it's in's axes)
+  note that the camera also changes when that axes flip occurs. if we can prevent that, that'd be neat.
+
+  looks like the issue is with lookAt()
+  this might help: https://discourse.threejs.org/t/solved-lookat-flips-cam-rotation-180-degrees-how-do-i-remove-this/2066/3
+  and this: https://github.com/mrdoob/three.js/issues/688
+
+  this dicussion also looks interesting: https://github.com/mrdoob/three.js/issues/1460
+
 todo:
 - get a runway, a hangar, better lighting + clouds
 - basic f-18 animations like:

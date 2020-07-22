@@ -1,0 +1,24 @@
+{
+  "name": "threejs-projects",
+  "version": "1.0.0",
+  "description": "small projects using three.js    \r https://syncopika.github.io/threejs-projects/",
+  "main": "server.js",
+  "dependencies": {
+    "express": "^4.17.1"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/syncopika/threejs-projects.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/syncopika/threejs-projects/issues"
+  },
+  "homepage": "https://github.com/syncopika/threejs-projects#readme"
+}
