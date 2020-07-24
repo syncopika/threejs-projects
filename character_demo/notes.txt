@@ -1,0 +1,8 @@
+testing character animations with a low-poly humanoid
+
+having trouble with the imported mesh :'(
+https://stackoverflow.com/questions/42886821/blender-exported-json-model-shows-wrong-animations-in-three-js
+
+outdated but maybe still useful: https://unboring.net/workflows/animation.html
+
+this is so helpful :'): https://gltf-viewer.donmccurdy.com/

@@ -20,6 +20,7 @@ the same time I'm not really sure what a proper experience should be like thinki
 - also, when I put the f18 in a group object the rolling behavior is exactly what i want. but when i try using just the f18 mesh itself,
   the rotation is not as good, i.e. it feels like there's some offset, rather than rotating the jet as if the z-axis was going through the 
   middle of it. not really sure why but that's something to look into.
+// https://stackoverflow.com/questions/28848863/threejs-how-to-rotate-around-objects-own-center-instead-of-world-center
 
 todo:
 - get a runway, a hangar, better lighting + clouds
