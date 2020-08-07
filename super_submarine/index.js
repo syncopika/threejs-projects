@@ -284,6 +284,7 @@ scene.background = new THREE.Color(0xffffff);
 scene.add(camera);
 
 
+
 let pointLight = new THREE.PointLight(0xffffff, 1, 0); //new THREE.pointLight( 0xffffff );
 pointLight.position.set(0, 10, -35);
 pointLight.castShadow = true;
@@ -293,6 +294,11 @@ pointLight.shadow.camera.near = 10;
 pointLight.shadow.camera.far = 100;
 pointLight.shadow.camera.fov = 30;
 scene.add(pointLight);
+
+
+let hemiLight = new THREE.HemisphereLight(0xffffff);
+hemiLight.position.set(0, 100, 0);
+scene.add(hemiLight);
 
 const clock = new THREE.Clock();
 let sec = clock.getDelta();
