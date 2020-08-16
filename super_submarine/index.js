@@ -384,6 +384,8 @@ Promise.all(loadedModels).then((objects) => {
 			mesh.scale.y /= 2;
 			mesh.scale.z /= 2;
 			theNpc = mesh;
+			//theNpc.matrixAutoUpdate = false;
+			//console.log(theNpc);
 		}else if(mesh.name === "goalObject"){
 			mesh.position.set(-100, -18.2, -100);
 			mesh.rotation.y = Math.PI / 6;
@@ -490,17 +492,56 @@ function update(){
 		// this particularly cool drift/turn thing somehwere along the path).
 		
 		// perhaps a spline path would be better?
-		
+		theNpc.matrixAutoUpdate = false;
+
+		var currstep = 0.01;
 		var x = theNpc.position.x;
 		var z = theNpc.position.z;
-		var newX = x + (8*Math.cos(t))/15;
-		var newZ = z + (8*Math.sin(t))/15;
-		theNpc.position.set(newX, theNpc.position.y, newZ);
+		//var newX = x + (8*Math.cos(t))/15;
+		//var newZ = z + (8*Math.sin(t))/15;
+		//theNpc.position.set(newX, theNpc.position.y, newZ);
+
+		//var forwardVec = getForward(theNpc);
+		//forwardVec.sub(theNpc.position);
+		//var vecToRotateTo = forwardVec.clone().applyAxisAngle(new THREE.Vector3(0,1,0), (Math.PI/2));
+		//theNpc.lookAt(vecToRotateTo);
 		
-		var forwardVec = getForward(theNpc);
-		forwardVec.sub(theNpc.position);
-		var vecToRotateTo = forwardVec.clone().applyAxisAngle(new THREE.Vector3(0,1,0), (Math.PI/2));
-		theNpc.lookAt(vecToRotateTo);
+		var curr = theNpc.matrix;
+		//console.log(theNpc);
+			
+		// new Matrix4f(new float[] {1,0,0,p.m03,  0,1,0,p.m13,  0,0,1,p.m23,  p.m30,p.m31,p.m32,p.m33});
+		var oldLoc = new THREE.Matrix4();
+		oldLoc.copy(curr);
+		console.log(oldLoc);
+	
+		var rotY = new THREE.Matrix4();
+		rotY.makeRotationY(currstep);
+		//console.log(rotY);
+		//console.log("---------------");
+
+		
+		var transMat = new THREE.Matrix4();
+		transMat.set(1,0,0,(0.5+.5*(Math.cos(currstep))), 0,1,0,0, 0,0,1,(0.5+.5*(Math.sin(currstep))), 0,0,0,1); // affect only X and Z axes!
+		//console.log(transMat);
+		
+		var originMat = new THREE.Matrix4();
+		originMat.set(0.5,0,0,0, 0,0.5,0,2, 0,0,0.5,0, 0,0,0,0.5); // make sure just Y is set to 2 (and scale to .5)
+		
+		// move to origin, rotate, move back 
+    	//p.mul(propTransMatrix); // last step -> go to next step in circle
+    	//p.mul(oldLoc); // go to original starting point for this current frame
+    	//p.mul(rotYp);  // rotate cube accordingly at origin
+    	//p.mul(new Matrix4f(new float[] {1,0,0,0, 0,1,0,1.9f, 0,0,1,0, 0,0,0,1})); // go to origin
+		
+		curr.multiply(transMat); // put in new location
+		//curr.multiply(oldLoc);   // put it back 
+		curr.multiply(rotY);     // rotate it 
+		//curr.multiply(originMat); // put at origin
+		
+		//console.log(curr);
+		
+		//theNpc.matrix.fromArray(curr.elements);
+	
 	}
 	
 	if(keyboard.pressed("shift")){
