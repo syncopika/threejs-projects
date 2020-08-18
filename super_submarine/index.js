@@ -379,11 +379,29 @@ Promise.all(loadedModels).then((objects) => {
 			var sharkGroup = new THREE.Group();
 			sharkGroup.add(mesh);
 			mesh = sharkGroup;
+			
+			/*
 			mesh.position.set(-10, 2, -120);
 			mesh.scale.x /= 2;
 			mesh.scale.y /= 2;
 			mesh.scale.z /= 2;
+			*/
 			theNpc = mesh;
+			theNpc.matrixAutoUpdate = false;
+			
+			var mat = theNpc.matrix;
+			mat.identity();
+			
+			var curr = new THREE.Matrix4();
+			curr.makeTranslation(-10, 2, -120);
+			
+			var scale = new THREE.Matrix4();
+			scale.makeScale(mesh.scale.x/2, mesh.scale.y/2, mesh.scale.z/2);
+			
+			mat.multiply(curr);
+			mat.multiply(scale);
+			
+			
 			//theNpc.matrixAutoUpdate = false;
 			//console.log(theNpc);
 		}else if(mesh.name === "goalObject"){
@@ -473,7 +491,7 @@ function update(){
 	var changeCameraView = false;
 	//console.log(rotationAngle);
 	//console.log(Math.cos(rotationAngle));
-	t += 0.007;
+	t += 0.017;
 	
 	// move the whale shark in a circle
 	// to get it to rotate in a realistic manner as well, I think I have to 
@@ -492,7 +510,7 @@ function update(){
 		// this particularly cool drift/turn thing somehwere along the path).
 		
 		// perhaps a spline path would be better?
-		theNpc.matrixAutoUpdate = false;
+		//theNpc.matrixAutoUpdate = false;
 
 		var currstep = 0.01;
 		var x = theNpc.position.x;
@@ -506,13 +524,24 @@ function update(){
 		//var vecToRotateTo = forwardVec.clone().applyAxisAngle(new THREE.Vector3(0,1,0), (Math.PI/2));
 		//theNpc.lookAt(vecToRotateTo);
 		
-		var curr = theNpc.matrix;
+		var curr = new THREE.Matrix4();
+		curr.copy(theNpc.matrix);
+		var oldLocVals = curr.elements;
+		// gotta keep the diagonal with 1's! that's why scaling should be applied as a separate multiplication step
+		oldLocVals[0] = 1.0;
+		oldLocVals[5] = 1.0;
+		oldLocVals[10] = 1.0;
+		oldLocVals[15] = 1.0;
+		//curr.fromArray(oldLocVals);
 		//console.log(theNpc);
+		//console.log(curr);
 			
 		// new Matrix4f(new float[] {1,0,0,p.m03,  0,1,0,p.m13,  0,0,1,p.m23,  p.m30,p.m31,p.m32,p.m33});
 		var oldLoc = new THREE.Matrix4();
 		oldLoc.copy(curr);
-		console.log(oldLoc);
+		
+		//oldLoc.copy(curr);
+		//console.log(oldLoc);
 	
 		var rotY = new THREE.Matrix4();
 		rotY.makeRotationY(currstep);
@@ -521,12 +550,23 @@ function update(){
 
 		
 		var transMat = new THREE.Matrix4();
-		transMat.set(1,0,0,(0.5+.5*(Math.cos(currstep))), 0,1,0,0, 0,0,1,(0.5+.5*(Math.sin(currstep))), 0,0,0,1); // affect only X and Z axes!
+		transMat.set(1,0,0,(2+5*(Math.cos(currstep))), 0,1,0,0, 0,0,1,(2+5*(Math.sin(currstep))), 0,0,0,1); // affect only X and Z axes! - need to use t so we get a constantly changing value for cos and sin
 		//console.log(transMat);
 		
 		var originMat = new THREE.Matrix4();
-		originMat.set(0.5,0,0,0, 0,0.5,0,2, 0,0,0.5,0, 0,0,0,0.5); // make sure just Y is set to 2 (and scale to .5)
+		var originVals = originMat.elements; // we want an identity matrix initially
+		//var oldLocVals = oldLoc.elements; // just need to edit indices 12-14 for x,y and z axes (cause column-major order here)
+		//console.log(oldLocVals);
+		originVals[12] = 0 - oldLocVals[12]; // invert
+		originVals[13] = 0 - oldLocVals[13];
+		originVals[14] = 0 - oldLocVals[14];
+		//console.log(oldLocVals);
+		originMat.fromArray(originVals);
 		
+		var scale = new THREE.Matrix4();
+		scale.makeScale(theNpc.scale.x/2, theNpc.scale.y/2, theNpc.scale.z/2);
+		
+		// https://gamedev.stackexchange.com/questions/16719/what-is-the-correct-order-to-multiply-scale-rotation-and-translation-matrices-f
 		// move to origin, rotate, move back 
     	//p.mul(propTransMatrix); // last step -> go to next step in circle
     	//p.mul(oldLoc); // go to original starting point for this current frame
@@ -534,13 +574,13 @@ function update(){
     	//p.mul(new Matrix4f(new float[] {1,0,0,0, 0,1,0,1.9f, 0,0,1,0, 0,0,0,1})); // go to origin
 		
 		curr.multiply(transMat); // put in new location
-		//curr.multiply(oldLoc);   // put it back 
+		curr.multiply(originMat); //curr.multiply(oldLoc);   // put it back 
 		curr.multiply(rotY);     // rotate it 
-		//curr.multiply(originMat); // put at origin
-		
+		curr.multiply(originMat); // put at origin  - take oldLoc and set the last column to be negative for x, y, and z.
+		curr.multiply(scale);
 		//console.log(curr);
 		
-		//theNpc.matrix.fromArray(curr.elements);
+		theNpc.matrix.copy(curr);
 	
 	}
 	
