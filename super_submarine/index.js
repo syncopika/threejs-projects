@@ -389,6 +389,7 @@ Promise.all(loadedModels).then((objects) => {
 			theNpc = mesh;
 			theNpc.matrixAutoUpdate = false;
 			
+			/*
 			var mat = theNpc.matrix;
 			mat.identity();
 			
@@ -400,7 +401,7 @@ Promise.all(loadedModels).then((objects) => {
 			
 			mat.multiply(curr);
 			mat.multiply(scale);
-			
+			*/
 			
 			//theNpc.matrixAutoUpdate = false;
 			//console.log(theNpc);
@@ -491,7 +492,7 @@ function update(){
 	var changeCameraView = false;
 	//console.log(rotationAngle);
 	//console.log(Math.cos(rotationAngle));
-	t += 0.017;
+	t += 0.005;
 	
 	// move the whale shark in a circle
 	// to get it to rotate in a realistic manner as well, I think I have to 
@@ -512,7 +513,7 @@ function update(){
 		// perhaps a spline path would be better?
 		//theNpc.matrixAutoUpdate = false;
 
-		var currstep = 0.01;
+		var currstep = 0.1;
 		var x = theNpc.position.x;
 		var z = theNpc.position.z;
 		//var newX = x + (8*Math.cos(t))/15;
@@ -525,13 +526,16 @@ function update(){
 		//theNpc.lookAt(vecToRotateTo);
 		
 		var curr = new THREE.Matrix4();
-		curr.copy(theNpc.matrix);
+		curr.extractRotation(theNpc.matrix);
+		//curr.makeTranslation(0, 0, 0);
+		//console.log(curr.elements);
+		
 		var oldLocVals = curr.elements;
 		// gotta keep the diagonal with 1's! that's why scaling should be applied as a separate multiplication step
-		oldLocVals[0] = 1.0;
-		oldLocVals[5] = 1.0;
-		oldLocVals[10] = 1.0;
-		oldLocVals[15] = 1.0;
+		//oldLocVals[0] = 1.0;
+		//oldLocVals[5] = 1.0;
+		//oldLocVals[10] = 1.0;
+		//oldLocVals[15] = 1.0;
 		//curr.fromArray(oldLocVals);
 		//console.log(theNpc);
 		//console.log(curr);
@@ -544,13 +548,13 @@ function update(){
 		//console.log(oldLoc);
 	
 		var rotY = new THREE.Matrix4();
-		rotY.makeRotationY(currstep);
+		rotY.makeRotationY(-0.016);
 		//console.log(rotY);
 		//console.log("---------------");
 
 		
 		var transMat = new THREE.Matrix4();
-		transMat.set(1,0,0,(2+5*(Math.cos(currstep))), 0,1,0,0, 0,0,1,(2+5*(Math.sin(currstep))), 0,0,0,1); // affect only X and Z axes! - need to use t so we get a constantly changing value for cos and sin
+		transMat.set(1,0,0,(65+65*(Math.cos(0.01))), 0,1,0,0, 0,0,1,(65+65*(Math.sin(0.01))), 0,0,0,1); // affect only X and Z axes! - need to use t so we get a constantly changing value for cos and sin
 		//console.log(transMat);
 		
 		var originMat = new THREE.Matrix4();
@@ -573,11 +577,13 @@ function update(){
     	//p.mul(rotYp);  // rotate cube accordingly at origin
     	//p.mul(new Matrix4f(new float[] {1,0,0,0, 0,1,0,1.9f, 0,0,1,0, 0,0,0,1})); // go to origin
 		
-		curr.multiply(transMat); // put in new location
-		curr.multiply(originMat); //curr.multiply(oldLoc);   // put it back 
-		curr.multiply(rotY);     // rotate it 
-		curr.multiply(originMat); // put at origin  - take oldLoc and set the last column to be negative for x, y, and z.
+		//curr.multiply(transMat); // put in new location
 		curr.multiply(scale);
+		//curr.multiply(oldLoc); //curr.multiply(oldLoc);   // put it back 
+		curr.multiply(rotY);     // rotate it 
+		curr.multiply(transMat);
+		//curr.multiply(originMat); // put at origin  - take oldLoc and set the last column to be negative for x, y, and z.
+		
 		//console.log(curr);
 		
 		theNpc.matrix.copy(curr);
