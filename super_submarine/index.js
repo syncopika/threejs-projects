@@ -379,11 +379,32 @@ Promise.all(loadedModels).then((objects) => {
 			var sharkGroup = new THREE.Group();
 			sharkGroup.add(mesh);
 			mesh = sharkGroup;
+			
+			/*
 			mesh.position.set(-10, 2, -120);
 			mesh.scale.x /= 2;
 			mesh.scale.y /= 2;
 			mesh.scale.z /= 2;
+			*/
 			theNpc = mesh;
+			theNpc.matrixAutoUpdate = false;
+			
+			/*
+			var mat = theNpc.matrix;
+			mat.identity();
+			
+			var curr = new THREE.Matrix4();
+			curr.makeTranslation(-10, 2, -120);
+			
+			var scale = new THREE.Matrix4();
+			scale.makeScale(mesh.scale.x/2, mesh.scale.y/2, mesh.scale.z/2);
+			
+			mat.multiply(curr);
+			mat.multiply(scale);
+			*/
+			
+			//theNpc.matrixAutoUpdate = false;
+			//console.log(theNpc);
 		}else if(mesh.name === "goalObject"){
 			mesh.position.set(-100, -18.2, -100);
 			mesh.rotation.y = Math.PI / 6;
@@ -471,36 +492,40 @@ function update(){
 	var changeCameraView = false;
 	//console.log(rotationAngle);
 	//console.log(Math.cos(rotationAngle));
-	t += 0.007;
+	t += 0.005;
 	
 	// move the whale shark in a circle
 	// to get it to rotate in a realistic manner as well, I think I have to 
 	// do something a bit more complicated? I forgot what I did in my graphics course :(
 	if(theNpc){
-		
-		// hmm so this is kinda weird? it looks like the forward vector is always pointing
-		// towards the origin (0,0,0). so it's not really a forward vector but maybe it can be helpful?
-		
-		// my thinking here is that, assuming this 'forward' vector keeps pointing to the origin,
-		// I can just get the perpendicular vector of that by rotating it 90 deg to get the tangent vector
-		// of the circular path (and so I can make the npc point along the tangent).
-		
-		// looks like I kinda have that working with this code, except lookAt might not be the best thing to do.
-		// it's still not quite right cause now it looks like the npc is always drifting a bit (but it does do 
-		// this particularly cool drift/turn thing somehwere along the path).
-		
-		// perhaps a spline path would be better?
-		
+
+		var currstep = 0.1;
 		var x = theNpc.position.x;
 		var z = theNpc.position.z;
-		var newX = x + (8*Math.cos(t))/15;
-		var newZ = z + (8*Math.sin(t))/15;
-		theNpc.position.set(newX, theNpc.position.y, newZ);
+
 		
-		var forwardVec = getForward(theNpc);
-		forwardVec.sub(theNpc.position);
-		var vecToRotateTo = forwardVec.clone().applyAxisAngle(new THREE.Vector3(0,1,0), (Math.PI/2));
-		theNpc.lookAt(vecToRotateTo);
+		var curr = new THREE.Matrix4();
+		curr.extractRotation(theNpc.matrix); // need to build off of previous rotation
+
+		var rotY = new THREE.Matrix4();
+		rotY.makeRotationY(-0.01);
+	
+		var transMat = new THREE.Matrix4();
+		transMat.set(1,0,0,(30+30*(Math.cos(0.005))), 0,1,0,0, 0,0,1,(30+30*(Math.sin(0.005))), 0,0,0,1); // affect only X and Z axes! - need to use t so we get a constantly changing value for cos and sin
+
+		
+		var scale = new THREE.Matrix4();
+		scale.makeScale(theNpc.scale.x/2, theNpc.scale.y/2, theNpc.scale.z/2);
+		
+		// https://gamedev.stackexchange.com/questions/16719/what-is-the-correct-order-to-multiply-scale-rotation-and-translation-matrices-f
+	
+		// assuming the whale shark is already at the origin (with the matrix curr, which should only have rotation info)
+		curr.multiply(transMat);
+		curr.multiply(scale);
+		curr.multiply(rotY);
+		
+		theNpc.matrix.copy(curr);
+	
 	}
 	
 	if(keyboard.pressed("shift")){
