@@ -498,93 +498,31 @@ function update(){
 	// to get it to rotate in a realistic manner as well, I think I have to 
 	// do something a bit more complicated? I forgot what I did in my graphics course :(
 	if(theNpc){
-		
-		// hmm so this is kinda weird? it looks like the forward vector is always pointing
-		// towards the origin (0,0,0). so it's not really a forward vector but maybe it can be helpful?
-		
-		// my thinking here is that, assuming this 'forward' vector keeps pointing to the origin,
-		// I can just get the perpendicular vector of that by rotating it 90 deg to get the tangent vector
-		// of the circular path (and so I can make the npc point along the tangent).
-		
-		// looks like I kinda have that working with this code, except lookAt might not be the best thing to do.
-		// it's still not quite right cause now it looks like the npc is always drifting a bit (but it does do 
-		// this particularly cool drift/turn thing somehwere along the path).
-		
-		// perhaps a spline path would be better?
-		//theNpc.matrixAutoUpdate = false;
 
 		var currstep = 0.1;
 		var x = theNpc.position.x;
 		var z = theNpc.position.z;
-		//var newX = x + (8*Math.cos(t))/15;
-		//var newZ = z + (8*Math.sin(t))/15;
-		//theNpc.position.set(newX, theNpc.position.y, newZ);
 
-		//var forwardVec = getForward(theNpc);
-		//forwardVec.sub(theNpc.position);
-		//var vecToRotateTo = forwardVec.clone().applyAxisAngle(new THREE.Vector3(0,1,0), (Math.PI/2));
-		//theNpc.lookAt(vecToRotateTo);
 		
 		var curr = new THREE.Matrix4();
-		curr.extractRotation(theNpc.matrix);
-		//curr.makeTranslation(0, 0, 0);
-		//console.log(curr.elements);
-		
-		var oldLocVals = curr.elements;
-		// gotta keep the diagonal with 1's! that's why scaling should be applied as a separate multiplication step
-		//oldLocVals[0] = 1.0;
-		//oldLocVals[5] = 1.0;
-		//oldLocVals[10] = 1.0;
-		//oldLocVals[15] = 1.0;
-		//curr.fromArray(oldLocVals);
-		//console.log(theNpc);
-		//console.log(curr);
-			
-		// new Matrix4f(new float[] {1,0,0,p.m03,  0,1,0,p.m13,  0,0,1,p.m23,  p.m30,p.m31,p.m32,p.m33});
-		var oldLoc = new THREE.Matrix4();
-		oldLoc.copy(curr);
-		
-		//oldLoc.copy(curr);
-		//console.log(oldLoc);
-	
-		var rotY = new THREE.Matrix4();
-		rotY.makeRotationY(-0.016);
-		//console.log(rotY);
-		//console.log("---------------");
+		curr.extractRotation(theNpc.matrix); // need to build off of previous rotation
 
-		
+		var rotY = new THREE.Matrix4();
+		rotY.makeRotationY(-0.01);
+	
 		var transMat = new THREE.Matrix4();
-		transMat.set(1,0,0,(65+65*(Math.cos(0.01))), 0,1,0,0, 0,0,1,(65+65*(Math.sin(0.01))), 0,0,0,1); // affect only X and Z axes! - need to use t so we get a constantly changing value for cos and sin
-		//console.log(transMat);
-		
-		var originMat = new THREE.Matrix4();
-		var originVals = originMat.elements; // we want an identity matrix initially
-		//var oldLocVals = oldLoc.elements; // just need to edit indices 12-14 for x,y and z axes (cause column-major order here)
-		//console.log(oldLocVals);
-		originVals[12] = 0 - oldLocVals[12]; // invert
-		originVals[13] = 0 - oldLocVals[13];
-		originVals[14] = 0 - oldLocVals[14];
-		//console.log(oldLocVals);
-		originMat.fromArray(originVals);
+		transMat.set(1,0,0,(30+30*(Math.cos(0.005))), 0,1,0,0, 0,0,1,(30+30*(Math.sin(0.005))), 0,0,0,1); // affect only X and Z axes! - need to use t so we get a constantly changing value for cos and sin
+
 		
 		var scale = new THREE.Matrix4();
 		scale.makeScale(theNpc.scale.x/2, theNpc.scale.y/2, theNpc.scale.z/2);
 		
 		// https://gamedev.stackexchange.com/questions/16719/what-is-the-correct-order-to-multiply-scale-rotation-and-translation-matrices-f
-		// move to origin, rotate, move back 
-    	//p.mul(propTransMatrix); // last step -> go to next step in circle
-    	//p.mul(oldLoc); // go to original starting point for this current frame
-    	//p.mul(rotYp);  // rotate cube accordingly at origin
-    	//p.mul(new Matrix4f(new float[] {1,0,0,0, 0,1,0,1.9f, 0,0,1,0, 0,0,0,1})); // go to origin
-		
-		//curr.multiply(transMat); // put in new location
-		curr.multiply(scale);
-		//curr.multiply(oldLoc); //curr.multiply(oldLoc);   // put it back 
-		curr.multiply(rotY);     // rotate it 
+	
+		// assuming the whale shark is already at the origin (with the matrix curr, which should only have rotation info)
 		curr.multiply(transMat);
-		//curr.multiply(originMat); // put at origin  - take oldLoc and set the last column to be negative for x, y, and z.
-		
-		//console.log(curr);
+		curr.multiply(scale);
+		curr.multiply(rotY);
 		
 		theNpc.matrix.copy(curr);
 	
