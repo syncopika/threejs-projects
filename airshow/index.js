@@ -157,13 +157,13 @@ container.appendChild(renderer.domElement);
 //const controls = new OrbitControls(defaultCamera, renderer.domElement);
 
 const camera = defaultCamera;
-camera.position.set(0,5,20);
+//camera.position.set(0,15,30);
 
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0xffffff);	
 scene.add(camera);
 
-
+/*
 let pointLight = new THREE.PointLight(0xffffff, 1, 0); //new THREE.pointLight( 0xffffff );
 pointLight.position.set(0, 10, -35);
 pointLight.castShadow = true;
@@ -173,6 +173,16 @@ pointLight.shadow.camera.near = 10;
 pointLight.shadow.camera.far = 100;
 pointLight.shadow.camera.fov = 30;
 scene.add(pointLight);
+*/
+
+
+var hemiLight = new THREE.HemisphereLight( 0xffffff, 0x444444 );
+hemiLight.position.set( 0, 300, 0 );
+scene.add( hemiLight );
+
+var dirLight = new THREE.DirectionalLight( 0xffffff );
+dirLight.position.set( 75, 300, -75 );
+scene.add( dirLight );
 
 const clock = new THREE.Clock();
 let sec = clock.getDelta();
@@ -193,25 +203,21 @@ function getModel(modelFilePath, side, name){
 					if(child.type === "Mesh"){
 					
 						let material = child.material;
-						//console.log(material)
 						let geometry = child.geometry;
 						let obj = new THREE.Mesh(geometry, material);
 						
 						if(name === "bg"){
-							// TODO: having trouble scaling the runway :/
-							// for now use the ocean floor 
-							obj.scale.x = child.scale.x * 10;
-							obj.scale.y = child.scale.y * 10;
-							obj.scale.z = child.scale.z * 10;
-							//obj.rotateOnAxis(new THREE.Vector3(0,1,0), Math.PI);
-						}else{
+						}
+						
+						if(name === "player"){
 							// jet needs to be rotated 180 deg. -_-
 							obj.rotateOnAxis(new THREE.Vector3(0,1,0), Math.PI);
 						}
 						
-						obj.side = side; // player or enemy mesh?
 						obj.name = name;
-						resolve(obj);
+						//resolve(obj);
+						
+						processMesh(obj);
 					}
 				});
 			},
@@ -232,8 +238,9 @@ function getModel(modelFilePath, side, name){
 
 // https://threejs.org/docs/#api/en/textures/Texture
 // create a mesh, apply ocean shader on it 
-loadedModels.push(getModel('models/airshow-bg-test.glb', 'none', 'bg'));
-loadedModels.push(getModel('models/f-18hornet-edit.glb', 'player', 'p1'));
+//loadedModels.push(getModel('models/airshow-bg-test.glb', 'none', 'bg'));
+loadedModels.push(getModel('models/f-18hornet-edit.glb', 'player', 'player'));
+loadedModels.push(getModel('models/airbase.gltf', 'airbase', 'bg'));
 
 let thePlayer = null;
 let theNpc = null;
@@ -242,46 +249,39 @@ let bgAxesHelper;
 let playerAxesHelper;
 let playerGroupAxesHelper;
 
-Promise.all(loadedModels).then((objects) => {
-	objects.forEach((mesh) => {
-		if(mesh.name === "bg"){
-			// runway
-			//mesh.position.set(0, -10, -50);
-			mesh.position.set(0, 0, 0);
-			bgAxesHelper = new THREE.AxesHelper(10);
-			mesh.add(bgAxesHelper);
-		}else if(mesh.name === "npc"){
-			// npcs?
-		}else{
-			// the local axis of the imported mesh is a bit weird and not consistent with the world axis. so, to fix that,
-			// put it in a group object and just control the group object! the mesh is also just orientated properly initially when placed in the group.
-			playerAxesHelper = new THREE.AxesHelper(10);
-			mesh.add(playerAxesHelper);
-			
-			var group = new THREE.Group();
-			group.add(mesh);
-			playerGroupAxesHelper = new THREE.AxesHelper(8);
-			group.add(playerGroupAxesHelper);
-			
-			thePlayer = group;
-			mesh = group;
-			mesh.position.set(0, 1, -50);
-			mesh.originalColor = group.children[0].material; // this should only be temporary
-			
-			// alternate materials used for the sub depending on condition 
-			var hitMaterial = new THREE.MeshBasicMaterial({color: 0xff0000});
-			mesh.hitMaterial = hitMaterial;
-			mesh.originalMaterial = mesh.children[0].material;
-
-			animate();
-		}
+function processMesh(mesh){
+	
+	if(mesh.name === "player"){
 		
-		mesh.castShadow = true;
-		//mesh.receiveShadow = true;
-		scene.add(mesh);
-		renderer.render(scene, camera);
-	})
-});
+		// the local axis of the imported mesh is a bit weird and not consistent with the world axis. so, to fix that,
+		// put it in a group object and just control the group object! the mesh is also just orientated properly initially when placed in the group.
+		playerAxesHelper = new THREE.AxesHelper(10);
+		mesh.add(playerAxesHelper);
+		
+		var group = new THREE.Group();
+		group.add(mesh);
+		playerGroupAxesHelper = new THREE.AxesHelper(8);
+		group.add(playerGroupAxesHelper);
+		
+		thePlayer = group;
+		mesh = group;
+		mesh.position.set(-15, 1, -40);
+		mesh.originalColor = group.children[0].material; // this should only be temporary
+		
+		// alternate materials used for the sub depending on condition 
+		var hitMaterial = new THREE.MeshBasicMaterial({color: 0xff0000});
+		mesh.hitMaterial = hitMaterial;
+		mesh.originalMaterial = mesh.children[0].material;
+
+		animate();
+	}
+
+	//mesh.castShadow = true;
+	//mesh.receiveShadow = true;
+	scene.add(mesh);
+	renderer.render(scene, camera);
+}
+
 
 
 let lastTime = clock.getDelta();
@@ -357,9 +357,9 @@ function update(){
 	// how about first-person view?
 	var relCameraOffset;
 	if(!changeCameraView){
-		relCameraOffset = new THREE.Vector3(0, 3, 15);
+		relCameraOffset = new THREE.Vector3(0, 8, 25);
 	}else{
-		relCameraOffset = new THREE.Vector3(0, 3, -15);
+		relCameraOffset = new THREE.Vector3(0, 8, -25);
 	}
 	
 	var cameraOffset = relCameraOffset.applyMatrix4(thePlayer.matrixWorld);
