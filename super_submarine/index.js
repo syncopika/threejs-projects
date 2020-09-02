@@ -284,7 +284,6 @@ scene.background = new THREE.Color(0xffffff);
 scene.add(camera);
 
 
-
 let pointLight = new THREE.PointLight(0xffffff, 1, 0); //new THREE.pointLight( 0xffffff );
 pointLight.position.set(0, 10, -35);
 pointLight.castShadow = true;
@@ -305,6 +304,10 @@ let sec = clock.getDelta();
 let moveDistance = 60 * sec;
 let rotationAngle = (Math.PI / 2) * sec;
 
+// animation mixer for whale shark
+let whaleSharkAnimation = null;
+let whaleSharkClips = null;
+
 // need to keep some state 
 const state = {};
 
@@ -316,19 +319,40 @@ function getModel(modelFilePath, side, name){
 			modelFilePath,
 			function(gltf){
 				gltf.scene.traverse((child) => {
-					if(child.type === "Mesh"){
+
+					let material = child.material;
+					let geometry = child.geometry;
+					let obj;
+						
+					if(child.type === "SkinnedMesh"){
+						// whale shark
+						console.log(child);
+						obj = child;
+						
+						// https://stackoverflow.com/questions/46317927/what-is-the-correct-way-to-bind-a-skeleton-to-a-skinnedmesh-in-three-js
+						obj.add(obj.skeleton.bones[0]); 
+						
+						obj.scale.x = child.scale.x * 20;
+						obj.scale.y = child.scale.y * 20;
+						obj.scale.z = child.scale.z * 20;
 					
-						let material = child.material;
-						//console.log(material)
-						let geometry = child.geometry;
-						let obj = new THREE.Mesh(geometry, material);
+						// why does my skinnedmesh require a different set of initial rotations to get things looking the same as with a regular mesh!?
+						obj.rotateOnAxis(new THREE.Vector3(-1,0,0), Math.PI / 2);
+						obj.rotateOnAxis(new THREE.Vector3(0,1,0), Math.PI); // turn around 180 deg.
+						
+						whaleSharkClips = gltf.animations;
+					}
+					
+					if(child.type === "Mesh"){
+						obj = new THREE.Mesh(geometry, material);
 						
 						obj.scale.x = child.scale.x * 20;
 						obj.scale.y = child.scale.y * 20;
 						obj.scale.z = child.scale.z * 20;
 						obj.rotateOnAxis(new THREE.Vector3(0,1,0), Math.PI / 2);
+					}
 					
-						obj.side = side; // player or enemy mesh?
+					if(obj){
 						obj.name = name;
 						resolve(obj);
 					}
@@ -357,7 +381,7 @@ scene.add(newSphere2);
 loadedModels.push(getModel('models/submarine1.glb', 'player', 'p1'));
 loadedModels.push(getModel('models/battleship2.glb', 'player2', 'p2'));
 loadedModels.push(getModel('models/oceanfloor.glb', 'none', 'bg'));
-loadedModels.push(getModel('models/whale-shark-final.glb', 'none', 'npc'));
+loadedModels.push(getModel('models/whale-shark-final.gltf', 'none', 'npc'));
 loadedModels.push(getModel('models/dangerous-capsule-edit-final.glb', 'none', 'goalObject'));
 let thePlayer = null;
 let theNpc = null;
@@ -376,35 +400,17 @@ Promise.all(loadedModels).then((objects) => {
 			mesh.position.set(0, -20, 0);
 		}else if(mesh.name === "npc"){
 			// whale shark
+			console.log(mesh);
+			whaleSharkAnimation = new THREE.AnimationMixer(mesh);
+			
 			var sharkGroup = new THREE.Group();
 			sharkGroup.add(mesh);
 			mesh = sharkGroup;
-			
-			/*
-			mesh.position.set(-10, 2, -120);
-			mesh.scale.x /= 2;
-			mesh.scale.y /= 2;
-			mesh.scale.z /= 2;
-			*/
+
 			theNpc = mesh;
 			theNpc.matrixAutoUpdate = false;
-			
-			/*
-			var mat = theNpc.matrix;
-			mat.identity();
-			
-			var curr = new THREE.Matrix4();
-			curr.makeTranslation(-10, 2, -120);
-			
-			var scale = new THREE.Matrix4();
-			scale.makeScale(mesh.scale.x/2, mesh.scale.y/2, mesh.scale.z/2);
-			
-			mat.multiply(curr);
-			mat.multiply(scale);
-			*/
-			
-			//theNpc.matrixAutoUpdate = false;
-			//console.log(theNpc);
+		
+
 		}else if(mesh.name === "goalObject"){
 			mesh.position.set(-100, -18.2, -100);
 			mesh.rotation.y = Math.PI / 6;
@@ -423,7 +429,6 @@ Promise.all(loadedModels).then((objects) => {
 			mesh = group;
 			mesh.position.set(0, 0, -10);
 			mesh.originalColor = group.children[0].material; // this should only be temporary
-			//console.log(group.children[0].material);
 			
 			// set player health
 			thePlayer.health = 100;
@@ -498,12 +503,12 @@ function update(){
 	// to get it to rotate in a realistic manner as well, I think I have to 
 	// do something a bit more complicated? I forgot what I did in my graphics course :(
 	if(theNpc){
-
-		var currstep = 0.1;
-		var x = theNpc.position.x;
-		var z = theNpc.position.z;
-
 		
+		let swimAction = whaleSharkAnimation.clipAction(whaleSharkClips[0]);
+		swimAction.setLoop(THREE.LoopRepeat);
+		swimAction.play();
+		whaleSharkAnimation.update(sec);
+
 		var curr = new THREE.Matrix4();
 		curr.extractRotation(theNpc.matrix); // need to build off of previous rotation
 
@@ -511,7 +516,7 @@ function update(){
 		rotY.makeRotationY(-0.01);
 	
 		var transMat = new THREE.Matrix4();
-		transMat.set(1,0,0,(30+30*(Math.cos(0.005))), 0,1,0,0, 0,0,1,(30+30*(Math.sin(0.005))), 0,0,0,1); // affect only X and Z axes! - need to use t so we get a constantly changing value for cos and sin
+		transMat.set(1,0,0,(30+30*(Math.cos(0.001))), 0,1,0,0, 0,0,1,(30+30*(Math.sin(0.001))), 0,0,0,1); // affect only X and Z axes! - need to use t so we get a constantly changing value for cos and sin
 
 		
 		var scale = new THREE.Matrix4();
@@ -523,6 +528,7 @@ function update(){
 		curr.multiply(transMat);
 		curr.multiply(scale);
 		curr.multiply(rotY);
+		
 		
 		theNpc.matrix.copy(curr);
 	
