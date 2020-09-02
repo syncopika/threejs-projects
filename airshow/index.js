@@ -299,6 +299,9 @@ function update(){
 		// note that this gets called several times with one key press!
 		// I think it's because update() in requestAnimationFrames gets called quite a few times per second
 		thePlayer.translateZ(-moveDistance);
+		
+		// have distance amount increase/decrease along a logarithmic function? based on how long
+		// the W key is held down
 	}
 	
 	if(keyboard.pressed("S")){
