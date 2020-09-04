@@ -101,6 +101,19 @@ function createProgressBar(name, barColor, filled=false){
 	return loadingBarContainer;
 }
 
+function changeMode(){
+	// if plane is in taxi, can change to takeoff only
+	// if plane is flying and at a certain speed, can only change to landing
+	
+	// in taxi mode, speed is constant
+	// in takeoff mode, speed grows logarithmically?
+	// takeoff transitions to flying when a certain altitude and speed are reached
+		// pitch up allowed at a certain speed
+		
+	// being able to land should correspond with how leveled the plane is (vectors should help!)
+		// landing = limited movement?
+}
+
 
 
 // https://github.com/evanw/webgl-water
@@ -163,18 +176,6 @@ const scene = new THREE.Scene();
 scene.background = new THREE.Color(0xffffff);	
 scene.add(camera);
 
-/*
-let pointLight = new THREE.PointLight(0xffffff, 1, 0); //new THREE.pointLight( 0xffffff );
-pointLight.position.set(0, 10, -35);
-pointLight.castShadow = true;
-pointLight.shadow.mapSize.width = 512;
-pointLight.shadow.mapSize.height = 512;
-pointLight.shadow.camera.near = 10;
-pointLight.shadow.camera.far = 100;
-pointLight.shadow.camera.fov = 30;
-scene.add(pointLight);
-*/
-
 
 var hemiLight = new THREE.HemisphereLight( 0xffffff, 0x444444 );
 hemiLight.position.set( 0, 300, 0 );
@@ -190,7 +191,11 @@ let moveDistance = 60 * sec;
 let rotationAngle = (Math.PI / 2) * sec;
 
 // need to keep some state 
-const state = {};
+const state = {
+	'mode': 'taxi', // other options include: takeoff, flying, landing. taxi is for moving on the ground
+	'speed': 0.0,
+	'altitude': 0.0,
+};
 
 let loadedModels = [];
 
@@ -233,7 +238,6 @@ function getModel(modelFilePath, side, name){
 		);
 	});
 }
-
 
 
 // https://threejs.org/docs/#api/en/textures/Texture
@@ -282,6 +286,13 @@ function processMesh(mesh){
 	renderer.render(scene, camera);
 }
 
+
+document.addEventListener("keydown", (evt) => {
+	if(evt.keyCode === 20){
+		// capslock
+		console.log("mode changed!");
+	}
+});
 
 
 let lastTime = clock.getDelta();
@@ -373,7 +384,7 @@ function update(){
 	
 	// hmm can we take the player's rotation (since it's the group's rotation) and just apply 
 	// it to the camera? just make sure the camera is behind the player. (instead of using lookAt)
-
+	
 }
 
 function animate(){
