@@ -195,6 +195,7 @@ const state = {
 	'mode': 'taxi', // other options include: takeoff, flying, landing. taxi is for moving on the ground
 	'speed': 0.0,
 	'altitude': 0.0,
+	'phase': null // for determining if a mode has started? like for takeoff, we kinda need to know when to start the function to gradually increase speed.
 };
 
 let loadedModels = [];
@@ -291,14 +292,28 @@ document.addEventListener("keydown", (evt) => {
 	if(evt.keyCode === 20){
 		// capslock
 		console.log("mode changed!");
+		state['mode'] = 'takeoff';
+		state['phase'] = 1;
 	}
 });
 
 
 let lastTime = clock.getDelta();
+
+https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math/log
+function getBaseLog(x, y) {
+  return Math.log(y) / Math.log(x);
+}
+
+
+function getSpeed(timeDelta){
+	//return getBaseLog(2, timeDelta);
+	return Math.exp(timeDelta);
+}
+
+moveDistance = 20
 function update(){
 	sec = clock.getDelta();
-	moveDistance = 20 * sec;
 	rotationAngle = (Math.PI / 2) * sec;
 	var changeCameraView = false;
 	
@@ -309,10 +324,31 @@ function update(){
 	if(keyboard.pressed("W")){
 		// note that this gets called several times with one key press!
 		// I think it's because update() in requestAnimationFrames gets called quite a few times per second
-		thePlayer.translateZ(-moveDistance);
 		
 		// have distance amount increase/decrease along a logarithmic function? based on how long
 		// the W key is held down
+		// when W is released, speed should decrease by the same function too?
+		// http://www.aerodynamics4students.com/aircraft-performance/take-off-and-landing.php
+		// https://aviation.stackexchange.com/questions/9961/does-acceleration-increase-linearly-on-a-takeoff-roll
+		if(state['mode'] === 'takeoff' && state['phase']){
+			state['phase'] = 0;
+			state['start'] = Date.now();
+		}
+		
+		if(state['mode'] === 'takeoff'){
+			let now = Date.now();
+			let deltaTime = now - state['start'];
+			
+			if(moveDistance < 2.0){
+				let currSpeed = getSpeed(deltaTime/1000);
+				moveDistance = 20 * currSpeed * sec;
+				console.log(moveDistance);
+			}
+		}else if(state['mode'] === 'taxi'){
+			moveDistance = 20 * sec;
+		}
+		
+		thePlayer.translateZ(-moveDistance);
 	}
 	
 	if(keyboard.pressed("S")){
