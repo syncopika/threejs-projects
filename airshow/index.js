@@ -259,7 +259,7 @@ function processMesh(mesh){
 	if(mesh.name === "player"){
 		
 		// the local axis of the imported mesh is a bit weird and not consistent with the world axis. so, to fix that,
-		// put it in a group object and just control the group object! the mesh is also just orientated properly initially when placed in the group.
+		// put it in a group object and just control the group object! the mesh is also just oriented properly initially when placed in the group.
 		playerAxesHelper = new THREE.AxesHelper(10);
 		mesh.add(playerAxesHelper);
 		
@@ -292,15 +292,19 @@ document.addEventListener("keydown", (evt) => {
 	if(evt.keyCode === 20){
 		// capslock
 		console.log("mode changed!");
-		state['mode'] = 'takeoff';
-		state['phase'] = 1;
+		if(state['mode'] === 'taxi'){
+			state['mode'] = 'takeoff';
+			state['phase'] = 1;
+		}else if(state['mode'] === 'flying'){
+			// 
+		}
 	}
 });
 
 
 let lastTime = clock.getDelta();
 
-https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math/log
+// https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math/log
 function getBaseLog(x, y) {
   return Math.log(y) / Math.log(x);
 }
@@ -311,11 +315,13 @@ function getSpeed(timeDelta){
 	return Math.exp(timeDelta);
 }
 
-moveDistance = 20
 function update(){
 	sec = clock.getDelta();
 	rotationAngle = (Math.PI / 2) * sec;
 	var changeCameraView = false;
+	
+	// update altitude 
+	state['altitude'] = thePlayer.position.y;
 	
 	if(keyboard.pressed("shift")){
 		changeCameraView = true;
@@ -333,21 +339,29 @@ function update(){
 		if(state['mode'] === 'takeoff' && state['phase']){
 			state['phase'] = 0;
 			state['start'] = Date.now();
-		}
+		}/*else if(state['mode'] === 'flying' && ) -> need a state for stopped moving? when W is released? */ 
 		
 		if(state['mode'] === 'takeoff'){
 			let now = Date.now();
 			let deltaTime = now - state['start'];
 			
-			if(moveDistance < 2.0){
+			if(moveDistance < 1.8){
 				let currSpeed = getSpeed(deltaTime/1000);
-				moveDistance = 20 * currSpeed * sec;
-				console.log(moveDistance);
+				moveDistance = 15 * currSpeed * sec;
+			}else{
+				//console.log(thePlayer.position.y);
+				// check altitude
+				if(state['altitude'] > 5.0){
+					console.log("ok i'm flying");
+					state['mode'] = 'flying';
+				}
 			}
+			
 		}else if(state['mode'] === 'taxi'){
-			moveDistance = 20 * sec;
+			moveDistance = 15 * sec;
 		}
 		
+		// if W stops being pressed, the plane should decelerate (make moveDistance decrease exponentially to 0?) and lose altitude
 		thePlayer.translateZ(-moveDistance);
 	}
 	
@@ -379,7 +393,8 @@ function update(){
 		thePlayer.children[0].rotateOnAxis(axis, rotationAngle);
 	}
 	
-	if(keyboard.pressed("up")){
+	// check altitude
+	if(keyboard.pressed("up") && moveDistance >= 1.8){
 		// rotate up (note that we're rotating on the mesh's axis. its axes might be configured weird)
 		// the forward vector for the mesh might be backwards and perpendicular to the front of the sub
 		// up arrow key
@@ -388,6 +403,7 @@ function update(){
 		thePlayer.rotateOnAxis(axis, rotationAngle);
 	}
 	
+	// check altitude
 	if(keyboard.pressed("down")){
 		// down arrow key
 		// CLAMP ANGLE!

@@ -31,3 +31,7 @@ todo:
 - takeoff/landing logic??
 - make more planes for static displays! 
 	-ideas: c-17, c-5, f-15, f-16, c-130, f-14 (even though retired lol), f-22, f-35, av-8b, p-8, tanks are good too
+
+
+http://www.aerodynamics4students.com/aircraft-performance/take-off-and-landing.php
+https://aviation.stackexchange.com/questions/9961/does-acceleration-increase-linearly-on-a-takeoff-roll
