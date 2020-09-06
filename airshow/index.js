@@ -1,105 +1,6 @@
 // airshow!
+// relies on some functions defined in utils.js in ../lib
 
-
-//https://stackoverflow.com/questions/38305408/threejs-get-center-of-object
-function getCenter(mesh){
-	var mid = new THREE.Vector3();
-	var geometry = mesh.geometry;
-	
-	geometry.computeBoundingBox();
-	mid.x = (geometry.boundingBox.max.x + geometry.boundingBox.min.x)/2;
-	mid.y = (geometry.boundingBox.max.y + geometry.boundingBox.min.y)/2;
-	mid.z = (geometry.boundingBox.max.z + geometry.boundingBox.min.z)/2;
-	
-	mesh.localToWorld(mid);
-	return mid;
-}
-
-// https://stackoverflow.com/questions/14813902/three-js-get-the-direction-in-which-the-camera-is-looking
-// https://stackoverflow.com/questions/25224153/how-can-i-get-the-normalized-vector-of-the-direction-an-object3d-is-facing
-function getForward(mesh){
-	var forwardVec = new THREE.Vector3();
-	mesh.getWorldDirection(forwardVec);	
-	return forwardVec;
-}
-
-function checkCollision(mesh, raycaster){
-	var top = new THREE.Vector3(0, 1, 0);
-	var bottom = new THREE.Vector3(0, -1, 0);
-	var left = new THREE.Vector3(-1, 0, 0);
-	var right = new THREE.Vector3(1, 0, 0);
-	var front = new THREE.Vector3(0, 0, -1);
-	var back = new THREE.Vector3(0, 0, 1);
-	var dirToCheck = [
-		top,
-		bottom,
-		left,
-		right,
-		front,
-		back
-	];
-	var objCenter = getCenter(mesh);
-	
-	for(var i = 0; i < dirToCheck.length; i++){
-		var dir = dirToCheck[i];
-		raycaster.set(objCenter, dir);
-		var intersects = raycaster.intersectObjects(scene.children);
-		for(var j = 0; j < intersects.length; j++){
-			if(objCenter.distanceTo(intersects[j].point) < 1.0){
-				//console.log("object collided! direction: " + dir.x + ", " + dir.y + ", " + dir.z);
-				return true;
-			}
-		}
-	}
-	return false;
-}
-
-
-function drawForwardVector(mesh){
-	
-	var forwardVec = getForward(mesh);
-	
-	// create a vector
-	var point1 = getCenter(mesh); //new THREE.Vector3(forwardVec.x, forwardVec.y, forwardVec.z);
-	var point2 = new THREE.Vector3(forwardVec.x, forwardVec.y, forwardVec.z); 
-	point2.multiplyScalar(2);
-	
-	var points = [point1, point2];
-	
-	var material = new THREE.LineBasicMaterial({color: 0x0000ff});
-	var geometry = new THREE.BufferGeometry().setFromPoints(points);
-	var line = new THREE.Line(geometry, material);
-	scene.add(line);
-}
-
-// create a general progress bar
-function createProgressBar(name, barColor, filled=false){
-	let loadingBarContainer = document.createElement("div");
-	let loadingBar = document.createElement("div");
-	
-	loadingBarContainer.id = name + 'BarContainer';
-	loadingBarContainer.style.width = '200px';
-	loadingBarContainer.style.backgroundColor = '#fff';
-	loadingBarContainer.style.height = '20px';
-	loadingBarContainer.style.textAlign = 'center';
-	loadingBarContainer.style.position = 'absolute';
-	loadingBarContainer.style.zIndex = 100;
-	
-	loadingBar.id = name + "Bar";
-	
-	if(filled){
-		loadingBar.style.width = '200px';
-	}else{
-		loadingBar.style.width = '0px';
-	}
-	
-	loadingBar.style.height = '20px';
-	loadingBar.style.zIndex = 100;
-	loadingBar.style.backgroundColor = barColor; //"#00ff00";
-	
-	loadingBarContainer.appendChild(loadingBar);
-	return loadingBarContainer;
-}
 
 function changeMode(){
 	// if plane is in taxi, can change to takeoff only
@@ -115,8 +16,6 @@ function changeMode(){
 }
 
 
-
-// https://github.com/evanw/webgl-water
 // https://github.com/donmccurdy/three-gltf-viewer/blob/master/src/viewer.js
 const el = document.getElementById("container");
 const fov = 60;
@@ -125,8 +24,6 @@ const keyboard = new THREEx.KeyboardState();
 const container = document.querySelector('#container');
 const raycaster = new THREE.Raycaster();
 const loadingManager = new THREE.LoadingManager();
-
-
 
 
 // https://stackoverflow.com/questions/35575065/how-to-make-a-loading-screen-in-three-js
@@ -158,7 +55,6 @@ loadingManager.onError = (url) => {
 }
 
 const loader = new THREE.GLTFLoader(loadingManager);
-
 const renderer = new THREE.WebGLRenderer();
 renderer.shadowMap.enabled = true;
 renderer.setSize(el.clientWidth, el.clientHeight);	
@@ -176,12 +72,11 @@ const scene = new THREE.Scene();
 scene.background = new THREE.Color(0xffffff);	
 scene.add(camera);
 
-
-var hemiLight = new THREE.HemisphereLight( 0xffffff, 0x444444 );
+let hemiLight = new THREE.HemisphereLight( 0xffffff, 0x444444 );
 hemiLight.position.set( 0, 300, 0 );
 scene.add( hemiLight );
 
-var dirLight = new THREE.DirectionalLight( 0xffffff );
+let dirLight = new THREE.DirectionalLight( 0xffffff );
 dirLight.position.set( 75, 300, -75 );
 scene.add( dirLight );
 
@@ -198,9 +93,18 @@ const state = {
 	'isMoving': false, // when 'w' key is pressed, this is true.
 	'originalPosition': {
 		'position': null,
-		'rotation': null
+		'rotation': null,
+		'aircraftPosition': null,
+		'aircraftRotation': null
 	}
 };
+
+function resetPosition(state, player){
+	player.position.copy(state['originalPosition']['position']);
+	player.rotation.copy(state['originalPosition']['rotation']);
+	player.children[0].position.copy(state['originalPosition']['aircraftPosition']);
+	player.children[0].rotation.copy(state['originalPosition']['aircraftRotation']);
+}
 
 function resetState(state){
 	state['mode'] = 'static';
@@ -228,6 +132,9 @@ function getModel(modelFilePath, side, name){
 						
 						if(name === "player"){
 							// jet needs to be rotated 180 deg. -_-
+							obj.scale.x = 0.98;
+							obj.scale.y = 0.98;
+							obj.scale.z = 0.98;
 							obj.rotateOnAxis(new THREE.Vector3(0,1,0), Math.PI);
 						}
 						
@@ -254,7 +161,6 @@ function getModel(modelFilePath, side, name){
 
 // https://threejs.org/docs/#api/en/textures/Texture
 // create a mesh, apply ocean shader on it 
-//loadedModels.push(getModel('models/airshow-bg-test.glb', 'none', 'bg'));
 loadedModels.push(getModel('models/f-18hornet-edit.glb', 'player', 'player'));
 loadedModels.push(getModel('models/airbase.gltf', 'airbase', 'bg'));
 
@@ -284,14 +190,24 @@ function processMesh(mesh){
 		mesh.position.set(-15, 1, -40);
 		mesh.originalColor = group.children[0].material; // this should only be temporary
 		
-		// save current position and rotation
-		let originalPosition = new THREE.Vector3();
-		let originalRotation = new THREE.Euler();
+		// save current position and rotation of the group and the aircraft mesh itself
+		let originalPositionGroup = new THREE.Vector3();
+		let originalPositionAircraft = new THREE.Vector3();
+		let originalRotationGroup = new THREE.Euler();
+		let originalRotationAircraft = new THREE.Euler();
 		
-		originalPosition.copy(thePlayer.position);
-		originalRotation.copy(thePlayer.rotation);
-		state['originalPosition']['position'] = originalPosition;
-		state['originalPosition']['rotation'] = originalRotation;
+		originalPositionGroup.copy(thePlayer.position);
+		originalRotationGroup.copy(thePlayer.rotation);
+		originalPositionAircraft.copy(thePlayer.children[0].position);
+		originalRotationAircraft.copy(thePlayer.children[0].rotation);
+		
+		console.log(originalRotationAircraft);
+		console.log(originalRotationGroup);
+		
+		state['originalPosition']['position'] = originalPositionGroup;
+		state['originalPosition']['rotation'] = originalRotationGroup;
+		state['originalPosition']['aircraftPosition'] = originalPositionAircraft;
+		state['originalPosition']['aircraftRotation'] = originalRotationAircraft;
 		
 		// alternate materials used for the sub depending on condition 
 		var hitMaterial = new THREE.MeshBasicMaterial({color: 0xff0000});
@@ -302,7 +218,7 @@ function processMesh(mesh){
 	}
 
 	//mesh.castShadow = true;
-	//mesh.receiveShadow = true;
+	mesh.receiveShadow = true;
 	scene.add(mesh);
 	renderer.render(scene, camera);
 }
@@ -315,36 +231,46 @@ document.addEventListener("keydown", (evt) => {
 		if(state['mode'] === 'taxi'){
 			state['mode'] = 'takeoff';
 			state['phase'] = 1;
-			console.log("mode changed to takeoff!");
+			//console.log("mode changed to takeoff!");
 		}else if(state['mode'] === 'flying'){
 			// something for landing?
+			console.log("mode changed to landing!");
+			state['mode'] = 'landing';
+			
+			// reset rotation
+			// this is broken: so far it only works if you're landing in the same direction that the plane
+			// initially points to  when the scene loads. feel like it should be an easy fix but need to think
+			// some more
+			
+			thePlayer.children[0].rotation.copy(state['originalPosition']['aircraftRotation']);
+			//thePlayer.rotation.copy(state['originalPosition']['rotation']);
+			thePlayer.rotation.x = 0.0;
+			thePlayer.rotation.z = 0.0;
+			
+		}else if(state['mode'] === 'landing'){
+			// go back to takeoff -> flying
+			state['mode'] = 'takeoff';
 		}
 	}
 });
 
 document.addEventListener("keyup", (evt) => {
 	if(evt.keyCode === 87){
-		// 'w' key 
-		state['isMoving'] = false;
-		if(state['mode'] === 'flying'){
-			state['start'] = Date.now();
-			state['mode'] = 'falling';
+		// 'w' key
+		if(state['mode'] !== 'landing'){
+			state['isMoving'] = false;
+			if(state['mode'] === 'flying'){
+				state['start'] = Date.now();
+				state['mode'] = 'falling';
+			}
 		}
 		//console.log("w key released!");
 	}
 });
 
-// what is this for!?
-let lastTime = clock.getDelta();
-
-// https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math/log
-function getBaseLog(x, y) {
-  return Math.log(y) / Math.log(x);
-}
 
 
 function getSpeed(timeDelta){
-	//return getBaseLog(2, timeDelta);
 	return Math.exp(timeDelta);
 }
 
@@ -367,20 +293,23 @@ function update(){
 		
 		if(state['mode'] === 'static'){
 			state['mode'] = 'taxi';
-			console.log("starting to taxi...");
+			//console.log("starting to taxi...");
 		}
 	
 		if(state['mode'] === 'takeoff' && state['phase']){
 			state['phase'] = 0;
 			state['start'] = Date.now();
-			console.log("starting takeoff...");
+			//console.log("starting takeoff...");
 		}
 		
 		if(state['mode'] === 'takeoff' || state['mode'] === 'falling'){
+			// if takeoff, accelerate to a certain point. also allow user to accelerate/regain movement again if falling.
 			let now = Date.now();
 			let deltaTime = now - state['start'];
 			
 			if(state['mode'] === 'falling'){
+				// hmm it would make sense for the aircraft to continue falling I think until a certain speed is reached, maybe?
+				// if we switch modes here, the plane kinda hangs for a little bit since it's not 'falling' anymore
 				state['mode'] === 'takeoff';
 			}
 			
@@ -390,14 +319,25 @@ function update(){
 			}else{
 				// check altitude
 				if(state['altitude'] > 5.0){
-					console.log("ok i'm flying");
+					//console.log("ok i'm flying");
 					state['mode'] = 'flying';
 				}
 			}
-			
 		}else if(state['mode'] === 'taxi'){
 			moveDistance = 15 * sec;
-			console.log("taxiing...");
+			//console.log("taxiing...");
+		}
+		
+		if(state['mode'] === 'landing'){
+			console.log("landing!");
+			if(state['altitude'] > 0.0){
+				thePlayer.translateY(-0.3);
+				moveDistance = 1.2;
+			}else{
+				console.log("touchdown");
+				thePlayer.position.y = 0.0;
+				resetState(state);
+			}
 		}
 		
 		state['speed'] = moveDistance;
@@ -418,46 +358,55 @@ function update(){
 				moveDistance = 0.0;
 			}
 			
-			thePlayer.translateZ(-moveDistance*2);
+			thePlayer.translateZ(-moveDistance*3);
 		}else{
 			moveDistance = 0.0;
 		}
 		
 		if(state['altitude'] > -1.0){
-			thePlayer.translateY(-0.9);
+			let deltaTime = Date.now() - state['start'];
+			let currSpeed = getSpeed(deltaTime/1000);
+			let fallSpeed = 30 * currSpeed * sec;
+			thePlayer.translateY(-fallSpeed*3); // -0.9
 		}
 		
 		state['speed'] = moveDistance;
 		
 		// start over at original position
 		if(state['altitude'] <= 0.0){
+			// since thePlayer is actually a group, we need to reset the position + rotation of the group 
+			// and the actual aircraft mesh, which is a child of the group.
+			resetPosition(state, thePlayer);
 			
-			thePlayer.position.copy(state['originalPosition']['position']);
-			thePlayer.rotation.copy(state['originalPosition']['rotation']);
-			
-			// SINCE thePlayer IS ACTUALLY A GROUP, MAKE SURE TO ALSO CORRECT THE ROTATION
-			// OF THE ACTUAL AIRCRAFT MESH!
-			
-			// RESET STATE
+			// reset state params like altitude, speed, mode
+			resetState(state);
+		}
+	}else if(state['mode'] === 'landing'){
+		console.log("landing!");
+		if(state['altitude'] > 0.0){
+			thePlayer.translateY(-0.3);
+			thePlayer.translateZ(-1.2);
+		}else{
+			thePlayer.position.y = 0.0;
 			resetState(state);
 		}
 	}
 	
-	if(keyboard.pressed("S")){
+	if(keyboard.pressed("S") && state['mode'] === 'taxi'){
 		thePlayer.translateZ(moveDistance);
 	}
 	
-	if(keyboard.pressed("A")){
+	if(keyboard.pressed("A") && state['mode'] !== 'landing'){
 		var axis = new THREE.Vector3(0, 1, 0);
 		thePlayer.rotateOnAxis(axis, rotationAngle);
 	}
 	
-	if(keyboard.pressed("D")){
+	if(keyboard.pressed("D") && state['mode'] !== 'landing'){
 		var axis = new THREE.Vector3(0, 1, 0);
 		thePlayer.rotateOnAxis(axis, -rotationAngle);
 	}
 	
-	if(keyboard.pressed("Q") && thePlayer.position.y > 6.0){
+	if(keyboard.pressed("Q") && thePlayer.position.y > 6.0 && state['mode'] !== 'landing'){
 		// notice we're not rotating about the group mesh, but the child 
 		// mesh of the group, which is actually the jet mesh!
 		// if you try to move in all sorts of directions, after a while
@@ -466,25 +415,24 @@ function update(){
 		thePlayer.children[0].rotateOnAxis(axis, -rotationAngle);
 	}
 	
-	if(keyboard.pressed("E") && thePlayer.position.y > 6.0){
+	if(keyboard.pressed("E") && thePlayer.position.y > 6.0 && state['mode'] !== 'landing'){
 		var axis = new THREE.Vector3(0, 0, 1);
 		thePlayer.children[0].rotateOnAxis(axis, rotationAngle);
 	}
 	
 	// check altitude
-	if(keyboard.pressed("up") && moveDistance >= 1.8){
+	if(keyboard.pressed("up") && moveDistance >= 1.8 && state['mode'] !== 'landing'){
 		// rotate up (note that we're rotating on the mesh's axis. its axes might be configured weird)
 		// the forward vector for the mesh might be backwards and perpendicular to the front of the sub
 		// up arrow key
-		// NEED TO CLAMP ANGLE
 		var axis = new THREE.Vector3(1, 0, 0);
 		thePlayer.rotateOnAxis(axis, rotationAngle);
 	}
 	
 	// check altitude
-	if(keyboard.pressed("down")){
+	if(keyboard.pressed("down") && moveDistance >= 1.8 && state['mode'] !== 'landing'){
 		// down arrow key
-		// CLAMP ANGLE!
+		// CLAMP ANGLE?
 		var axis = new THREE.Vector3(1, 0, 0);
 		thePlayer.rotateOnAxis(axis, -rotationAngle);
 	}
@@ -494,6 +442,10 @@ function update(){
 	var hasCollision = checkCollision(thePlayer.children[0], raycaster);
 	if(hasCollision){
 		thePlayer.children[0].material = thePlayer.hitMaterial;
+		
+		// crash - reset everything 
+		resetPosition(state, thePlayer);
+		resetState(state);
 	}else{
 		thePlayer.children[0].material = thePlayer.originalMaterial;
 	}
