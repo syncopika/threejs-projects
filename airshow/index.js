@@ -192,11 +192,22 @@ let rotationAngle = (Math.PI / 2) * sec;
 
 // need to keep some state 
 const state = {
-	'mode': 'taxi', // other options include: takeoff, flying, landing. taxi is for moving on the ground
+	'mode': 'static', // other options include: static, takeoff, flying, landing. taxi is for moving on the ground
 	'speed': 0.0,
 	'altitude': 0.0,
-	'phase': null // for determining if a mode has started? like for takeoff, we kinda need to know when to start the function to gradually increase speed.
+	'isMoving': false, // when 'w' key is pressed, this is true.
+	'originalPosition': {
+		'position': null,
+		'rotation': null
+	}
 };
+
+function resetState(state){
+	state['mode'] = 'static';
+	state['speed'] = 0.0;
+	state['altitude'] = 0.0;
+	state['isMoving'] = false;
+}
 
 let loadedModels = [];
 
@@ -273,6 +284,15 @@ function processMesh(mesh){
 		mesh.position.set(-15, 1, -40);
 		mesh.originalColor = group.children[0].material; // this should only be temporary
 		
+		// save current position and rotation
+		let originalPosition = new THREE.Vector3();
+		let originalRotation = new THREE.Euler();
+		
+		originalPosition.copy(thePlayer.position);
+		originalRotation.copy(thePlayer.rotation);
+		state['originalPosition']['position'] = originalPosition;
+		state['originalPosition']['rotation'] = originalRotation;
+		
 		// alternate materials used for the sub depending on condition 
 		var hitMaterial = new THREE.MeshBasicMaterial({color: 0xff0000});
 		mesh.hitMaterial = hitMaterial;
@@ -290,18 +310,31 @@ function processMesh(mesh){
 
 document.addEventListener("keydown", (evt) => {
 	if(evt.keyCode === 20){
-		// capslock
+		// caps lock
 		console.log("mode changed!");
 		if(state['mode'] === 'taxi'){
 			state['mode'] = 'takeoff';
 			state['phase'] = 1;
+			console.log("mode changed to takeoff!");
 		}else if(state['mode'] === 'flying'){
-			// 
+			// something for landing?
 		}
 	}
 });
 
+document.addEventListener("keyup", (evt) => {
+	if(evt.keyCode === 87){
+		// 'w' key 
+		state['isMoving'] = false;
+		if(state['mode'] === 'flying'){
+			state['start'] = Date.now();
+			state['mode'] = 'falling';
+		}
+		//console.log("w key released!");
+	}
+});
 
+// what is this for!?
 let lastTime = clock.getDelta();
 
 // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math/log
@@ -330,26 +363,31 @@ function update(){
 	if(keyboard.pressed("W")){
 		// note that this gets called several times with one key press!
 		// I think it's because update() in requestAnimationFrames gets called quite a few times per second
+		state['isMoving'] = true;
 		
-		// have distance amount increase/decrease along a logarithmic function? based on how long
-		// the W key is held down
-		// when W is released, speed should decrease by the same function too?
-		// http://www.aerodynamics4students.com/aircraft-performance/take-off-and-landing.php
-		// https://aviation.stackexchange.com/questions/9961/does-acceleration-increase-linearly-on-a-takeoff-roll
+		if(state['mode'] === 'static'){
+			state['mode'] = 'taxi';
+			console.log("starting to taxi...");
+		}
+	
 		if(state['mode'] === 'takeoff' && state['phase']){
 			state['phase'] = 0;
 			state['start'] = Date.now();
-		}/*else if(state['mode'] === 'flying' && ) -> need a state for stopped moving? when W is released? */ 
+			console.log("starting takeoff...");
+		}
 		
-		if(state['mode'] === 'takeoff'){
+		if(state['mode'] === 'takeoff' || state['mode'] === 'falling'){
 			let now = Date.now();
 			let deltaTime = now - state['start'];
+			
+			if(state['mode'] === 'falling'){
+				state['mode'] === 'takeoff';
+			}
 			
 			if(moveDistance < 1.8){
 				let currSpeed = getSpeed(deltaTime/1000);
 				moveDistance = 15 * currSpeed * sec;
 			}else{
-				//console.log(thePlayer.position.y);
 				// check altitude
 				if(state['altitude'] > 5.0){
 					console.log("ok i'm flying");
@@ -359,10 +397,50 @@ function update(){
 			
 		}else if(state['mode'] === 'taxi'){
 			moveDistance = 15 * sec;
+			console.log("taxiing...");
 		}
+		
+		state['speed'] = moveDistance;
 		
 		// if W stops being pressed, the plane should decelerate (make moveDistance decrease exponentially to 0?) and lose altitude
 		thePlayer.translateZ(-moveDistance);
+		
+	}else if(state['mode'] === 'falling'){
+		
+		// handle deceleration
+		if(moveDistance > 0.10){
+			let deltaTime = Date.now() - state['start'];
+			let currSpeed = getSpeed(-deltaTime/1000);
+			moveDistance = 30 * currSpeed * sec;
+			//console.log("decelerating...");
+			
+			if(moveDistance < 0.0){
+				moveDistance = 0.0;
+			}
+			
+			thePlayer.translateZ(-moveDistance*2);
+		}else{
+			moveDistance = 0.0;
+		}
+		
+		if(state['altitude'] > -1.0){
+			thePlayer.translateY(-0.9);
+		}
+		
+		state['speed'] = moveDistance;
+		
+		// start over at original position
+		if(state['altitude'] <= 0.0){
+			
+			thePlayer.position.copy(state['originalPosition']['position']);
+			thePlayer.rotation.copy(state['originalPosition']['rotation']);
+			
+			// SINCE thePlayer IS ACTUALLY A GROUP, MAKE SURE TO ALSO CORRECT THE ROTATION
+			// OF THE ACTUAL AIRCRAFT MESH!
+			
+			// RESET STATE
+			resetState(state);
+		}
 	}
 	
 	if(keyboard.pressed("S")){
