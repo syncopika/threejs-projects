@@ -239,13 +239,17 @@ document.addEventListener("keydown", (evt) => {
 			
 			// reset rotation
 			// this is broken: so far it only works if you're landing in the same direction that the plane
-			// initially points to  when the scene loads. feel like it should be an easy fix but need to think
-			// some more
+			// initially points to  when the scene loads. feel like it should be an easy fix but need to think some more
+			// we want the plane to be aligned with the runway
+			//maybe we also need to know the forward vector of the plane?
+
+			//thePlayer.children[0].rotation.copy(state['originalPosition']['aircraftRotation']);
+			thePlayer.children[0].rotation.x = state['originalPosition']['aircraftRotation'].x;
+			thePlayer.children[0].rotation.Z = state['originalPosition']['aircraftRotation'].z;
 			
-			thePlayer.children[0].rotation.copy(state['originalPosition']['aircraftRotation']);
 			//thePlayer.rotation.copy(state['originalPosition']['rotation']);
-			thePlayer.rotation.x = 0.0;
-			thePlayer.rotation.z = 0.0;
+			thePlayer.rotation.x = state['originalPosition']['rotation'].x;
+			thePlayer.rotation.z = state['originalPosition']['rotation'].z;
 			
 		}else if(state['mode'] === 'landing'){
 			// go back to takeoff -> flying
@@ -264,7 +268,6 @@ document.addEventListener("keyup", (evt) => {
 				state['mode'] = 'falling';
 			}
 		}
-		//console.log("w key released!");
 	}
 });
 
@@ -342,7 +345,6 @@ function update(){
 		
 		state['speed'] = moveDistance;
 		
-		// if W stops being pressed, the plane should decelerate (make moveDistance decrease exponentially to 0?) and lose altitude
 		thePlayer.translateZ(-moveDistance);
 		
 	}else if(state['mode'] === 'falling'){
@@ -384,6 +386,7 @@ function update(){
 	}else if(state['mode'] === 'landing'){
 		console.log("landing!");
 		if(state['altitude'] > 0.0){
+			// gradually get closer to the ground. plane should be aligned with ground ideally
 			thePlayer.translateY(-0.3);
 			thePlayer.translateZ(-1.2);
 		}else{
