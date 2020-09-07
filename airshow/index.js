@@ -1,6 +1,6 @@
 // airshow!
 // relies on some functions defined in utils.js in ../lib
-
+// also Ronen Ness' partykals.js in ../lib
 
 function changeMode(){
 	// if plane is in taxi, can change to takeoff only
@@ -214,6 +214,7 @@ function processMesh(mesh){
 		mesh.hitMaterial = hitMaterial;
 		mesh.originalMaterial = mesh.children[0].material;
 
+		engineFlameParticles(thePlayer); // set up particles for engine
 		animate();
 	}
 
@@ -271,8 +272,79 @@ document.addEventListener("keyup", (evt) => {
 	}
 });
 
+let particleSystems = [];
+function engineFlameParticles(obj){
+	// sample some number of points in a circle 
+	// we want their paths to converge at some point to form a cone shape
+	// actually let's skip the cone thing. let's just make a straight path but gradually decrease
+	// the size of the particles (and make them more transparent)
+	/*
+	let theta = 60; // 60 deg. slices
+	let radius = 8;
+	let convergePoint = {
+		'x': 0,
+		'y': 0,
+		'z': 10
+	};
+	let particlePaths = [];
+	for(let deg = 0; deg < 360; deg += theta){
+		// 7 points total?
+		let x = radius * Math.cos((Math.PI * deg) / 180);
+		let y = radius * Math.sin((Math.PI * deg) / 180);
+		particlePaths.push({
+			'start': {
+				'x': x, 
+				'y': y,
+				'z': 0.0
+			},
+			'end': convergePoint
+			'particles': []
+		});
+	}
+	*/
+	
+	// using partykals.js: https://github.com/RonenNess/partykals
+	// create a set of particles for each engine
+	for(let i = 0; i < 2; i++){
+		let pSystem = new Partykals.ParticlesSystem({
+			container: obj,
+			particles: {
+				startAlpha: 1,
+				endAlpha: 0,
+				startSize: 3.5,
+				endSize: 15,
+				ttl: 5,
+				velocity: new Partykals.Randomizers.SphereRandomizer(5),
+				velocityBonus: new THREE.Vector3(0, 0, 25),
+				colorize: true,
+				startColor: new Partykals.Randomizers.ColorsRandomizer(new THREE.Color(0.5, 0.2, 0), new THREE.Color(1, 0.5, 0)),
+				endColor: new THREE.Color(0, 0, 0),
+				blending: "additive",
+				worldPosition: true,
+			},
+			system: {
+				particlesCount: 200,
+				scale: 400,
+				emitters: new Partykals.Emitter({
+					onInterval: new Partykals.Randomizers.MinMaxRandomizer(0, 5),
+					interval: new Partykals.Randomizers.MinMaxRandomizer(0, 0.25),
+				}),
+				depthWrite: false,
+				speed: 1.5,
+				onUpdate: (system) => {
+					system.startX = system.startX || system.particleSystem.position.x;
+					system.particleSystem.position.x = system.startX + Math.sin(system.age * 2) * 5;
+					system.particleSystem.position.z = -Math.sin(system.age * 2) * 5;
+				},
+			}
+		});
+		particleSystems.push(pSystem);
+	}
+	
+	// launch them?
+}
 
-
+// for incrementing the speed when accelerating on takeoff
 function getSpeed(timeDelta){
 	return Math.exp(timeDelta);
 }
@@ -293,6 +365,15 @@ function update(){
 		// note that this gets called several times with one key press!
 		// I think it's because update() in requestAnimationFrames gets called quite a few times per second
 		state['isMoving'] = true;
+		
+		// engine particles 
+		if(state['mode'] !== 'taxi'){
+			particleSystems.forEach((pSystem) => {
+				pSystem.update();
+			});
+		}else{
+			// clear the particles!
+		}
 		
 		if(state['mode'] === 'static'){
 			state['mode'] = 'taxi';
