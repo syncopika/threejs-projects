@@ -96,7 +96,8 @@ const state = {
 		'rotation': null,
 		'aircraftPosition': null,
 		'aircraftRotation': null
-	}
+	},
+	'particleSystems': []
 };
 
 function resetPosition(state, player){
@@ -112,6 +113,58 @@ function resetState(state){
 	state['altitude'] = 0.0;
 	state['isMoving'] = false;
 }
+
+function engineFlameParticles(state, obj){
+	// sample some number of points in a circle 
+	// we want their paths to converge at some point to form a cone shape
+	// actually let's skip the cone thing. let's just make a straight path but gradually decrease
+	// the size of the particles (and make them more transparent)
+	
+	// using partykals.js: https://github.com/RonenNess/partykals
+	// create a set of particles for each engine
+	for(let i = 0; i < 2; i++){
+		let pSystem = new Partykals.ParticlesSystem({
+			container: obj,
+			particles: {
+				startAlpha: 1,
+				endAlpha: 0,
+				startSize: 3.5,
+				endSize: 12,
+				ttl: 5,
+				velocity: new Partykals.Randomizers.SphereRandomizer(5),
+				velocityBonus: new THREE.Vector3(0, 0, 25),
+				colorize: true,
+				startColor: new Partykals.Randomizers.ColorsRandomizer(new THREE.Color(0.5, 0.2, 0), new THREE.Color(1, 0.5, 0)),
+				endColor: new THREE.Color(0, 0, 0),
+				blending: "additive",
+				worldPosition: true,
+			},
+			system: {
+				particlesCount: 100,
+				scale: 400,
+				emitters: new Partykals.Emitter({
+					onInterval: new Partykals.Randomizers.MinMaxRandomizer(0, 5),
+					interval: new Partykals.Randomizers.MinMaxRandomizer(0, 0.25),
+				}),
+				depthWrite: false,
+				speed: 1.5,
+				onUpdate: (system) => {
+					system.startX = system.startX || system.particleSystem.position.x;
+					system.particleSystem.position.x = system.startX + Math.sin(system.age * 2) * 5;
+					system.particleSystem.position.z = -Math.sin(system.age * 2) * 5;
+				},
+			}
+		});
+		state.particleSystems.push(pSystem);
+		//console.log(pSystem);
+	}
+}
+
+// for incrementing the speed when accelerating on takeoff
+function getSpeed(timeDelta){
+	return Math.exp(timeDelta);
+}
+
 
 let loadedModels = [];
 
@@ -201,8 +254,8 @@ function processMesh(mesh){
 		originalPositionAircraft.copy(thePlayer.children[0].position);
 		originalRotationAircraft.copy(thePlayer.children[0].rotation);
 		
-		console.log(originalRotationAircraft);
-		console.log(originalRotationGroup);
+		//console.log(originalRotationAircraft);
+		//console.log(originalRotationGroup);
 		
 		state['originalPosition']['position'] = originalPositionGroup;
 		state['originalPosition']['rotation'] = originalRotationGroup;
@@ -214,7 +267,6 @@ function processMesh(mesh){
 		mesh.hitMaterial = hitMaterial;
 		mesh.originalMaterial = mesh.children[0].material;
 
-		engineFlameParticles(thePlayer); // set up particles for engine
 		animate();
 	}
 
@@ -233,7 +285,9 @@ document.addEventListener("keydown", (evt) => {
 			state['mode'] = 'takeoff';
 			state['phase'] = 1;
 			//console.log("mode changed to takeoff!");
+			engineFlameParticles(state, thePlayer); // set up particles for engine
 		}else if(state['mode'] === 'flying'){
+			
 			// something for landing?
 			console.log("mode changed to landing!");
 			state['mode'] = 'landing';
@@ -272,82 +326,6 @@ document.addEventListener("keyup", (evt) => {
 	}
 });
 
-let particleSystems = [];
-function engineFlameParticles(obj){
-	// sample some number of points in a circle 
-	// we want their paths to converge at some point to form a cone shape
-	// actually let's skip the cone thing. let's just make a straight path but gradually decrease
-	// the size of the particles (and make them more transparent)
-	/*
-	let theta = 60; // 60 deg. slices
-	let radius = 8;
-	let convergePoint = {
-		'x': 0,
-		'y': 0,
-		'z': 10
-	};
-	let particlePaths = [];
-	for(let deg = 0; deg < 360; deg += theta){
-		// 7 points total?
-		let x = radius * Math.cos((Math.PI * deg) / 180);
-		let y = radius * Math.sin((Math.PI * deg) / 180);
-		particlePaths.push({
-			'start': {
-				'x': x, 
-				'y': y,
-				'z': 0.0
-			},
-			'end': convergePoint
-			'particles': []
-		});
-	}
-	*/
-	
-	// using partykals.js: https://github.com/RonenNess/partykals
-	// create a set of particles for each engine
-	for(let i = 0; i < 2; i++){
-		let pSystem = new Partykals.ParticlesSystem({
-			container: obj,
-			particles: {
-				startAlpha: 1,
-				endAlpha: 0,
-				startSize: 3.5,
-				endSize: 15,
-				ttl: 5,
-				velocity: new Partykals.Randomizers.SphereRandomizer(5),
-				velocityBonus: new THREE.Vector3(0, 0, 25),
-				colorize: true,
-				startColor: new Partykals.Randomizers.ColorsRandomizer(new THREE.Color(0.5, 0.2, 0), new THREE.Color(1, 0.5, 0)),
-				endColor: new THREE.Color(0, 0, 0),
-				blending: "additive",
-				worldPosition: true,
-			},
-			system: {
-				particlesCount: 200,
-				scale: 400,
-				emitters: new Partykals.Emitter({
-					onInterval: new Partykals.Randomizers.MinMaxRandomizer(0, 5),
-					interval: new Partykals.Randomizers.MinMaxRandomizer(0, 0.25),
-				}),
-				depthWrite: false,
-				speed: 1.5,
-				onUpdate: (system) => {
-					system.startX = system.startX || system.particleSystem.position.x;
-					system.particleSystem.position.x = system.startX + Math.sin(system.age * 2) * 5;
-					system.particleSystem.position.z = -Math.sin(system.age * 2) * 5;
-				},
-			}
-		});
-		particleSystems.push(pSystem);
-	}
-	
-	// launch them?
-}
-
-// for incrementing the speed when accelerating on takeoff
-function getSpeed(timeDelta){
-	return Math.exp(timeDelta);
-}
 
 function update(){
 	sec = clock.getDelta();
@@ -367,12 +345,16 @@ function update(){
 		state['isMoving'] = true;
 		
 		// engine particles 
-		if(state['mode'] !== 'taxi'){
-			particleSystems.forEach((pSystem) => {
+		if(state['mode'] === 'takeoff' || state['mode'] === 'flying'){
+			state.particleSystems.forEach((pSystem) => {
+				pSystem.addTo(thePlayer);
 				pSystem.update();
 			});
 		}else{
-			// clear the particles!
+			// don't show any particles
+			state.particleSystems.forEach((pSystem) => {
+				pSystem.removeSelf();
+			});
 		}
 		
 		if(state['mode'] === 'static'){
@@ -425,7 +407,6 @@ function update(){
 		}
 		
 		state['speed'] = moveDistance;
-		
 		thePlayer.translateZ(-moveDistance);
 		
 	}else if(state['mode'] === 'falling'){
