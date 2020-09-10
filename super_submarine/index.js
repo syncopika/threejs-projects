@@ -3,9 +3,9 @@
 
 // create the message that shows when the player is within range to disarm the dangerous capsule
 function setupDisarmMessage(canvas){
-	var canvasPos = canvas.getBoundingClientRect();
-	var disarmMessageText = "hold space to disarm the dangerous capsule";
-	var disarmMessage = document.createElement('h3');
+	let canvasPos = canvas.getBoundingClientRect();
+	let disarmMessageText = "hold space to disarm the dangerous capsule";
+	let disarmMessage = document.createElement('h3');
 	
 	disarmMessage.id = "disarmMessage";
 	disarmMessage.style.fontFamily = 'monospace';
@@ -21,7 +21,7 @@ function setupDisarmMessage(canvas){
 
 // show/hide the message the allows the player to disarm the dangerous capsule
 function toggleDisarmMessage(canvas, showMessage){
-	var message = document.getElementById("disarmMessage");
+	let message = document.getElementById("disarmMessage");
 	if(!message){
 		return;
 	}
@@ -30,9 +30,9 @@ function toggleDisarmMessage(canvas, showMessage){
 		message.style.display = 'none';
 	}else{
 		// make sure message shows up in right place
-		var canvasPos = canvas.getBoundingClientRect();
-		var x = canvasPos.left;
-		var y = canvasPos.top;
+		let canvasPos = canvas.getBoundingClientRect();
+		let x = canvasPos.left;
+		let y = canvasPos.top;
 		
 		message.style.left = (x + Math.round(.40 * canvasPos.width)) + "px";
 		message.style.top = (y + Math.round(.80 * canvasPos.height)) + "px";
@@ -45,13 +45,13 @@ function toggleDisarmMessage(canvas, showMessage){
 // source = position of source obj, dir = direction vector
 function checkCapsuleHit(source, dir, raycaster){
 	raycaster.set(source, dir);
-	var intersects = raycaster.intersectObjects(scene.children);
-	for(var i = 0; i < intersects.length; i++){
-		var target = intersects[i];
-		//console.log(target);
-		//console.log(source.distanceTo(target.point));
+	let intersects = raycaster.intersectObjects(scene.children);
+	for(let i = 0; i < intersects.length; i++){
+
+		let target = intersects[i];
+
 		if(target.object.name === "goalObject"){
-			var inRange = source.distanceTo(target.point) > 7.0 && source.distanceTo(target.point) < 12.0;
+			let inRange = source.distanceTo(target.point) > 7.0 && source.distanceTo(target.point) < 12.0;
 			if(inRange){
 				//console.log("hit capsule!");
 				return target.object;
@@ -263,8 +263,8 @@ function getModel(modelFilePath, side, name){
 	});
 }
 
-var newSphere = createSphereWireframe({}, {});
-var newSphere2 = createSphereWireframe({x: 5, y: 6, z: -45}, {});
+let newSphere = createSphereWireframe({}, {});
+let newSphere2 = createSphereWireframe({x: 5, y: 6, z: -45}, {});
 scene.add(newSphere);
 scene.add(newSphere2);
 
@@ -295,14 +295,13 @@ Promise.all(loadedModels).then((objects) => {
 			console.log(mesh);
 			whaleSharkAnimation = new THREE.AnimationMixer(mesh);
 			
-			var sharkGroup = new THREE.Group();
+			let sharkGroup = new THREE.Group();
 			sharkGroup.add(mesh);
 			mesh = sharkGroup;
 
 			theNpc = mesh;
 			theNpc.matrixAutoUpdate = false;
 		
-
 		}else if(mesh.name === "goalObject"){
 			mesh.position.set(-100, -18.2, -100);
 			mesh.rotation.y = Math.PI / 6;
@@ -315,7 +314,7 @@ Promise.all(loadedModels).then((objects) => {
 		}else{
 			// the local axis of the imported mesh is a bit weird and not consistent with the world axis. so, to fix that,
 			// put it in a group object and just control the group object! the mesh is also just orientated properly initially when placed in the group.
-			var group = new THREE.Group();
+			let group = new THREE.Group();
 			group.add(mesh);
 			thePlayer = group;
 			mesh = group;
@@ -326,13 +325,13 @@ Promise.all(loadedModels).then((objects) => {
 			thePlayer.health = 100;
 			
 			// alternate materials used for the sub depending on condition 
-			var hitMaterial = new THREE.MeshBasicMaterial({color: 0xff0000});
+			let hitMaterial = new THREE.MeshBasicMaterial({color: 0xff0000});
 			mesh.hitMaterial = hitMaterial;
 			mesh.originalMaterial = mesh.children[0].material;
 			
 			// give the submarine a spotlight
 			// the spotlight should be facing downwards!
-			var spotlight = createSpotlight(); //createSphereWireframe({}, {});
+			let spotlight = createSpotlight(); //createSphereWireframe({}, {});
 			thePlayer.spotlight = spotlight;
 			thePlayer.spotlightVisible = false;
 			spotlight.visible = false;
@@ -344,7 +343,7 @@ Promise.all(loadedModels).then((objects) => {
 			// can I position the dummy object relative to the group and have its position stay consistent with 
 			// any movement? for now I'm going to try to reposition the spotlight target based on the group's
 			// forward vector.
-			var spotlightTarget = new THREE.Object3D();
+			let spotlightTarget = new THREE.Object3D();
 			group.add(spotlightTarget);
 			
 			scene.add(spotlightTarget);
@@ -383,17 +382,15 @@ Promise.all(loadedModels).then((objects) => {
 let t = 0;
 let lastTime = clock.getDelta();
 function update(){
+	
 	sec = clock.getDelta();
 	moveDistance = 20 * sec;
 	rotationAngle = (Math.PI / 2) * sec;
-	var changeCameraView = false;
-	//console.log(rotationAngle);
-	//console.log(Math.cos(rotationAngle));
-	t += 0.005;
+	let changeCameraView = false;
+
+	t += 0.005; // can remove?
 	
 	// move the whale shark in a circle
-	// to get it to rotate in a realistic manner as well, I think I have to 
-	// do something a bit more complicated? I forgot what I did in my graphics course :(
 	if(theNpc){
 		
 		let swimAction = whaleSharkAnimation.clipAction(whaleSharkClips[0]);
@@ -401,29 +398,25 @@ function update(){
 		swimAction.play();
 		whaleSharkAnimation.update(sec);
 
-		var curr = new THREE.Matrix4();
+		let curr = new THREE.Matrix4();
 		curr.extractRotation(theNpc.matrix); // need to build off of previous rotation
 
-		var rotY = new THREE.Matrix4();
+		let rotY = new THREE.Matrix4();
 		rotY.makeRotationY(-0.01);
 	
-		var transMat = new THREE.Matrix4();
-		transMat.set(1,0,0,(30+30*(Math.cos(0.001))), 0,1,0,0, 0,0,1,(30+30*(Math.sin(0.001))), 0,0,0,1); // affect only X and Z axes! - need to use t so we get a constantly changing value for cos and sin
+		let transMat = new THREE.Matrix4();
+		transMat.set(1,0,0,(30+30*(Math.cos(0.001))), 0,1,0,0, 0,0,1,(30+30*(Math.sin(0.001))), 0,0,0,1); // affect only X and Z axes!
 
-		
-		var scale = new THREE.Matrix4();
+		let scale = new THREE.Matrix4();
 		scale.makeScale(theNpc.scale.x/2, theNpc.scale.y/2, theNpc.scale.z/2);
 		
 		// https://gamedev.stackexchange.com/questions/16719/what-is-the-correct-order-to-multiply-scale-rotation-and-translation-matrices-f
-	
 		// assuming the whale shark is already at the origin (with the matrix curr, which should only have rotation info)
 		curr.multiply(transMat);
 		curr.multiply(scale);
 		curr.multiply(rotY);
 		
-		
 		theNpc.matrix.copy(curr);
-	
 	}
 	
 	if(keyboard.pressed("shift")){
@@ -442,22 +435,22 @@ function update(){
 	
 	if(keyboard.pressed("A")){
 		// rotate the sub and the camera appropriately
-		var axis = new THREE.Vector3(0, 1, 0);
+		let axis = new THREE.Vector3(0, 1, 0);
 		thePlayer.rotateOnAxis(axis, rotationAngle);
 	}
 	
 	if(keyboard.pressed("D")){
-		var axis = new THREE.Vector3(0, 1, 0);
+		let axis = new THREE.Vector3(0, 1, 0);
 		thePlayer.rotateOnAxis(axis, -rotationAngle);
 	}
 	
 	if(keyboard.pressed("Q")){
-		var axis = new THREE.Vector3(0, 0, 1);
+		let axis = new THREE.Vector3(0, 0, 1);
 		thePlayer.rotateOnAxis(axis, rotationAngle);
 	}
 	
 	if(keyboard.pressed("E")){
-		var axis = new THREE.Vector3(0, 0, 1);
+		let axis = new THREE.Vector3(0, 0, 1);
 		thePlayer.rotateOnAxis(axis, -rotationAngle);
 	}
 	
@@ -466,14 +459,14 @@ function update(){
 		// the forward vector for the mesh might be backwards and perpendicular to the front of the sub
 		// up arrow key
 		// NEED TO CLAMP ANGLE
-		var axis = new THREE.Vector3(1, 0, 0);
+		let axis = new THREE.Vector3(1, 0, 0);
 		thePlayer.rotateOnAxis(axis, rotationAngle);
 	}
 	
 	if(keyboard.pressed("down")){
 		// down arrow key
 		// CLAMP ANGLE!
-		var axis = new THREE.Vector3(1, 0, 0);
+		let axis = new THREE.Vector3(1, 0, 0);
 		thePlayer.rotateOnAxis(axis, -rotationAngle);
 	}
 	
@@ -481,45 +474,45 @@ function update(){
 	if(thePlayer.spotlightVisible){
 		// reposition spotlight target so that it's slightly below 
 		// and forward relative to the front of the sub
-		var subForward = getForward(thePlayer); 
-		var spotlight = thePlayer.spotlight;
+		let subForward = getForward(thePlayer); 
+		let spotlight = thePlayer.spotlight;
 		
-		var x = thePlayer.position.x - (subForward.x * 2);
-		var y = thePlayer.position.y - 3;
-		var z = thePlayer.position.z - (subForward.z * 2);
+		let x = thePlayer.position.x - (subForward.x * 2);
+		let y = thePlayer.position.y - 3;
+		let z = thePlayer.position.z - (subForward.z * 2);
 		
 		spotlight.target.position.set(x, y, z);
 		
-		var pos = getCenter(thePlayer.children[0]);
+		let pos = getCenter(thePlayer.children[0]);
 		spotlight.position.x = pos.x;
 		spotlight.position.y = pos.y;
 		spotlight.position.z = pos.z;
 		
 		// see if the spotlight hits the dangerous capsule
-		var source = spotlight.position;
-		var target = spotlight.target.position;
-		var dir = (new THREE.Vector3(target.x - source.x, target.y - source.y, target.z - source.z)).normalize();
-		var capsuleHit = checkCapsuleHit(source, dir, raycaster);
+		let source = spotlight.position;
+		let target = spotlight.target.position;
+		let dir = (new THREE.Vector3(target.x - source.x, target.y - source.y, target.z - source.z)).normalize();
+		let capsuleHit = checkCapsuleHit(source, dir, raycaster);
 
 		if(capsuleHit && !capsuleHit.disarmed){
 			toggleDisarmMessage(document.getElementsByTagName('canvas')[0], true);
 			
-			var disarmProgress = document.getElementById("disarmBarContainer");
-			var progressBar = disarmProgress.children[0];
-			var congratsMsg;
+			let disarmProgress = document.getElementById("disarmBarContainer");
+			let progressBar = disarmProgress.children[0];
+			let congratsMsg;
 			
 			if(keyboard.pressed("space")){
 				disarmProgress.style.display = "block";
-				var currWidth = parseInt(progressBar.style.width);
-				var fullWidth = parseInt(disarmProgress.style.width);
+				let currWidth = parseInt(progressBar.style.width);
+				let fullWidth = parseInt(disarmProgress.style.width);
 
 				if(lastTime === 0){
 					lastTime = clock.getElapsedTime();
 				}
 				
-				var currTime = clock.getElapsedTime();
+				let currTime = clock.getElapsedTime();
 				if(currWidth < fullWidth && (currTime - lastTime) > 0.5){
-					var newWidth = Math.min(currWidth + 50, fullWidth);
+					let newWidth = Math.min(currWidth + 50, fullWidth);
 					progressBar.style.width = newWidth + "px";
 					lastTime = currTime;
 				}else if(currWidth >= fullWidth){
@@ -555,7 +548,7 @@ function update(){
 	
 	// check for collision?
 	// check top, left, right, bottom, front, back? 
-	var hasCollision = checkCollision(thePlayer.children[0], raycaster);
+	let hasCollision = checkCollision(thePlayer.children[0], raycaster);
 	if(!thePlayer.isCollided && hasCollision){
 		thePlayer.children[0].material = thePlayer.hitMaterial;
 
@@ -564,7 +557,7 @@ function update(){
 		thePlayer.isCollided = true;
 
 		if(thePlayer.health >= 0){
-			var currHealthBarVal = parseInt(document.getElementById("healthBar").style.width);
+			let currHealthBarVal = parseInt(document.getElementById("healthBar").style.width);
 			document.getElementById("healthBar").style.width = (200*(thePlayer.health/100)) + "px"; // 200 == default width of the health bar in px
 		}else{
 			// player dead? or just respawn?
@@ -580,14 +573,14 @@ function update(){
 	}
 	
 	// how about first-person view?
-	var relCameraOffset;
+	let relCameraOffset;
 	if(!changeCameraView){
 		relCameraOffset = new THREE.Vector3(0, 3, 12);
 	}else{
 		relCameraOffset = new THREE.Vector3(0, 3, -12);
 	}
 	
-	var cameraOffset = relCameraOffset.applyMatrix4(thePlayer.matrixWorld);
+	let cameraOffset = relCameraOffset.applyMatrix4(thePlayer.matrixWorld);
 	camera.position.x = cameraOffset.x;
 	camera.position.y = cameraOffset.y;
 	camera.position.z = cameraOffset.z;
