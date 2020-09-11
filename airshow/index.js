@@ -101,10 +101,10 @@ const state = {
 };
 
 function resetPosition(state, player){
-	//player.position.copy(state['originalPosition']['position']);
-	//player.rotation.copy(state['originalPosition']['rotation']);
-	player.position.copy(state['originalPosition']['aircraftPosition']);
-	player.rotation.copy(state['originalPosition']['aircraftRotation']);
+	player.position.copy(state['originalPosition']['position']);
+	player.rotation.copy(state['originalPosition']['rotation']);
+	player.children[0].position.copy(state['originalPosition']['aircraftPosition']);
+	player.children[0].rotation.copy(state['originalPosition']['aircraftRotation']);
 }
 
 function resetState(state){
@@ -112,6 +112,10 @@ function resetState(state){
 	state['speed'] = 0.0;
 	state['altitude'] = 0.0;
 	state['isMoving'] = false;
+	
+	state.particleSystems.forEach((pSystem) => {
+		pSystem.removeSelf();
+	});
 }
 
 function engineFlameParticles(state, obj){
@@ -156,7 +160,6 @@ function engineFlameParticles(state, obj){
 			}
 		});
 		state.particleSystems.push(pSystem);
-		//console.log(pSystem);
 	}
 }
 
@@ -184,11 +187,10 @@ function getModel(modelFilePath, side, name){
 						}
 						
 						if(name === "player"){
-							// jet needs to be rotated 180 deg. -_-
 							obj.scale.x = 0.98;
 							obj.scale.y = 0.98;
 							obj.scale.z = 0.98;
-							//obj.rotateOnAxis(new THREE.Vector3(0,1,0), Math.PI);
+							obj.rotateOnAxis(new THREE.Vector3(0,1,0), Math.PI);
 						}
 						
 						obj.name = name;
@@ -233,41 +235,39 @@ function processMesh(mesh){
 		playerAxesHelper = new THREE.AxesHelper(10);
 		mesh.add(playerAxesHelper);
 		
-		/*
 		var group = new THREE.Group();
 		group.add(mesh);
 		playerGroupAxesHelper = new THREE.AxesHelper(8);
 		group.add(playerGroupAxesHelper);
-		*/
-		
-		thePlayer = mesh; //group;
-		//mesh = group;
+	
+		thePlayer = group;
+		mesh = group;
 		mesh.position.set(-15, 1, -40);
-		mesh.originalColor = mesh.material; // this should only be temporary
+		mesh.originalColor = mesh.children[0].material; // this should only be temporary
 		
 		// save current position and rotation of the group and the aircraft mesh itself
-		//let originalPositionGroup = new THREE.Vector3();
+		let originalPositionGroup = new THREE.Vector3();
 		let originalPositionAircraft = new THREE.Vector3();
-		//let originalRotationGroup = new THREE.Euler();
+		let originalRotationGroup = new THREE.Euler();
 		let originalRotationAircraft = new THREE.Euler();
 		
-		//originalPositionGroup.copy(thePlayer.position);
-		//originalRotationGroup.copy(thePlayer.rotation);
-		originalPositionAircraft.copy(thePlayer.position);
-		originalRotationAircraft.copy(thePlayer.rotation);
+		originalPositionGroup.copy(thePlayer.position);
+		originalRotationGroup.copy(thePlayer.rotation);
+		originalPositionAircraft.copy(thePlayer.children[0].position);
+		originalRotationAircraft.copy(thePlayer.children[0].rotation);
 		
 		//console.log(originalRotationAircraft);
 		//console.log(originalRotationGroup);
 		
-		//state['originalPosition']['position'] = originalPositionGroup;
-		//state['originalPosition']['rotation'] = originalRotationGroup;
+		state['originalPosition']['position'] = originalPositionGroup;
+		state['originalPosition']['rotation'] = originalRotationGroup;
 		state['originalPosition']['aircraftPosition'] = originalPositionAircraft;
 		state['originalPosition']['aircraftRotation'] = originalRotationAircraft;
 		
 		// alternate materials used for the sub depending on condition 
 		var hitMaterial = new THREE.MeshBasicMaterial({color: 0xff0000});
 		mesh.hitMaterial = hitMaterial;
-		mesh.originalMaterial = mesh.material;
+		mesh.originalMaterial = mesh.children[0].material;
 
 		animate();
 	}
@@ -293,20 +293,24 @@ document.addEventListener("keydown", (evt) => {
 			// something for landing?
 			console.log("mode changed to landing!");
 			state['mode'] = 'landing';
-			
-			// reset rotation
-			// this is broken: so far it only works if you're landing in the same direction that the plane
-			// initially points to  when the scene loads. feel like it should be an easy fix but need to think some more
-			// we want the plane to be aligned with the runway
-			//maybe we also need to know the forward vector of the plane?
 
-			//thePlayer.children[0].rotation.copy(state['originalPosition']['aircraftRotation']);
-			thePlayer.rotation.x = state['originalPosition']['aircraftRotation'].x;
-			thePlayer.rotation.Z = state['originalPosition']['aircraftRotation'].z;
+			// reset rotation
+			let forwardZ = getForward(thePlayer.children[0]).z;
+			console.log("aircraft mesh forward: " + forwardZ);
+
+			//let forwardZ2 = getForward(thePlayer).z;
+			//console.log("aircraft group forward: " + forwardZ2);
+
+			// THE Z ROTATIONS of the actual aircraft mesh and the group object it's in are opposite to each other
+			if(forwardZ < 0){
+				thePlayer.rotation.z = 0.0
+				thePlayer.children[0].rotation.z = -Math.PI;
+			}else{
+				thePlayer.rotation.z = -Math.PI
+				thePlayer.children[0].rotation.z = Math.PI;
+			}
 			
-			//thePlayer.rotation.copy(state['originalPosition']['rotation']);
-			thePlayer.rotation.x = state['originalPosition']['rotation'].x;
-			thePlayer.rotation.z = state['originalPosition']['rotation'].z;
+			// how about the x axis?
 			
 		}else if(state['mode'] === 'landing'){
 			// go back to takeoff -> flying
@@ -349,6 +353,7 @@ function update(){
 		// engine particles 
 		if(state['mode'] === 'takeoff' || state['mode'] === 'flying'){
 			state.particleSystems.forEach((pSystem) => {
+				// TODO: make sure the particle flow direction is opposite to the plane's forward vector!
 				pSystem.addTo(thePlayer);
 				pSystem.update();
 			});
@@ -452,7 +457,7 @@ function update(){
 		if(state['altitude'] > 0.0){
 			// gradually get closer to the ground. plane should be aligned with ground ideally
 			thePlayer.translateY(-0.3);
-			thePlayer.translateZ(-1.2);
+			thePlayer.translateZ(1.2);
 		}else{
 			thePlayer.position.y = 0.0;
 			resetState(state);
@@ -474,17 +479,18 @@ function update(){
 	}
 	
 	if(keyboard.pressed("Q") && thePlayer.position.y > 6.0 && state['mode'] !== 'landing'){
+		// https://stackoverflow.com/questions/28848863/threejs-how-to-rotate-around-objects-own-center-instead-of-world-center
 		// notice we're not rotating about the group mesh, but the child 
 		// mesh of the group, which is actually the jet mesh!
 		// if you try to move in all sorts of directions, after a while
 		// the camera gets off center and axes seem to get messed up :/
-		var axis = new THREE.Vector3(0, 0, 1);
-		thePlayer.rotateOnAxis(axis, -rotationAngle);
+		let axis = new THREE.Vector3(0, 0, 1);
+		thePlayer.children[0].rotateOnAxis(axis, -rotationAngle);
 	}
 	
 	if(keyboard.pressed("E") && thePlayer.position.y > 6.0 && state['mode'] !== 'landing'){
-		var axis = new THREE.Vector3(0, 0, 1);
-		thePlayer.rotateOnAxis(axis, rotationAngle);
+		let axis = new THREE.Vector3(0, 0, 1);
+		thePlayer.children[0].rotateOnAxis(axis, rotationAngle);
 	}
 	
 	// check altitude
@@ -492,7 +498,7 @@ function update(){
 		// rotate up (note that we're rotating on the mesh's axis. its axes might be configured weird)
 		// the forward vector for the mesh might be backwards and perpendicular to the front of the sub
 		// up arrow key
-		var axis = new THREE.Vector3(1, 0, 0);
+		let axis = new THREE.Vector3(1, 0, 0);
 		thePlayer.rotateOnAxis(axis, rotationAngle);
 	}
 	
@@ -500,32 +506,32 @@ function update(){
 	if(keyboard.pressed("down") && moveDistance >= 1.8 && state['mode'] !== 'landing'){
 		// down arrow key
 		// CLAMP ANGLE?
-		var axis = new THREE.Vector3(1, 0, 0);
+		let axis = new THREE.Vector3(1, 0, 0);
 		thePlayer.rotateOnAxis(axis, -rotationAngle);
 	}
 	
 	// check for collision?
-	/* check top, left, right, bottom, front, back? 
-	var hasCollision = checkCollision(thePlayer, raycaster);
+	// check top, left, right, bottom, front, back? 
+	let hasCollision = checkCollision(thePlayer.children[0], raycaster);
 	if(hasCollision){
-		thePlayer.material = thePlayer.hitMaterial;
+		thePlayer.children[0].material = thePlayer.hitMaterial;
 		
 		// crash - reset everything 
 		resetPosition(state, thePlayer);
 		resetState(state);
 	}else{
-		thePlayer.material = thePlayer.originalMaterial;
-	}*/
+		thePlayer.children[0].material = thePlayer.originalMaterial;
+	}
 	
 	// how about first-person view?
-	var relCameraOffset;
+	let relCameraOffset;
 	if(!changeCameraView){
 		relCameraOffset = new THREE.Vector3(0, 8, 25);
 	}else{
 		relCameraOffset = new THREE.Vector3(0, 8, -25);
 	}
 	
-	var cameraOffset = relCameraOffset.applyMatrix4(thePlayer.matrixWorld);
+	let cameraOffset = relCameraOffset.applyMatrix4(thePlayer.matrixWorld);
 	camera.position.x = cameraOffset.x;
 	camera.position.y = cameraOffset.y;
 	camera.position.z = cameraOffset.z;

@@ -63,7 +63,7 @@ function checkCapsuleHit(source, dir, raycaster){
 
 
 function createSpotlight(){
-	var spotlight = new THREE.SpotLight(0xffffff, 1.8, 50, 0.35, 1.0, 1.2);
+	let spotlight = new THREE.SpotLight(0xffffff, 1.8, 50, 0.35, 1.0, 1.2);
 	spotlight.castShadow = true;
 	
 	spotlight.shadow.mapSize.width = 20;
@@ -201,7 +201,7 @@ let whaleSharkAnimation = null;
 let whaleSharkClips = null;
 
 // need to keep some state 
-const state = {};
+const state = {}; // not currently using. use for objectives or something?
 
 let loadedModels = [];
 
