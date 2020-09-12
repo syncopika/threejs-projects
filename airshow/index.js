@@ -2,19 +2,6 @@
 // relies on some functions defined in utils.js in ../lib
 // also Ronen Ness' partykals.js in ../lib
 
-function changeMode(){
-	// if plane is in taxi, can change to takeoff only
-	// if plane is flying and at a certain speed, can only change to landing
-	
-	// in taxi mode, speed is constant
-	// in takeoff mode, speed grows logarithmically?
-	// takeoff transitions to flying when a certain altitude and speed are reached
-		// pitch up allowed at a certain speed
-		
-	// being able to land should correspond with how leveled the plane is (vectors should help!)
-		// landing = limited movement?
-}
-
 
 // https://github.com/donmccurdy/three-gltf-viewer/blob/master/src/viewer.js
 const el = document.getElementById("container");
@@ -66,7 +53,6 @@ container.appendChild(renderer.domElement);
 //const controls = new OrbitControls(defaultCamera, renderer.domElement);
 
 const camera = defaultCamera;
-//camera.position.set(0,15,30);
 
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0xffffff);	
@@ -77,7 +63,7 @@ hemiLight.position.set( 0, 300, 0 );
 scene.add( hemiLight );
 
 let dirLight = new THREE.DirectionalLight( 0xffffff );
-dirLight.position.set( 75, 300, -75 );
+dirLight.position.set(0, 100, -55 );
 scene.add( dirLight );
 
 const clock = new THREE.Clock();
@@ -132,16 +118,16 @@ function engineFlameParticles(state, obj){
 			particles: {
 				startAlpha: 1,
 				endAlpha: 0,
-				startSize: 3.5,
-				endSize: 12,
+				startSize: 2.5,
+				endSize: 6,
 				ttl: 5,
-				velocity: new Partykals.Randomizers.SphereRandomizer(5),
-				velocityBonus: new THREE.Vector3(0, 0, 25),
+				velocity: new Partykals.Randomizers.SphereRandomizer(3),
+				velocityBonus: new THREE.Vector3(0, 10, -60),
 				colorize: true,
-				startColor: new Partykals.Randomizers.ColorsRandomizer(new THREE.Color(0.5, 0.2, 0), new THREE.Color(1, 0.5, 0)),
+				startColor: new Partykals.Randomizers.ColorsRandomizer(new THREE.Color(0.3, 0.2, 0), new THREE.Color(0.3, 0.4, 0.3)),
 				endColor: new THREE.Color(0, 0, 0),
 				blending: "additive",
-				worldPosition: true,
+				worldPosition: false,
 			},
 			system: {
 				particlesCount: 100,
@@ -151,12 +137,7 @@ function engineFlameParticles(state, obj){
 					interval: new Partykals.Randomizers.MinMaxRandomizer(0, 0.25),
 				}),
 				depthWrite: false,
-				speed: 1.5,
-				onUpdate: (system) => {
-					system.startX = system.startX || system.particleSystem.position.x;
-					system.particleSystem.position.x = system.startX + Math.sin(system.age * 2) * 5;
-					system.particleSystem.position.z = -Math.sin(system.age * 2) * 5;
-				},
+				speed: 1.5
 			}
 		});
 		state.particleSystems.push(pSystem);
@@ -194,8 +175,6 @@ function getModel(modelFilePath, side, name){
 						}
 						
 						obj.name = name;
-						//resolve(obj);
-						
 						processMesh(obj);
 					}
 				});
@@ -235,7 +214,7 @@ function processMesh(mesh){
 		playerAxesHelper = new THREE.AxesHelper(10);
 		mesh.add(playerAxesHelper);
 		
-		var group = new THREE.Group();
+		let group = new THREE.Group();
 		group.add(mesh);
 		playerGroupAxesHelper = new THREE.AxesHelper(8);
 		group.add(playerGroupAxesHelper);
@@ -265,7 +244,7 @@ function processMesh(mesh){
 		state['originalPosition']['aircraftRotation'] = originalRotationAircraft;
 		
 		// alternate materials used for the sub depending on condition 
-		var hitMaterial = new THREE.MeshBasicMaterial({color: 0xff0000});
+		let hitMaterial = new THREE.MeshBasicMaterial({color: 0xff0000});
 		mesh.hitMaterial = hitMaterial;
 		mesh.originalMaterial = mesh.children[0].material;
 
@@ -287,7 +266,7 @@ document.addEventListener("keydown", (evt) => {
 			state['mode'] = 'takeoff';
 			state['phase'] = 1;
 			//console.log("mode changed to takeoff!");
-			engineFlameParticles(state, thePlayer); // set up particles for engine
+			engineFlameParticles(state, thePlayer.children[0]); // set up particles for engine
 		}else if(state['mode'] === 'flying'){
 			
 			// something for landing?
@@ -303,14 +282,16 @@ document.addEventListener("keydown", (evt) => {
 
 			// THE Z ROTATIONS of the actual aircraft mesh and the group object it's in are opposite to each other
 			if(forwardZ < 0){
-				thePlayer.rotation.z = 0.0
+				thePlayer.rotation.z = 0.0;
+				thePlayer.rotation.x = 0.0;
 				thePlayer.children[0].rotation.z = -Math.PI;
+				thePlayer.children[0].rotation.x = -Math.PI;
 			}else{
-				thePlayer.rotation.z = -Math.PI
+				thePlayer.rotation.z = -Math.PI;
+				thePlayer.rotation.x = -Math.PI;
 				thePlayer.children[0].rotation.z = Math.PI;
+				thePlayer.children[0].rotation.x = Math.PI;
 			}
-			
-			// how about the x axis?
 			
 		}else if(state['mode'] === 'landing'){
 			// go back to takeoff -> flying
@@ -336,7 +317,7 @@ document.addEventListener("keyup", (evt) => {
 function update(){
 	sec = clock.getDelta();
 	rotationAngle = (Math.PI / 2) * sec;
-	var changeCameraView = false;
+	let changeCameraView = false;
 	
 	// update altitude 
 	state['altitude'] = thePlayer.position.y;
@@ -353,8 +334,7 @@ function update(){
 		// engine particles 
 		if(state['mode'] === 'takeoff' || state['mode'] === 'flying'){
 			state.particleSystems.forEach((pSystem) => {
-				// TODO: make sure the particle flow direction is opposite to the plane's forward vector!
-				pSystem.addTo(thePlayer);
+				pSystem.addTo(thePlayer.children[0]);
 				pSystem.update();
 			});
 		}else{
@@ -457,7 +437,7 @@ function update(){
 		if(state['altitude'] > 0.0){
 			// gradually get closer to the ground. plane should be aligned with ground ideally
 			thePlayer.translateY(-0.3);
-			thePlayer.translateZ(1.2);
+			thePlayer.translateZ(-1.2);
 		}else{
 			thePlayer.position.y = 0.0;
 			resetState(state);
@@ -469,12 +449,12 @@ function update(){
 	}
 	
 	if(keyboard.pressed("A") && state['mode'] !== 'landing'){
-		var axis = new THREE.Vector3(0, 1, 0);
+		let axis = new THREE.Vector3(0, 1, 0);
 		thePlayer.rotateOnAxis(axis, rotationAngle);
 	}
 	
 	if(keyboard.pressed("D") && state['mode'] !== 'landing'){
-		var axis = new THREE.Vector3(0, 1, 0);
+		let axis = new THREE.Vector3(0, 1, 0);
 		thePlayer.rotateOnAxis(axis, -rotationAngle);
 	}
 	
