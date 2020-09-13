@@ -46,10 +46,6 @@ https://threejsfundamentals.org/threejs/lessons/threejs-scenegraph.html
 
 
 to do ---------------
-- clamp angles? or not. it's your choice really.
-- collision detection
 - item collection
-- submarine spotlight - needs to point forward (and downward a bit)
-- health bar
 - trackball rotation
 - rocks, seaweed, animals (i.e. sharks?)
