@@ -205,7 +205,7 @@ function getModel(modelFilePath, side, name){
 // https://threejs.org/docs/#api/en/textures/Texture
 // create a mesh, apply ocean shader on it 
 loadedModels.push(getModel('models/f-18hornet-edit.glb', 'player', 'player'));
-loadedModels.push(getModel('models/airbase-edit2.gltf', 'airbase', 'bg'));
+loadedModels.push(getModel('models/airbase-edit.gltf', 'airbase', 'bg'));
 
 let thePlayer = null;
 let theNpc = null;
