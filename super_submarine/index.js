@@ -1,45 +1,6 @@
 // super submarine!
 // relies on some functions defined in ../lib/utils.js
 
-// create the message that shows when the player is within range to disarm the dangerous capsule
-function setupDisarmMessage(canvas){
-	let canvasPos = canvas.getBoundingClientRect();
-	let disarmMessageText = "hold space to disarm the dangerous capsule";
-	let disarmMessage = document.createElement('h3');
-	
-	disarmMessage.id = "disarmMessage";
-	disarmMessage.style.fontFamily = 'monospace';
-	disarmMessage.style.position = 'absolute';
-	disarmMessage.style.color = '#fff';
-	disarmMessage.style.zIndex = 100;
-	disarmMessage.textContent = disarmMessageText;
-	disarmMessage.style.display = 'none';
-	
-	canvas.parentNode.appendChild(disarmMessage);
-	return disarmMessage;
-}
-
-// show/hide the message the allows the player to disarm the dangerous capsule
-function toggleDisarmMessage(canvas, showMessage){
-	let message = document.getElementById("disarmMessage");
-	if(!message){
-		return;
-	}
-	
-	if(!showMessage){
-		message.style.display = 'none';
-	}else{
-		// make sure message shows up in right place
-		let canvasPos = canvas.getBoundingClientRect();
-		let x = canvasPos.left;
-		let y = canvasPos.top;
-		
-		message.style.left = (x + Math.round(.40 * canvasPos.width)) + "px";
-		message.style.top = (y + Math.round(.80 * canvasPos.height)) + "px";
-		message.style.display = 'block';
-	}
-}
-
 
 // check if spotlight hits the dangerous capsule or the sunken ship
 // source = position of source obj, dir = direction vector
@@ -89,39 +50,6 @@ const raycaster = new THREE.Raycaster();
 const loadingManager = new THREE.LoadingManager();
 
 
-
-// set up health bar 
-function createHealthBar(){
-	let container = document.getElementById("container");
-	let containerDimensions = container.getBoundingClientRect();
-	let left = (containerDimensions.left + Math.round(.05 * containerDimensions.width)) + "px";
-	let top = (containerDimensions.top + Math.round(.05 * containerDimensions.height)) + "px";
-	let healthBarContainer = createProgressBar("health", "#00ff00", true);
-	healthBarContainer.style.border = "1px solid #000";
-	healthBarContainer.style.left = left;
-	healthBarContainer.style.top = top;
-	container.appendChild(healthBarContainer);
-}
-
-// progress bar for disarming the dangerous capsule
-function createDisarmProgressBar(){
-	let container = document.getElementById("container");
-	let containerDimensions = container.getBoundingClientRect();
-	let left = (containerDimensions.left + Math.round(.40 * containerDimensions.width)) + "px";
-	let top = (containerDimensions.top + Math.round(.50 * containerDimensions.height)) + "px";
-	
-	let disarmProgressBarContainer = createProgressBar("disarm", "#ff0000", false);
-	disarmProgressBarContainer.style.border = "1px solid #000";
-	disarmProgressBarContainer.style.left = left;
-	disarmProgressBarContainer.style.top = top;
-	
-	// only show when player is in range of capsule and pressing spacebar
-	disarmProgressBarContainer.style.display = 'none';
-	
-	container.appendChild(disarmProgressBarContainer);
-}
-
-
 // https://stackoverflow.com/questions/35575065/how-to-make-a-loading-screen-in-three-js
 loadingManager.onStart = (url, itemsLoaded, itemsTotal) => {
 	// set up a loading bar
@@ -144,7 +72,10 @@ loadingManager.onLoad = () => {
 	createHealthBar();
 	
 	// set up the progress bar to be used for disarming the dangerous capsule 
-	createDisarmProgressBar();
+	createProgressBarContainer("disarm");
+	
+	// set up progress bar for recovering sunken ship
+	createProgressBarContainer("sunkenShip");
 }
 
 loadingManager.onProgress = (url, itemsLoaded, itemsTotal) => {
@@ -163,7 +94,19 @@ renderer.shadowMap.enabled = true;
 renderer.setSize(el.clientWidth, el.clientHeight);	
 container.appendChild(renderer.domElement);
 
-setupDisarmMessage(document.getElementsByTagName('canvas')[0]);
+// for disarming the dangerous capsule
+setupGoalObjectMessage(
+	document.getElementsByTagName('canvas')[0],
+	"disarmMessage",
+	"hold space to disarm the dangerous capsule"
+);
+
+// for recovering the sunken ship
+setupGoalObjectMessage(
+	document.getElementsByTagName('canvas')[0],
+	"sunkenShipMessage",
+	"hold space to recover important parts of the sunken ship"
+);
 
 //https://threejs.org/docs/#examples/en/controls/OrbitControls
 // or this?: https://github.com/mrdoob/three.js/blob/dev/examples/jsm/controls/TrackballControls.js
@@ -292,6 +235,11 @@ Promise.all(loadedModels).then((objects) => {
 		}else if(mesh.name === "bg"){
 			// ocean floor
 			mesh.position.set(0, -20, 0);
+			
+			// add water?
+			// https://github.com/jbouny/ocean
+			
+			
 		}else if(mesh.name === "npc"){
 			// whale shark
 			console.log(mesh);
@@ -374,7 +322,11 @@ Promise.all(loadedModels).then((objects) => {
 						thePlayer.spotlightVisible = false;
 						
 						// hide capsule disarm message if it was showing
-						toggleDisarmMessage(document.getElementsByTagName('canvas')[0], false);
+						toggleMessage(
+							document.getElementsByTagName('canvas')[0], 
+							document.getElementById("disarmMessage"), 
+							false
+						);
 					}
 				}
 			});
@@ -507,7 +459,12 @@ function update(){
 			if(goalObjectHit.name === "goalObject"){
 				let capsuleHit = goalObjectHit;
 				if(!capsuleHit.disarmed){
-					toggleDisarmMessage(document.getElementsByTagName('canvas')[0], true);
+
+					toggleMessage(
+						document.getElementsByTagName('canvas')[0], 
+						document.getElementById("disarmMessage"), 
+						true
+					);
 					
 					let disarmProgress = document.getElementById("disarmBarContainer");
 					let progressBar = disarmProgress.children[0];
@@ -529,9 +486,15 @@ function update(){
 							lastTime = currTime;
 						}else if(currWidth >= fullWidth){
 							// disarm successful!
+							lastTime = 0;
 							disarmProgress.style.display = "none";
 							capsuleHit.disarmed = true;
-							toggleDisarmMessage(document.getElementsByTagName('canvas')[0], false);
+							
+							toggleMessage(
+								document.getElementsByTagName('canvas')[0], 
+								document.getElementById("disarmMessage"), 
+								false
+							);
 							
 							congratsMsg = document.createElement("h3");
 							congratsMsg.style.position = "absolute";
@@ -554,14 +517,93 @@ function update(){
 					}
 					
 				}else{
-					toggleDisarmMessage(document.getElementsByTagName('canvas')[0], false);
+					// hide message
+					toggleMessage(
+						document.getElementsByTagName('canvas')[0], 
+						document.getElementById("disarmMessage"), 
+						false
+					);
 				}
 			}else if(goalObjectHit.name === "goalObject2"){
-				console.log("sunken ship located!");
+				//console.log("sunken ship located!");
 				if(!sunkenShip.recovered){
+					toggleMessage(
+						document.getElementsByTagName('canvas')[0], 
+						document.getElementById("sunkenShipMessage"), 
+						true
+					);
 					
+					let recoverProgress = document.getElementById("sunkenShipBarContainer");
+					let progressBar = recoverProgress.children[0];
+					let congratsMsg;
+					
+					if(keyboard.pressed("space")){
+						recoverProgress.style.display = "block";
+						let currWidth = parseInt(progressBar.style.width);
+						let fullWidth = parseInt(recoverProgress.style.width);
+
+						if(lastTime === 0){
+							lastTime = clock.getElapsedTime();
+						}
+						
+						let currTime = clock.getElapsedTime();
+						if(currWidth < fullWidth && (currTime - lastTime) > 0.5){
+							let newWidth = Math.min(currWidth + 50, fullWidth);
+							progressBar.style.width = newWidth + "px";
+							lastTime = currTime;
+						}else if(currWidth >= fullWidth){
+							lastTime = 0;
+							recoverProgress.style.display = "none";
+							sunkenShip.recovered = true;
+							
+							toggleMessage(
+								document.getElementsByTagName('canvas')[0], 
+								document.getElementById("sunkenShipMessage"), 
+								false
+							);
+							
+							congratsMsg = document.createElement("h3");
+							congratsMsg.style.position = "absolute";
+							congratsMsg.style.top = recoverProgress.style.top;
+							congratsMsg.style.left = recoverProgress.style.left;
+							congratsMsg.style.fontFamily = "monospace";
+							congratsMsg.style.color = "#fff";
+							congratsMsg.textContent = "great, you recovered the sunken ship!";	
+							congratsMsg.style.display = "block";
+							recoverProgress.parentNode.appendChild(congratsMsg);
+							
+							setTimeout(function(){
+								congratsMsg.style.display = "none";
+							}, 2000); // show congrats msg for only 2 sec
+						}
+					}else{
+						recoverProgress.style.display = "none";
+						progressBar.style.width = "0px"; // reset to 0 width
+						lastTime = 0;
+					}
+					
+				}else{
+					toggleMessage(
+						document.getElementsByTagName('canvas')[0], 
+						document.getElementById("sunkenShipMessage"), 
+						false
+					);
 				}
 			}
+		}else{
+			// don't show any message text when spotlight no longer on goal object
+			// BUG: if spotlight is turned off but text is shown, the text will stay. need to 
+			// also turn off any text when spotlight is turned off.
+			toggleMessage(
+				document.getElementsByTagName('canvas')[0], 
+				document.getElementById("disarmMessage"), 
+				false
+			);
+			toggleMessage(
+				document.getElementsByTagName('canvas')[0], 
+				document.getElementById("sunkenShipMessage"), 
+				false
+			);
 		}
 	}
 	
