@@ -41,16 +41,17 @@ function toggleDisarmMessage(canvas, showMessage){
 }
 
 
-// check if spotlight hits the dangerous capsule
+// check if spotlight hits the dangerous capsule or the sunken ship
 // source = position of source obj, dir = direction vector
-function checkCapsuleHit(source, dir, raycaster){
+function checkGoalObjectHit(source, dir, raycaster){
 	raycaster.set(source, dir);
 	let intersects = raycaster.intersectObjects(scene.children);
 	for(let i = 0; i < intersects.length; i++){
 
 		let target = intersects[i];
 
-		if(target.object.name === "goalObject"){
+		if(target.object.name === "goalObject" || target.object.name === "goalObject2"){
+			// dangerous capsule
 			let inRange = source.distanceTo(target.point) > 7.0 && source.distanceTo(target.point) < 12.0;
 			if(inRange){
 				//console.log("hit capsule!");
@@ -268,16 +269,17 @@ let newSphere2 = createSphereWireframe({x: 5, y: 6, z: -45}, {});
 scene.add(newSphere);
 scene.add(newSphere2);
 
-// https://threejs.org/docs/#api/en/textures/Texture
-// create a mesh, apply ocean shader on it 
 loadedModels.push(getModel('models/submarine1.glb', 'player', 'p1'));
 loadedModels.push(getModel('models/battleship2.glb', 'player2', 'p2'));
 loadedModels.push(getModel('models/oceanfloor.glb', 'none', 'bg'));
 loadedModels.push(getModel('models/whale-shark-final.gltf', 'none', 'npc'));
 loadedModels.push(getModel('models/dangerous-capsule-edit-final.glb', 'none', 'goalObject'));
+loadedModels.push(getModel('models/smallship-damaged.gltf', 'none', 'goalObject2'));
+
 let thePlayer = null;
 let theNpc = null;
 let capsuleToDisarm = null;
+let sunkenShip = null;
 
 Promise.all(loadedModels).then((objects) => {
 	objects.forEach((mesh) => {
@@ -311,6 +313,14 @@ Promise.all(loadedModels).then((objects) => {
 
 			capsuleToDisarm = mesh;
 			capsuleToDisarm.disarmed = false;
+		}else if(mesh.name === "goalObject2"){
+			mesh.position.set(75, -20, -60);
+			mesh.scale.x /= 3;
+			mesh.scale.y /= 3;
+			mesh.scale.z /= 3;
+			
+			sunkenShip = mesh;
+			sunkenShip.recovered = false;
 		}else{
 			// the local axis of the imported mesh is a bit weird and not consistent with the world axis. so, to fix that,
 			// put it in a group object and just control the group object! the mesh is also just orientated properly initially when placed in the group.
@@ -492,57 +502,66 @@ function update(){
 		let source = spotlight.position;
 		let target = spotlight.target.position;
 		let dir = (new THREE.Vector3(target.x - source.x, target.y - source.y, target.z - source.z)).normalize();
-		let capsuleHit = checkCapsuleHit(source, dir, raycaster);
+		let goalObjectHit = checkGoalObjectHit(source, dir, raycaster);
+		if(goalObjectHit){
+			if(goalObjectHit.name === "goalObject"){
+				let capsuleHit = goalObjectHit;
+				if(!capsuleHit.disarmed){
+					toggleDisarmMessage(document.getElementsByTagName('canvas')[0], true);
+					
+					let disarmProgress = document.getElementById("disarmBarContainer");
+					let progressBar = disarmProgress.children[0];
+					let congratsMsg;
+					
+					if(keyboard.pressed("space")){
+						disarmProgress.style.display = "block";
+						let currWidth = parseInt(progressBar.style.width);
+						let fullWidth = parseInt(disarmProgress.style.width);
 
-		if(capsuleHit && !capsuleHit.disarmed){
-			toggleDisarmMessage(document.getElementsByTagName('canvas')[0], true);
-			
-			let disarmProgress = document.getElementById("disarmBarContainer");
-			let progressBar = disarmProgress.children[0];
-			let congratsMsg;
-			
-			if(keyboard.pressed("space")){
-				disarmProgress.style.display = "block";
-				let currWidth = parseInt(progressBar.style.width);
-				let fullWidth = parseInt(disarmProgress.style.width);
-
-				if(lastTime === 0){
-					lastTime = clock.getElapsedTime();
-				}
-				
-				let currTime = clock.getElapsedTime();
-				if(currWidth < fullWidth && (currTime - lastTime) > 0.5){
-					let newWidth = Math.min(currWidth + 50, fullWidth);
-					progressBar.style.width = newWidth + "px";
-					lastTime = currTime;
-				}else if(currWidth >= fullWidth){
-					// disarm successful!
-					disarmProgress.style.display = "none";
-					capsuleHit.disarmed = true;
+						if(lastTime === 0){
+							lastTime = clock.getElapsedTime();
+						}
+						
+						let currTime = clock.getElapsedTime();
+						if(currWidth < fullWidth && (currTime - lastTime) > 0.5){
+							let newWidth = Math.min(currWidth + 50, fullWidth);
+							progressBar.style.width = newWidth + "px";
+							lastTime = currTime;
+						}else if(currWidth >= fullWidth){
+							// disarm successful!
+							disarmProgress.style.display = "none";
+							capsuleHit.disarmed = true;
+							toggleDisarmMessage(document.getElementsByTagName('canvas')[0], false);
+							
+							congratsMsg = document.createElement("h3");
+							congratsMsg.style.position = "absolute";
+							congratsMsg.style.top = disarmProgress.style.top;
+							congratsMsg.style.left = disarmProgress.style.left;
+							congratsMsg.style.fontFamily = "monospace";
+							congratsMsg.style.color = "#fff";
+							congratsMsg.textContent = "nice! you disarmed the dangerous capsule!";	
+							congratsMsg.style.display = "block";
+							disarmProgress.parentNode.appendChild(congratsMsg);
+							
+							setTimeout(function(){
+								congratsMsg.style.display = "none";
+							}, 2000); // show congrats msg for only 2 sec
+						}
+					}else{
+						disarmProgress.style.display = "none";
+						progressBar.style.width = "0px"; // reset to 0 width
+						lastTime = 0;
+					}
+					
+				}else{
 					toggleDisarmMessage(document.getElementsByTagName('canvas')[0], false);
-					
-					congratsMsg = document.createElement("h3");
-					congratsMsg.style.position = "absolute";
-					congratsMsg.style.top = disarmProgress.style.top;
-					congratsMsg.style.left = disarmProgress.style.left;
-					congratsMsg.style.fontFamily = "monospace";
-					congratsMsg.style.color = "#fff";
-					congratsMsg.textContent = "nice! you disarmed the dangerous capsule!";	
-					congratsMsg.style.display = "block";
-					disarmProgress.parentNode.appendChild(congratsMsg);
-					
-					setTimeout(function(){
-						congratsMsg.style.display = "none";
-					}, 2000); // show congrats msg for only 2 sec
 				}
-			}else{
-				disarmProgress.style.display = "none";
-				progressBar.style.width = "0px"; // reset to 0 width
-				lastTime = 0;
+			}else if(goalObjectHit.name === "goalObject2"){
+				console.log("sunken ship located!");
+				if(!sunkenShip.recovered){
+					
+				}
 			}
-			
-		}else{
-			toggleDisarmMessage(document.getElementsByTagName('canvas')[0], false);
 		}
 	}
 	

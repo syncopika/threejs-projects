@@ -23,7 +23,7 @@ the same time I'm not really sure what a proper experience should be like thinki
 // https://stackoverflow.com/questions/28848863/threejs-how-to-rotate-around-objects-own-center-instead-of-world-center
 
 todo:
-- skybox, better lighting + clouds
+- better lighting + clouds
 - basic f-18 animations like:
 	- flaps
 	- rudders
@@ -36,7 +36,8 @@ todo:
 textures:
 http://hoodavirender.blogspot.com/2012/03/seamless-grass-texture.html
 borrowed top-view of Andrews Air Force Base from Google Maps
-
+https://www.goodfreephotos.com/united-states/colorado/rocky-mountains-national-park/colorado-rocky-mountains-national-park-mountains-in-the-horizon.jpg.php
+https://www.photos-public-domain.com/2011/03/02/blue-sky-with-white-clouds-texture/
 
 http://www.aerodynamics4students.com/aircraft-performance/take-off-and-landing.php
 https://aviation.stackexchange.com/questions/9961/does-acceleration-increase-linearly-on-a-takeoff-roll

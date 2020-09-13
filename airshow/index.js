@@ -6,7 +6,7 @@
 // https://github.com/donmccurdy/three-gltf-viewer/blob/master/src/viewer.js
 const el = document.getElementById("container");
 const fov = 60;
-const defaultCamera = new THREE.PerspectiveCamera(fov, el.clientWidth / el.clientHeight, 0.01, 1000);
+const defaultCamera = new THREE.PerspectiveCamera(fov, el.clientWidth / el.clientHeight, 0.01, 5000);
 const keyboard = new THREEx.KeyboardState();
 const container = document.querySelector('#container');
 const raycaster = new THREE.Raycaster();
@@ -76,6 +76,7 @@ const state = {
 	'mode': 'static', // other options include: static, takeoff, flying, landing. taxi is for moving on the ground
 	'speed': 0.0,
 	'altitude': 0.0,
+	'smokeOn': true,
 	'isMoving': false, // when 'w' key is pressed, this is true.
 	'originalPosition': {
 		'position': null,
@@ -85,6 +86,19 @@ const state = {
 	},
 	'particleSystems': []
 };
+
+function setUpSkyBox(){
+	
+}
+
+function updateStateHtml(state){
+	let altitude = document.getElementById('altitude');
+	let speed = document.getElementById('speed');
+	let status = document.getElementById('status');
+	altitude.textContent = `current altitude: ${state['altitude']}`;
+	speed.textContent = `current speed: ${state['speed']}`;
+	status.textContent = `current state: ${state['mode']}`;
+}
 
 function resetPosition(state, player){
 	player.position.copy(state['originalPosition']['position']);
@@ -105,11 +119,6 @@ function resetState(state){
 }
 
 function engineFlameParticles(state, obj){
-	// sample some number of points in a circle 
-	// we want their paths to converge at some point to form a cone shape
-	// actually let's skip the cone thing. let's just make a straight path but gradually decrease
-	// the size of the particles (and make them more transparent)
-	
 	// using partykals.js: https://github.com/RonenNess/partykals
 	// create a set of particles for each engine
 	for(let i = 0; i < 2; i++){
@@ -196,7 +205,7 @@ function getModel(modelFilePath, side, name){
 // https://threejs.org/docs/#api/en/textures/Texture
 // create a mesh, apply ocean shader on it 
 loadedModels.push(getModel('models/f-18hornet-edit.glb', 'player', 'player'));
-loadedModels.push(getModel('models/airbase.gltf', 'airbase', 'bg'));
+loadedModels.push(getModel('models/airbase-edit2.gltf', 'airbase', 'bg'));
 
 let thePlayer = null;
 let theNpc = null;
@@ -257,7 +266,12 @@ function processMesh(mesh){
 	renderer.render(scene, camera);
 }
 
-
+/*
+	add event listener for certain key presses that need to be 
+	evaluated just once (i.e. if we tried to listen to them in the update function,
+	since that function may run more then once a second, a key press might be registered
+	multiple times, which makes it unreliable)
+*/
 document.addEventListener("keydown", (evt) => {
 	if(evt.keyCode === 20){
 		// caps lock
@@ -275,7 +289,7 @@ document.addEventListener("keydown", (evt) => {
 
 			// reset rotation
 			let forwardZ = getForward(thePlayer.children[0]).z;
-			console.log("aircraft mesh forward: " + forwardZ);
+			//console.log("aircraft mesh forward: " + forwardZ);
 
 			//let forwardZ2 = getForward(thePlayer).z;
 			//console.log("aircraft group forward: " + forwardZ2);
@@ -310,6 +324,10 @@ document.addEventListener("keyup", (evt) => {
 				state['mode'] = 'falling';
 			}
 		}
+	}else if(evt.keyCode === 80){
+		// press P key to toggle smoke
+		state['smokeOn'] = !state['smokeOn'];
+		//console.log('smoke on? ' + state['smokeOn']);
 	}
 });
 
@@ -321,6 +339,7 @@ function update(){
 	
 	// update altitude 
 	state['altitude'] = thePlayer.position.y;
+	updateStateHtml(state);
 	
 	if(keyboard.pressed("shift")){
 		changeCameraView = true;
@@ -332,7 +351,7 @@ function update(){
 		state['isMoving'] = true;
 		
 		// engine particles 
-		if(state['mode'] === 'takeoff' || state['mode'] === 'flying'){
+		if((state['mode'] === 'takeoff' || state['mode'] === 'flying') && state['smokeOn']){
 			state.particleSystems.forEach((pSystem) => {
 				pSystem.addTo(thePlayer.children[0]);
 				pSystem.update();
@@ -361,8 +380,6 @@ function update(){
 			let deltaTime = now - state['start'];
 			
 			if(state['mode'] === 'falling'){
-				// hmm it would make sense for the aircraft to continue falling I think until a certain speed is reached, maybe?
-				// if we switch modes here, the plane kinda hangs for a little bit since it's not 'falling' anymore
 				state['mode'] === 'takeoff';
 			}
 			
@@ -382,7 +399,7 @@ function update(){
 		}
 		
 		if(state['mode'] === 'landing'){
-			console.log("landing!");
+			//console.log("landing!");
 			if(state['altitude'] > 0.0){
 				thePlayer.translateY(-0.3);
 				moveDistance = 1.2;
@@ -402,14 +419,14 @@ function update(){
 		if(moveDistance > 0.10){
 			let deltaTime = Date.now() - state['start'];
 			let currSpeed = getSpeed(-deltaTime/1000);
-			moveDistance = 30 * currSpeed * sec;
+			moveDistance = 20 * currSpeed * sec;
 			//console.log("decelerating...");
 			
 			if(moveDistance < 0.0){
 				moveDistance = 0.0;
 			}
 			
-			thePlayer.translateZ(-moveDistance*3);
+			thePlayer.translateZ(-moveDistance*2);
 		}else{
 			moveDistance = 0.0;
 		}
@@ -516,9 +533,6 @@ function update(){
 	camera.position.y = cameraOffset.y;
 	camera.position.z = cameraOffset.z;
 	camera.lookAt(thePlayer.position);
-	
-	// hmm can we take the player's rotation (since it's the group's rotation) and just apply 
-	// it to the camera? just make sure the camera is behind the player. (instead of using lookAt)
 	
 }
 
