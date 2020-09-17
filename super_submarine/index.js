@@ -1,6 +1,6 @@
 // super submarine!
 // relies on some functions defined in ../lib/utils.js
-
+// and Water defined in ../lib/Water.js
 
 // check if spotlight hits the dangerous capsule or the sunken ship
 // source = position of source obj, dir = direction vector
@@ -108,15 +108,11 @@ setupGoalObjectMessage(
 	"hold space to recover important parts of the sunken ship"
 );
 
-//https://threejs.org/docs/#examples/en/controls/OrbitControls
-// or this?: https://github.com/mrdoob/three.js/blob/dev/examples/jsm/controls/TrackballControls.js
-//const controls = new OrbitControls(defaultCamera, renderer.domElement);
-
 const camera = defaultCamera;
 camera.position.set(0,2,0);
 
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0xffffff);	
+scene.background = new THREE.Color(0x000000);	
 scene.add(camera);
 
 
@@ -223,6 +219,7 @@ let thePlayer = null;
 let theNpc = null;
 let capsuleToDisarm = null;
 let sunkenShip = null;
+let water = null;
 
 Promise.all(loadedModels).then((objects) => {
 	objects.forEach((mesh) => {
@@ -238,8 +235,41 @@ Promise.all(loadedModels).then((objects) => {
 			
 			// add water?
 			// https://github.com/jbouny/ocean
+			// this is jbouny's THREE.Water implementation	
+			let directionalLight = new THREE.DirectionalLight(0xffff55, 1);
+			directionalLight.position.set(-600, 80, 600);
+			scene.add(directionalLight);
+				
+			let waterNormals = new THREE.TextureLoader().load('waternormals.jpg', (texture) => {
+				texture.wrapS = texture.wrapT = THREE.RepeatWrapping; 
+			});
 			
+			water = new THREE.Water(renderer, camera, scene, {
+				textureWidth: 256,
+				textureHeight: 256,
+				waterNormals: waterNormals,
+				alpha: 	1.0,
+				sunDirection: directionalLight.position.normalize(),
+				sunColor: 0xffffff,
+				waterColor: 0x001e0f,
+				betaVersion: 0,
+				side: THREE.DoubleSide
+			});
 			
+			let meshMirror = new THREE.Mesh(
+				new THREE.PlaneBufferGeometry(2000, 2000, 10, 10), 
+				water.material
+			);
+			
+			meshMirror.add(water);
+			meshMirror.rotation.x = -Math.PI * 0.5;
+			meshMirror.position.y = 28;
+			
+			scene.add(meshMirror);
+			
+			// can't get rendering working right now but the mesh itself looks good I think.
+			// water.render();
+		
 		}else if(mesh.name === "npc"){
 			// whale shark
 			console.log(mesh);
@@ -341,7 +371,7 @@ Promise.all(loadedModels).then((objects) => {
 	})
 });
 
-let t = 0;
+
 let lastTime = clock.getDelta();
 function update(){
 	
@@ -349,8 +379,6 @@ function update(){
 	moveDistance = 20 * sec;
 	rotationAngle = (Math.PI / 2) * sec;
 	let changeCameraView = false;
-
-	t += 0.005; // can remove?
 	
 	// move the whale shark in a circle
 	if(theNpc){

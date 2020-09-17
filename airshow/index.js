@@ -128,7 +128,7 @@ function engineFlameParticles(state, obj){
 				startAlpha: 1,
 				endAlpha: 0,
 				startSize: 2.5,
-				endSize: 6,
+				endSize: 4,
 				ttl: 5,
 				velocity: new Partykals.Randomizers.SphereRandomizer(3),
 				velocityBonus: new THREE.Vector3(0, 10, -60),
@@ -160,8 +160,7 @@ function getSpeed(timeDelta){
 
 
 let loadedModels = [];
-
-function getModel(modelFilePath, side, name){
+function getModel(modelFilePath, type, name){
 	return new Promise((resolve, reject) => {
 		loader.load(
 			modelFilePath,
@@ -176,13 +175,13 @@ function getModel(modelFilePath, side, name){
 						if(name === "bg"){
 						}
 						
-						if(name === "player"){
+						if(type === "player"){
 							obj.scale.x = 0.98;
 							obj.scale.y = 0.98;
 							obj.scale.z = 0.98;
 							obj.rotateOnAxis(new THREE.Vector3(0,1,0), Math.PI);
 						}
-						
+						obj.type = type;
 						obj.name = name;
 						processMesh(obj);
 					}
@@ -201,10 +200,9 @@ function getModel(modelFilePath, side, name){
 	});
 }
 
-
-// https://threejs.org/docs/#api/en/textures/Texture
-// create a mesh, apply ocean shader on it 
-loadedModels.push(getModel('models/f-18hornet-edit.glb', 'player', 'player'));
+loadedModels.push(getModel('models/f-18hornet-edit.glb', 'player', 'f18'));
+loadedModels.push(getModel('models/f-16.gltf', 'player', 'f16'));
+loadedModels.push(getModel('models/f-35.gltf', 'player', 'f35'));
 loadedModels.push(getModel('models/airbase-edit.gltf', 'airbase', 'bg'));
 
 let thePlayer = null;
@@ -213,10 +211,13 @@ let theNpc = null;
 let bgAxesHelper;
 let playerAxesHelper;
 let playerGroupAxesHelper;
+let aircraftOptions = {};
 
 function processMesh(mesh){
 	
-	if(mesh.name === "player"){
+	if(mesh.type === "player"){
+		
+		let meshName = mesh.name;
 		
 		// the local axis of the imported mesh is a bit weird and not consistent with the world axis. so, to fix that,
 		// put it in a group object and just control the group object! the mesh is also just oriented properly initially when placed in the group.
@@ -227,42 +228,49 @@ function processMesh(mesh){
 		group.add(mesh);
 		playerGroupAxesHelper = new THREE.AxesHelper(8);
 		group.add(playerGroupAxesHelper);
-	
-		thePlayer = group;
+		
 		mesh = group;
 		mesh.position.set(-15, 1, -40);
 		mesh.originalColor = mesh.children[0].material; // this should only be temporary
-		
-		// save current position and rotation of the group and the aircraft mesh itself
-		let originalPositionGroup = new THREE.Vector3();
-		let originalPositionAircraft = new THREE.Vector3();
-		let originalRotationGroup = new THREE.Euler();
-		let originalRotationAircraft = new THREE.Euler();
-		
-		originalPositionGroup.copy(thePlayer.position);
-		originalRotationGroup.copy(thePlayer.rotation);
-		originalPositionAircraft.copy(thePlayer.children[0].position);
-		originalRotationAircraft.copy(thePlayer.children[0].rotation);
-		
-		//console.log(originalRotationAircraft);
-		//console.log(originalRotationGroup);
-		
-		state['originalPosition']['position'] = originalPositionGroup;
-		state['originalPosition']['rotation'] = originalRotationGroup;
-		state['originalPosition']['aircraftPosition'] = originalPositionAircraft;
-		state['originalPosition']['aircraftRotation'] = originalRotationAircraft;
-		
+
 		// alternate materials used for the sub depending on condition 
 		let hitMaterial = new THREE.MeshBasicMaterial({color: 0xff0000});
 		mesh.hitMaterial = hitMaterial;
 		mesh.originalMaterial = mesh.children[0].material;
-
-		animate();
+		
+		aircraftOptions[meshName] = mesh;
+		
+		if(meshName === "f18"){
+			
+			thePlayer = mesh;
+			
+			// save current position and rotation of the group and the aircraft mesh itself
+			let originalPositionGroup = new THREE.Vector3();
+			let originalPositionAircraft = new THREE.Vector3();
+			let originalRotationGroup = new THREE.Euler();
+			let originalRotationAircraft = new THREE.Euler();
+			
+			originalPositionGroup.copy(thePlayer.position);
+			originalRotationGroup.copy(thePlayer.rotation);
+			originalPositionAircraft.copy(thePlayer.children[0].position);
+			originalRotationAircraft.copy(thePlayer.children[0].rotation);
+			
+			//console.log(originalRotationAircraft);
+			//console.log(originalRotationGroup);
+			
+			state['originalPosition']['position'] = originalPositionGroup;
+			state['originalPosition']['rotation'] = originalRotationGroup;
+			state['originalPosition']['aircraftPosition'] = originalPositionAircraft;
+			state['originalPosition']['aircraftRotation'] = originalRotationAircraft;
+			
+			scene.add(mesh);
+			animate();
+		}
+	}else{
+		//mesh.castShadow = true;
+		//mesh.receiveShadow = true;
+		scene.add(mesh);
 	}
-
-	//mesh.castShadow = true;
-	mesh.receiveShadow = true;
-	scene.add(mesh);
 	renderer.render(scene, camera);
 }
 
@@ -289,10 +297,6 @@ document.addEventListener("keydown", (evt) => {
 
 			// reset rotation
 			let forwardZ = getForward(thePlayer.children[0]).z;
-			//console.log("aircraft mesh forward: " + forwardZ);
-
-			//let forwardZ2 = getForward(thePlayer).z;
-			//console.log("aircraft group forward: " + forwardZ2);
 
 			// THE Z ROTATIONS of the actual aircraft mesh and the group object it's in are opposite to each other
 			if(forwardZ < 0){
@@ -312,6 +316,19 @@ document.addEventListener("keydown", (evt) => {
 			state['mode'] = 'takeoff';
 		}
 	}
+	
+	// handle switching between aircraft choices
+	if(evt.keyCode === 49){
+		// 1 key
+		console.log("you're a f-18 now");
+	}else if(evt.keyCode === 50){
+		// 2 key
+		console.log("you're a f-16 now");
+	}else if(evt.keyCode === 51){
+		// 3 key
+		console.log("you're a f-35 now");
+	}
+	
 });
 
 document.addEventListener("keyup", (evt) => {
@@ -325,9 +342,8 @@ document.addEventListener("keyup", (evt) => {
 			}
 		}
 	}else if(evt.keyCode === 80){
-		// press P key to toggle smoke
+		// 'p' key to toggle smoke
 		state['smokeOn'] = !state['smokeOn'];
-		//console.log('smoke on? ' + state['smokeOn']);
 	}
 });
 
@@ -441,7 +457,7 @@ function update(){
 		state['speed'] = moveDistance;
 		
 		// start over at original position
-		if(state['altitude'] <= 0.0){
+		if(state['altitude'] < 1.0){
 			// since thePlayer is actually a group, we need to reset the position + rotation of the group 
 			// and the actual aircraft mesh, which is a child of the group.
 			resetPosition(state, thePlayer);
@@ -510,7 +526,8 @@ function update(){
 	// check for collision?
 	// check top, left, right, bottom, front, back? 
 	let hasCollision = checkCollision(thePlayer.children[0], raycaster);
-	if(hasCollision){
+	if(hasCollision || thePlayer.position.y < -1.0){
+		console.log("collision!");
 		thePlayer.children[0].material = thePlayer.hitMaterial;
 		
 		// crash - reset everything 
