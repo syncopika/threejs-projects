@@ -208,9 +208,6 @@ loadedModels.push(getModel('models/airbase-edit.gltf', 'airbase', 'bg'));
 let thePlayer = null;
 let theNpc = null;
 
-let bgAxesHelper;
-let playerAxesHelper;
-let playerGroupAxesHelper;
 let aircraftOptions = {};
 
 function processMesh(mesh){
@@ -221,12 +218,12 @@ function processMesh(mesh){
 		
 		// the local axis of the imported mesh is a bit weird and not consistent with the world axis. so, to fix that,
 		// put it in a group object and just control the group object! the mesh is also just oriented properly initially when placed in the group.
-		playerAxesHelper = new THREE.AxesHelper(10);
+		let playerAxesHelper = new THREE.AxesHelper(10);
 		mesh.add(playerAxesHelper);
 		
 		let group = new THREE.Group();
 		group.add(mesh);
-		playerGroupAxesHelper = new THREE.AxesHelper(8);
+		let playerGroupAxesHelper = new THREE.AxesHelper(8);
 		group.add(playerGroupAxesHelper);
 		
 		mesh = group;
@@ -263,7 +260,7 @@ function processMesh(mesh){
 			state['originalPosition']['aircraftPosition'] = originalPositionAircraft;
 			state['originalPosition']['aircraftRotation'] = originalRotationAircraft;
 			
-			scene.add(mesh);
+			scene.add(thePlayer);
 			animate();
 		}
 	}else{
@@ -318,15 +315,29 @@ document.addEventListener("keydown", (evt) => {
 	}
 	
 	// handle switching between aircraft choices
+	let selected = null;
 	if(evt.keyCode === 49){
 		// 1 key
-		console.log("you're a f-18 now");
+		//console.log("you're a f-18 now");
+		selected = aircraftOptions['f18'];
 	}else if(evt.keyCode === 50){
 		// 2 key
-		console.log("you're a f-16 now");
+		//console.log("you're a f-16 now");
+		selected = aircraftOptions['f16'];
 	}else if(evt.keyCode === 51){
 		// 3 key
-		console.log("you're a f-35 now");
+		//console.log("you're a f-35 now");
+		selected = aircraftOptions['f35'];
+	}
+	
+	if(selected){
+		selected.position.copy(thePlayer.position);
+		selected.rotation.copy(thePlayer.rotation);
+
+		scene.remove(thePlayer);
+		scene.add(selected);
+		
+		thePlayer = selected;
 	}
 	
 });
