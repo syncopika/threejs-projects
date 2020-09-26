@@ -163,8 +163,8 @@ scene.background = new THREE.Color(0xffffff);
 scene.add(camera);
 
 
-let pointLight = new THREE.PointLight(0xffffff, 1, 0); //new THREE.pointLight( 0xffffff );
-pointLight.position.set(0, 10, 25);
+let pointLight = new THREE.PointLight(0xffffff, 1, 0);
+pointLight.position.set(0, 10, -35);
 pointLight.castShadow = true;
 pointLight.shadow.mapSize.width = 512;
 pointLight.shadow.mapSize.height = 512;
@@ -173,15 +173,24 @@ pointLight.shadow.camera.far = 100;
 pointLight.shadow.camera.fov = 30;
 scene.add(pointLight);
 
+
+let hemiLight = new THREE.HemisphereLight(0xffffff);
+hemiLight.position.set(0, 100, 0);
+scene.add(hemiLight);
+
 const clock = new THREE.Clock();
 let sec = clock.getDelta();
 let moveDistance = 60 * sec;
 let rotationAngle = (Math.PI / 2) * sec;
 
 // need to keep some state 
-const state = {};
+const state = {
+	"movement": "idle"
+};
 
 let loadedModels = [];
+let animationMixer = null;
+let animationClips = null;
 
 function getModel(modelFilePath, side, name){
 	return new Promise((resolve, reject) => {
@@ -190,26 +199,27 @@ function getModel(modelFilePath, side, name){
 			function(gltf){
 				if(gltf.animations.length > 0){
 					console.log(gltf.animations);
+					animationClips = gltf.animations;
 				}
 				gltf.scene.traverse((child) => {
 					if(child.type === "Mesh" || child.type === "SkinnedMesh"){
-						//console.log("got a mesh");
+						
+						if(child.type === "SkinnedMesh"){
+							child.add(child.skeleton.bones[0]); 
+						}
 						
 						let material = child.material;
-						//console.log(material)
 						let geometry = child.geometry;
-						let obj = new THREE.Mesh(geometry, material);
+						//let obj = new THREE.Mesh(geometry, material);
+						obj = child;
 						
 						if(name === "bg"){
-							// TODO: having trouble scaling the runway :/
-							// for now use the ocean floor 
 							obj.scale.x = child.scale.x * 10;
 							obj.scale.y = child.scale.y * 10;
 							obj.scale.z = child.scale.z * 10;
 							//obj.rotateOnAxis(new THREE.Vector3(0,1,0), Math.PI);
 						}else{
-							// jet needs to be rotated 180 deg. -_-
-							obj.rotateOnAxis(new THREE.Vector3(0,1,0), Math.PI);
+							//obj.rotateOnAxis(new THREE.Vector3(0,1,0), Math.PI);
 						}
 						
 						obj.side = side; // player or enemy mesh?
@@ -238,7 +248,7 @@ function getModel(modelFilePath, side, name){
 // https://threejs.org/docs/#api/en/textures/Texture
 // create a mesh, apply ocean shader on it 
 loadedModels.push(getModel('models/oceanfloor.glb', 'none', 'bg'));
-loadedModels.push(getModel('models/low-poly-human-edit-rig2.glb', 'player', 'p1'));
+loadedModels.push(getModel('models/lowpolyhuman.gltf', 'player', 'p1'));
 
 let thePlayer = null;
 let theNpc = null;
@@ -250,33 +260,23 @@ let playerGroupAxesHelper;
 Promise.all(loadedModels).then((objects) => {
 	objects.forEach((mesh) => {
 		if(mesh.name === "bg"){
-			// runway
-			//mesh.position.set(0, -10, -50);
 			mesh.position.set(0, 0, 0);
-			bgAxesHelper = new THREE.AxesHelper(10);
-			mesh.add(bgAxesHelper);
 		}else if(mesh.name === "npc"){
 			// npcs?
 		}else{
-			// the local axis of the imported mesh is a bit weird and not consistent with the world axis. so, to fix that,
-			// put it in a group object and just control the group object! the mesh is also just orientated properly initially when placed in the group.
-			playerAxesHelper = new THREE.AxesHelper(10);
-			mesh.add(playerAxesHelper);
+			console.log(mesh);
+			thePlayer = mesh;
 			
-			var group = new THREE.Group();
-			group.add(mesh);
-			playerGroupAxesHelper = new THREE.AxesHelper(8);
-			group.add(playerGroupAxesHelper);
-			
-			thePlayer = group;
-			mesh = group;
-			mesh.position.set(0, 1, -50);
-			mesh.originalColor = group.children[0].material; // this should only be temporary
+			state['movement'] = 'idle';
+			animationMixer = new THREE.AnimationMixer(mesh);
+			mesh.position.set(0, 5, -50);
+			mesh.rotateOnAxis(new THREE.Vector3(0,1,0), Math.PI);
+			mesh.originalColor = mesh.material; // this should only be temporary
 			
 			// alternate materials used for the sub depending on condition 
 			var hitMaterial = new THREE.MeshBasicMaterial({color: 0xff0000});
 			mesh.hitMaterial = hitMaterial;
-			mesh.originalMaterial = mesh.children[0].material;
+			mesh.originalMaterial = mesh.material;
 
 			animate();
 		}
@@ -287,6 +287,23 @@ Promise.all(loadedModels).then((objects) => {
 		renderer.render(scene, camera);
 	})
 });
+
+function updateCurrentAction(state, animationMixer, time){
+	var movement = state['movement'];
+	if(movement === "idle"){
+		var idleAction = animationMixer.clipAction(animationClips[0]);
+		idleAction.setLoop(THREE.LoopRepeat);
+		idleAction.play();
+	}else if(movement === 'walk'){
+		// don't do this here
+		var walkAction = animationMixer.clipAction(animationClips[1]);
+		walkAction.setLoop(THREE.LoopRepeat);
+		walkAction.play();		
+	}else if(movement === 'run'){
+		// don't do this here
+	}
+	animationMixer.update(time/2);
+}
 
 
 let lastTime = clock.getDelta();
@@ -303,11 +320,15 @@ function update(){
 	if(keyboard.pressed("W")){
 		// note that this gets called several times with one key press!
 		// I think it's because update() in requestAnimationFrames gets called quite a few times per second
-		thePlayer.translateZ(-moveDistance);
+		state['movement'] = 'walk';
+		thePlayer.translateZ(moveDistance);
+	}else{
+		state['movement'] = 'idle';
 	}
 	
+	
 	if(keyboard.pressed("S")){
-		thePlayer.translateZ(moveDistance);
+		thePlayer.translateZ(-moveDistance);
 	}
 	
 	if(keyboard.pressed("A")){
@@ -320,51 +341,38 @@ function update(){
 		thePlayer.rotateOnAxis(axis, -rotationAngle);
 	}
 	
-	if(keyboard.pressed("Q") && thePlayer.position.y > 6.0){
+	if(keyboard.pressed("Q")){
 		// notice we're not rotating about the group mesh, but the child 
 		// mesh of the group, which is actually the jet mesh!
 		// if you try to move in all sorts of directions, after a while
 		// the camera gets off center and axes seem to get messed up :/
 		var axis = new THREE.Vector3(0, 0, 1);
-		thePlayer.children[0].rotateOnAxis(axis, -rotationAngle);
-	}
-	
-	if(keyboard.pressed("E") && thePlayer.position.y > 6.0){
-		var axis = new THREE.Vector3(0, 0, 1);
-		thePlayer.children[0].rotateOnAxis(axis, rotationAngle);
-	}
-	
-	if(keyboard.pressed("up")){
-		// rotate up (note that we're rotating on the mesh's axis. its axes might be configured weird)
-		// the forward vector for the mesh might be backwards and perpendicular to the front of the sub
-		// up arrow key
-		// NEED TO CLAMP ANGLE
-		var axis = new THREE.Vector3(1, 0, 0);
-		thePlayer.rotateOnAxis(axis, rotationAngle);
-	}
-	
-	if(keyboard.pressed("down")){
-		// down arrow key
-		// CLAMP ANGLE!
-		var axis = new THREE.Vector3(1, 0, 0);
 		thePlayer.rotateOnAxis(axis, -rotationAngle);
 	}
 	
-	// check for collision?
-	// check top, left, right, bottom, front, back? 
-	var hasCollision = checkCollision(thePlayer.children[0], raycaster);
-	if(hasCollision){
-		thePlayer.children[0].material = thePlayer.hitMaterial;
-	}else{
-		thePlayer.children[0].material = thePlayer.originalMaterial;
+	if(keyboard.pressed("E")){
+		var axis = new THREE.Vector3(0, 0, 1);
+		thePlayer.rotateOnAxis(axis, rotationAngle);
 	}
+	
+	/* check for collision?
+	// check top, left, right, bottom, front, back? 
+	var hasCollision = checkCollision(thePlayer, raycaster);
+	if(hasCollision){
+		thePlayer.material = thePlayer.hitMaterial;
+	}else{
+		thePlayer.material = thePlayer.originalMaterial;
+	}*/
+	
+	// update character motion
+	updateCurrentAction(state, animationMixer, sec);
 	
 	// how about first-person view?
 	var relCameraOffset;
 	if(!changeCameraView){
-		relCameraOffset = new THREE.Vector3(0, 3, 15);
-	}else{
 		relCameraOffset = new THREE.Vector3(0, 3, -15);
+	}else{
+		relCameraOffset = new THREE.Vector3(0, 3, 15);
 	}
 	
 	var cameraOffset = relCameraOffset.applyMatrix4(thePlayer.matrixWorld);
