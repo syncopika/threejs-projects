@@ -9,6 +9,9 @@
 			font-family: monospace;
 			margin-left: 2%;
 		}
+		.row {
+			display: flex;
+		}
 	</style>
 </head>
 
@@ -18,23 +21,31 @@
 	<p> <a href='https://github.com/syncopika/threejs-projects'>source</a> </p>
 	<br />
 	
-	<h3><a href='super_submarine/index.html'> super submarine </a></h3>
-	<p> You are a submarine tasked with providing underwater reconnaissance for the mother ship! <br /><br />
-		Survey the ocean floor to disarm dangerous things, as well as recover potentially useful things!
-	</p>
-	<img src='super_submarine/submarine_demo.gif' width='40%' height='30%' />
+	<div id='row1' class='row'>
 	
-	<br />
+		<div id='sub' class='project'>
+			<h3><a href='super_submarine/index.html'> super submarine </a></h3>
+			<p> You are a submarine tasked with providing underwater reconnaissance for the mother ship! <br /><br />
+				Survey the ocean floor to disarm dangerous things, as well as recover potentially useful things!
+			</p>
+			<img src='super_submarine/submarine_demo.gif' width='70%' height='70%' />
+		</div>
+		
+		<div id='airshow' class='project'>
+			<h3><a href='airshow/index.html'> airshow </a></h3>
+			<p> Fly a jet! </p>
+			<img src='airshow/airshow_demo.gif' width='78%' height='78%' />
+		</div>
 	
-	<h3><a href='airshow/index.html'> airshow </a></h3>
-	<p> Fly a jet! </p>
-	<img src='airshow/airshow_demo.gif' width='40%' height='30%' />
-	
-	<br />
-	
-	<h3><a href='character_demo/index.html'> character movement </a></h3>
-	<p> move a low poly human around </p>
-	<img src='character_demo/character_demo.gif' width='40%' height='30%' />
+	</div>
+
+	<div id='row2' class='row'>
+		<div class='project'>
+			<h3><a href='character_demo/index.html'> character movement </a></h3>
+			<p> move a low poly human around </p>
+			<img src='character_demo/character_demo.gif' width='70%' height='70%' style='border: 1px solid #000' />
+		</div>
+	</div>
 	
 </body>
 
