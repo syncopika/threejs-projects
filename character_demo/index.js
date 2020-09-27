@@ -200,12 +200,10 @@ Promise.all(loadedModels).then((objects) => {
 	})
 });
 
-
 function updateCurrentAction(state, animationMixer, time){
 	
 	if(!state['isMoving']){
 		//animationMixer.stopAllAction();
-		state['movement'] = 'idle';
 		animationMixer.timeScale = 1;
 		
 		for(var i = 1; i < animationClips.length; i++){
@@ -222,11 +220,20 @@ function updateCurrentAction(state, animationMixer, time){
 		var movement = state['movement'];
 		
 		if(movement === 'walk'){
+			// make sure idle and running is stopped 
+			animationMixer.clipAction(animationClips[0]).stop();
+			animationMixer.clipAction(animationClips[1]).stop();
+			
 			var walkAction = animationMixer.clipAction(animationClips[2]);
 			walkAction.setLoop(THREE.LoopRepeat);
 			walkAction.play();
 			animationMixer.update(time/1.5);
+			
 		}else if(movement === 'run'){
+			// make sure idle and walking is stopped
+			animationMixer.clipAction(animationClips[0]).stop();
+			animationMixer.clipAction(animationClips[2]).stop();
+			
 			var runAction = animationMixer.clipAction(animationClips[1]);
 			runAction.setLoop(THREE.LoopRepeat);
 			runAction.play();
@@ -264,12 +271,47 @@ function adjustVerticalHeightBasedOnTerrain(thePlayer, raycaster, scene){
 	}
 }
 
-document.addEventListener("keydown", (evt) => {
-	if(evt.keyCode === 20){
-		// caps lock
-		// toggle between walk and run
+function moveBasedOnState(state, thePlayer, speed, reverse){
+	state['isMoving'] = true;
+	var action = state['movement'];
+	
+	if(action === 'idle'){
+		action = 'walk';
+		state['movement'] = 'walk';
 	}
-});
+	
+	if(action === 'walk' || action === 'run'){
+		if(reverse){
+			animationMixer.timeScale = -1;
+			thePlayer.translateZ(-speed);
+		}else{
+			animationMixer.timeScale = 1;
+			thePlayer.translateZ(speed);
+		}
+	}
+}
+
+function turnOnRun(evt){
+	if(evt.keyCode === 16){
+		// shift key
+		// toggle between walk and run while moving
+		if(state['movement'] === 'walk'){
+			state['movement'] = 'run';
+			//console.log("running...");
+		}
+	}
+}
+
+function turnOffRun(evt){
+	if(evt.keyCode === 16){
+		if(state['movement'] === 'run'){
+			state['movement'] = 'walk';
+		}
+	}
+}
+
+document.addEventListener("keydown", turnOnRun);
+document.addEventListener("keyup", turnOffRun);
 
 
 var lastTime = clock.getDelta();
@@ -279,32 +321,30 @@ function update(){
 	rotationAngle = (Math.PI / 2) * sec;
 	var changeCameraView = false;
 	
-	if(keyboard.pressed("shift")){
+	if(keyboard.pressed("z")){
 		changeCameraView = true;
 	}
 	
 	if(keyboard.pressed("W")){
 		// note that this gets called several times with one key press!
 		// I think it's because update() in requestAnimationFrames gets called quite a few times per second
-		state['movement'] = 'walk';
-		state['isMoving'] = true;
-		animationMixer.timeScale = 1;
-		thePlayer.translateZ(moveDistance);
+		
+		moveBasedOnState(state, thePlayer, moveDistance, false);
 		
 		// adjust player's vertical position based on terrain height
 		adjustVerticalHeightBasedOnTerrain(thePlayer, raycaster, scene);
 	}
 	
 	if(keyboard.pressed("S")){
-		state['movement'] = 'walk';
-		state['isMoving'] = true;
-		animationMixer.timeScale = -1;
-		thePlayer.translateZ(-moveDistance);
+		
+		moveBasedOnState(state, thePlayer, moveDistance, true);
+		
 		adjustVerticalHeightBasedOnTerrain(thePlayer, raycaster, scene);
 	}
 	
 	if(!keyboard.pressed("W") && !keyboard.pressed("S")){
 		state['isMoving'] = false;
+		state['movement'] = 'idle';
 	}
 	
 	if(keyboard.pressed("A")){
