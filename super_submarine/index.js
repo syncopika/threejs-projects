@@ -4,7 +4,7 @@
 
 // check if spotlight hits the dangerous capsule or the sunken ship
 // source = position of source obj, dir = direction vector
-function checkGoalObjectHit(source, dir, raycaster){
+function checkGoalObjectHit(source, dir, raycaster, scene){
 	raycaster.set(source, dir);
 	let intersects = raycaster.intersectObjects(scene.children);
 	for(let i = 0; i < intersects.length; i++){
@@ -482,7 +482,7 @@ function update(){
 		let source = spotlight.position;
 		let target = spotlight.target.position;
 		let dir = (new THREE.Vector3(target.x - source.x, target.y - source.y, target.z - source.z)).normalize();
-		let goalObjectHit = checkGoalObjectHit(source, dir, raycaster);
+		let goalObjectHit = checkGoalObjectHit(source, dir, raycaster, scene);
 		if(goalObjectHit){
 			if(goalObjectHit.name === "goalObject"){
 				let capsuleHit = goalObjectHit;
@@ -637,7 +637,7 @@ function update(){
 	
 	// check for collision?
 	// check top, left, right, bottom, front, back? 
-	let hasCollision = checkCollision(thePlayer.children[0], raycaster);
+	let hasCollision = checkCollision(thePlayer.children[0], raycaster, scene);
 	if(!thePlayer.isCollided && hasCollision){
 		thePlayer.children[0].material = thePlayer.hitMaterial;
 

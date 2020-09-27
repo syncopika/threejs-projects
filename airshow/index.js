@@ -536,7 +536,7 @@ function update(){
 	
 	// check for collision?
 	// check top, left, right, bottom, front, back? 
-	let hasCollision = checkCollision(thePlayer.children[0], raycaster);
+	let hasCollision = checkCollision(thePlayer.children[0], raycaster, scene);
 	if(hasCollision || thePlayer.position.y < -1.0){
 		console.log("collision!");
 		thePlayer.children[0].material = thePlayer.hitMaterial;

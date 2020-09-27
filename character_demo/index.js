@@ -1,106 +1,4 @@
-
-
-//https://stackoverflow.com/questions/38305408/threejs-get-center-of-object
-function getCenter(mesh){
-	var mid = new THREE.Vector3();
-	var geometry = mesh.geometry;
-	
-	geometry.computeBoundingBox();
-	mid.x = (geometry.boundingBox.max.x + geometry.boundingBox.min.x)/2;
-	mid.y = (geometry.boundingBox.max.y + geometry.boundingBox.min.y)/2;
-	mid.z = (geometry.boundingBox.max.z + geometry.boundingBox.min.z)/2;
-	
-	mesh.localToWorld(mid);
-	return mid;
-}
-
-// https://stackoverflow.com/questions/14813902/three-js-get-the-direction-in-which-the-camera-is-looking
-// https://stackoverflow.com/questions/25224153/how-can-i-get-the-normalized-vector-of-the-direction-an-object3d-is-facing
-function getForward(mesh){
-	var forwardVec = new THREE.Vector3();
-	mesh.getWorldDirection(forwardVec);	
-	return forwardVec;
-}
-
-function checkCollision(mesh, raycaster){
-	var top = new THREE.Vector3(0, 1, 0);
-	var bottom = new THREE.Vector3(0, -1, 0);
-	var left = new THREE.Vector3(-1, 0, 0);
-	var right = new THREE.Vector3(1, 0, 0);
-	var front = new THREE.Vector3(0, 0, -1);
-	var back = new THREE.Vector3(0, 0, 1);
-	var dirToCheck = [
-		top,
-		bottom,
-		left,
-		right,
-		front,
-		back
-	];
-	var objCenter = getCenter(mesh);
-	
-	for(var i = 0; i < dirToCheck.length; i++){
-		var dir = dirToCheck[i];
-		raycaster.set(objCenter, dir);
-		var intersects = raycaster.intersectObjects(scene.children);
-		for(var j = 0; j < intersects.length; j++){
-			if(objCenter.distanceTo(intersects[j].point) < 1.0){
-				//console.log("object collided! direction: " + dir.x + ", " + dir.y + ", " + dir.z);
-				return true;
-			}
-		}
-	}
-	return false;
-}
-
-
-function drawForwardVector(mesh){
-	
-	var forwardVec = getForward(mesh);
-	
-	// create a vector
-	var point1 = getCenter(mesh); //new THREE.Vector3(forwardVec.x, forwardVec.y, forwardVec.z);
-	var point2 = new THREE.Vector3(forwardVec.x, forwardVec.y, forwardVec.z); 
-	point2.multiplyScalar(2);
-	
-	var points = [point1, point2];
-	
-	var material = new THREE.LineBasicMaterial({color: 0x0000ff});
-	var geometry = new THREE.BufferGeometry().setFromPoints(points);
-	var line = new THREE.Line(geometry, material);
-	scene.add(line);
-}
-
-// create a general progress bar
-function createProgressBar(name, barColor, filled=false){
-	let loadingBarContainer = document.createElement("div");
-	let loadingBar = document.createElement("div");
-	
-	loadingBarContainer.id = name + 'BarContainer';
-	loadingBarContainer.style.width = '200px';
-	loadingBarContainer.style.backgroundColor = '#fff';
-	loadingBarContainer.style.height = '20px';
-	loadingBarContainer.style.textAlign = 'center';
-	loadingBarContainer.style.position = 'absolute';
-	loadingBarContainer.style.zIndex = 100;
-	
-	loadingBar.id = name + "Bar";
-	
-	if(filled){
-		loadingBar.style.width = '200px';
-	}else{
-		loadingBar.style.width = '0px';
-	}
-	
-	loadingBar.style.height = '20px';
-	loadingBar.style.zIndex = 100;
-	loadingBar.style.backgroundColor = barColor; //"#00ff00";
-	
-	loadingBarContainer.appendChild(loadingBar);
-	return loadingBarContainer;
-}
-
-
+// helpful? https://docs.panda3d.org/1.10/python/programming/pandai/pathfinding/uneven-terrain
 
 // https://github.com/evanw/webgl-water
 // https://github.com/donmccurdy/three-gltf-viewer/blob/master/src/viewer.js
@@ -111,8 +9,6 @@ const keyboard = new THREEx.KeyboardState();
 const container = document.querySelector('#container');
 const raycaster = new THREE.Raycaster();
 const loadingManager = new THREE.LoadingManager();
-
-
 
 
 // https://stackoverflow.com/questions/35575065/how-to-make-a-loading-screen-in-three-js
@@ -164,18 +60,18 @@ scene.add(camera);
 
 
 let pointLight = new THREE.PointLight(0xffffff, 1, 0);
-pointLight.position.set(0, 10, -35);
+pointLight.position.set(0, 20, -25);
 pointLight.castShadow = true;
-pointLight.shadow.mapSize.width = 512;
-pointLight.shadow.mapSize.height = 512;
+pointLight.shadow.mapSize.width = 0;
+pointLight.shadow.mapSize.height = 0;
 pointLight.shadow.camera.near = 10;
 pointLight.shadow.camera.far = 100;
-pointLight.shadow.camera.fov = 30;
+pointLight.shadow.camera.fov = 70;
 scene.add(pointLight);
 
 
 let hemiLight = new THREE.HemisphereLight(0xffffff);
-hemiLight.position.set(0, 100, 0);
+hemiLight.position.set(0, 50, 0);
 scene.add(hemiLight);
 
 const clock = new THREE.Clock();
@@ -185,7 +81,8 @@ let rotationAngle = (Math.PI / 2) * sec;
 
 // need to keep some state 
 const state = {
-	"movement": "idle"
+	"movement": "idle",
+	"isMoving": false
 };
 
 let loadedModels = [];
@@ -210,7 +107,6 @@ function getModel(modelFilePath, side, name){
 						
 						let material = child.material;
 						let geometry = child.geometry;
-						//let obj = new THREE.Mesh(geometry, material);
 						obj = child;
 						
 						if(name === "bg"){
@@ -252,7 +148,7 @@ loadedModels.push(getModel('models/lowpolyhuman.gltf', 'player', 'p1'));
 
 let thePlayer = null;
 let theNpc = null;
-
+let terrain = null;
 let bgAxesHelper;
 let playerAxesHelper;
 let playerGroupAxesHelper;
@@ -261,20 +157,37 @@ Promise.all(loadedModels).then((objects) => {
 	objects.forEach((mesh) => {
 		if(mesh.name === "bg"){
 			mesh.position.set(0, 0, 0);
+			mesh.receiveShadow = true;
+			terrain = mesh;
 		}else if(mesh.name === "npc"){
 			// npcs?
 		}else{
 			console.log(mesh);
 			thePlayer = mesh;
 			
+			// add a 3d object to serve as a marker for the 
+			// location of the head of the mesh. we'll use this to 
+			// create a vertical ray towards the ground
+			// this ray can tell us the current height.
+			// if the height is < the height of our character,
+			// we know that we're on an uphill part of the terrain 
+			// and can adjust our character accordingly
+			// similarly, if the height is > the character height, we're going downhill
+			let cubeGeometry = new THREE.BoxGeometry(1,1,1);
+			let material = new THREE.MeshBasicMaterial({color: 0x00ff00});
+			let head = new THREE.Mesh(cubeGeometry, material); //new THREE.Object3D();
+			mesh.add(head);
+			mesh.head = head;
+			head.position.set(0, 4, 0);
+			
 			state['movement'] = 'idle';
 			animationMixer = new THREE.AnimationMixer(mesh);
-			mesh.position.set(0, 5, -50);
+			mesh.position.set(0, 4.8, -30);
 			mesh.rotateOnAxis(new THREE.Vector3(0,1,0), Math.PI);
 			mesh.originalColor = mesh.material; // this should only be temporary
 			
 			// alternate materials used for the sub depending on condition 
-			var hitMaterial = new THREE.MeshBasicMaterial({color: 0xff0000});
+			let hitMaterial = new THREE.MeshBasicMaterial({color: 0xff0000});
 			mesh.hitMaterial = hitMaterial;
 			mesh.originalMaterial = mesh.material;
 
@@ -288,28 +201,68 @@ Promise.all(loadedModels).then((objects) => {
 	})
 });
 
+
+/*
+function getDownVector(anchorCoord){
+	return new THREE.Vector3(anchorCoord.x, anchorCoord.y - 10, anchorCoord.z);
+}*/
+
+
 function updateCurrentAction(state, animationMixer, time){
-	var movement = state['movement'];
-	if(movement === "idle"){
+	
+	if(!state['isMoving']){
+		//animationMixer.stopAllAction();
+		state['movement'] = 'idle';
+		animationMixer.timeScale = 1;
+		
+		for(var i = 1; i < animationClips.length; i++){
+			// stop all the non-idle motion clips
+			animationMixer.clipAction(animationClips[i]).stop();
+		}
+
 		var idleAction = animationMixer.clipAction(animationClips[0]);
 		idleAction.setLoop(THREE.LoopRepeat);
 		idleAction.play();
-	}else if(movement === 'walk'){
-		// don't do this here
-		var walkAction = animationMixer.clipAction(animationClips[1]);
-		walkAction.setLoop(THREE.LoopRepeat);
-		walkAction.play();		
-	}else if(movement === 'run'){
-		// don't do this here
+		animationMixer.update(time/2.5);
+	}else{
+	
+		var movement = state['movement'];
+		
+		if(movement === 'walk'){
+			var walkAction = animationMixer.clipAction(animationClips[2]);
+			walkAction.setLoop(THREE.LoopRepeat);
+			walkAction.play();
+			animationMixer.update(time/1.5);
+		}else if(movement === 'run'){
+			// TODO
+		}
 	}
-	animationMixer.update(time/2);
+}
+
+function checkTerrainHeight(objCenter, raycaster, scene){
+	var intersects = raycaster.intersectObject(terrain);
+	raycaster.set(objCenter, new THREE.Vector3(0, -1, 0));
+	for(var i = 0; i < intersects.length; i++){
+		var height = objCenter.distanceTo(intersects[i].point);
+		if(height < 1.0){
+			// height is less than the height of the character so we're going uphill
+			//console.log("object collided! direction: " + dir.x + ", " + dir.y + ", " + dir.z);
+			console.log("going uphill");
+			return 1;
+		}else if(height > 1.0){
+			// height is greater than the height of the character so we're going downhill
+			console.log("going downhill");
+			return -1;
+		}
+	}
+	return 0;
 }
 
 
-let lastTime = clock.getDelta();
+var lastTime = clock.getDelta();
 function update(){
 	sec = clock.getDelta();
-	moveDistance = 20 * sec;
+	moveDistance = 8* sec;
 	rotationAngle = (Math.PI / 2) * sec;
 	var changeCameraView = false;
 	
@@ -321,14 +274,25 @@ function update(){
 		// note that this gets called several times with one key press!
 		// I think it's because update() in requestAnimationFrames gets called quite a few times per second
 		state['movement'] = 'walk';
+		state['isMoving'] = true;
+		animationMixer.timeScale = 1;
 		thePlayer.translateZ(moveDistance);
-	}else{
-		state['movement'] = 'idle';
+		
+		// check terrain height
+		var head = getCenter(thePlayer.head);
+		checkTerrainHeight(head, raycaster, scene);
+		
 	}
 	
-	
 	if(keyboard.pressed("S")){
+		state['movement'] = 'walk';
+		state['isMoving'] = true;
+		animationMixer.timeScale = -1;
 		thePlayer.translateZ(-moveDistance);
+	}
+	
+	if(!keyboard.pressed("W") && !keyboard.pressed("S")){
+		state['isMoving'] = false;
 	}
 	
 	if(keyboard.pressed("A")){
