@@ -1,4 +1,4 @@
-testing character animations with a low-poly humanoid
+testing character animations/movement with a low-poly humanoid
 
 having trouble with the imported mesh :'(
 https://stackoverflow.com/questions/42886821/blender-exported-json-model-shows-wrong-animations-in-three-js
@@ -6,3 +6,11 @@ https://stackoverflow.com/questions/42886821/blender-exported-json-model-shows-w
 outdated but maybe still useful: https://unboring.net/workflows/animation.html
 
 this is so helpful :'): https://gltf-viewer.donmccurdy.com/
+
+when using animations in threejs, make sure to attach the root bone to the skinned mesh, otherwise everything will be weird.
+i.e. if child.type === "SkinnedMesh" -> child.add(child.skeleton.bones[0])
+
+handling uneven terrain movement (panda3d looks like a good resource to learn a bunch of other things as well):
+https://docs.panda3d.org/1.10/python/programming/pandai/pathfinding/uneven-terrain
+
+ 

@@ -534,8 +534,7 @@ function update(){
 		thePlayer.rotateOnAxis(axis, -rotationAngle);
 	}
 	
-	// check for collision?
-	// check top, left, right, bottom, front, back? 
+	// check for collision
 	let hasCollision = checkCollision(thePlayer.children[0], raycaster, scene);
 	if(hasCollision || thePlayer.position.y < -1.0){
 		console.log("collision!");

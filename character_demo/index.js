@@ -1,4 +1,3 @@
-// helpful? https://docs.panda3d.org/1.10/python/programming/pandai/pathfinding/uneven-terrain
 
 // https://github.com/evanw/webgl-water
 // https://github.com/donmccurdy/three-gltf-viewer/blob/master/src/viewer.js
@@ -173,9 +172,9 @@ Promise.all(loadedModels).then((objects) => {
 			// we know that we're on an uphill part of the terrain 
 			// and can adjust our character accordingly
 			// similarly, if the height is > the character height, we're going downhill
-			let cubeGeometry = new THREE.BoxGeometry(1,1,1);
+			let cubeGeometry = new THREE.BoxGeometry(0.2,0.2,0.2);
 			let material = new THREE.MeshBasicMaterial({color: 0x00ff00});
-			let head = new THREE.Mesh(cubeGeometry, material); //new THREE.Object3D();
+			let head = new THREE.Mesh(cubeGeometry, material); 
 			mesh.add(head);
 			mesh.head = head;
 			head.position.set(0, 4, 0);
@@ -184,7 +183,7 @@ Promise.all(loadedModels).then((objects) => {
 			animationMixer = new THREE.AnimationMixer(mesh);
 			mesh.position.set(0, 4.8, -30);
 			mesh.rotateOnAxis(new THREE.Vector3(0,1,0), Math.PI);
-			mesh.originalColor = mesh.material; // this should only be temporary
+			mesh.originalColor = mesh.material;
 			
 			// alternate materials used for the sub depending on condition 
 			let hitMaterial = new THREE.MeshBasicMaterial({color: 0xff0000});
@@ -200,12 +199,6 @@ Promise.all(loadedModels).then((objects) => {
 		renderer.render(scene, camera);
 	})
 });
-
-
-/*
-function getDownVector(anchorCoord){
-	return new THREE.Vector3(anchorCoord.x, anchorCoord.y - 10, anchorCoord.z);
-}*/
 
 
 function updateCurrentAction(state, animationMixer, time){
@@ -234,35 +227,55 @@ function updateCurrentAction(state, animationMixer, time){
 			walkAction.play();
 			animationMixer.update(time/1.5);
 		}else if(movement === 'run'){
-			// TODO
+			var runAction = animationMixer.clipAction(animationClips[1]);
+			runAction.setLoop(THREE.LoopRepeat);
+			runAction.play();
+			animationMixer.update(time/1.1);
 		}
 	}
 }
 
+// thanks to: https://docs.panda3d.org/1.10/python/programming/pandai/pathfinding/uneven-terrain
 function checkTerrainHeight(objCenter, raycaster, scene){
 	var intersects = raycaster.intersectObject(terrain);
 	raycaster.set(objCenter, new THREE.Vector3(0, -1, 0));
 	for(var i = 0; i < intersects.length; i++){
 		var height = objCenter.distanceTo(intersects[i].point);
-		if(height < 1.0){
-			// height is less than the height of the character so we're going uphill
-			//console.log("object collided! direction: " + dir.x + ", " + dir.y + ", " + dir.z);
-			console.log("going uphill");
-			return 1;
-		}else if(height > 1.0){
-			// height is greater than the height of the character so we're going downhill
-			console.log("going downhill");
-			return -1;
-		}
+		//console.log(height);
+		document.getElementById('height').textContent = ("current height: " + height);
+		return height;
 	}
 	return 0;
 }
+
+function adjustVerticalHeightBasedOnTerrain(thePlayer, raycaster, scene){
+	// for now I'm hardcoding the expected height at level terrain 
+	var baseline = 8.8;
+	var head = getCenter(thePlayer.head);
+	var verticalDirection = checkTerrainHeight(head, raycaster, scene);
+	if(verticalDirection < 8.79){
+		// go uphill so increase y
+		var deltaY = baseline - verticalDirection;
+		thePlayer.position.y += deltaY;
+	}else if(verticalDirection > 8.81){
+		// go downhil so decrease y
+		var deltaY = verticalDirection - baseline;
+		thePlayer.position.y -= deltaY;
+	}
+}
+
+document.addEventListener("keydown", (evt) => {
+	if(evt.keyCode === 20){
+		// caps lock
+		// toggle between walk and run
+	}
+});
 
 
 var lastTime = clock.getDelta();
 function update(){
 	sec = clock.getDelta();
-	moveDistance = 8* sec;
+	moveDistance = 8 * sec;
 	rotationAngle = (Math.PI / 2) * sec;
 	var changeCameraView = false;
 	
@@ -278,10 +291,8 @@ function update(){
 		animationMixer.timeScale = 1;
 		thePlayer.translateZ(moveDistance);
 		
-		// check terrain height
-		var head = getCenter(thePlayer.head);
-		checkTerrainHeight(head, raycaster, scene);
-		
+		// adjust player's vertical position based on terrain height
+		adjustVerticalHeightBasedOnTerrain(thePlayer, raycaster, scene);
 	}
 	
 	if(keyboard.pressed("S")){
@@ -289,6 +300,7 @@ function update(){
 		state['isMoving'] = true;
 		animationMixer.timeScale = -1;
 		thePlayer.translateZ(-moveDistance);
+		adjustVerticalHeightBasedOnTerrain(thePlayer, raycaster, scene);
 	}
 	
 	if(!keyboard.pressed("W") && !keyboard.pressed("S")){
@@ -305,6 +317,7 @@ function update(){
 		thePlayer.rotateOnAxis(axis, -rotationAngle);
 	}
 	
+	/*
 	if(keyboard.pressed("Q")){
 		// notice we're not rotating about the group mesh, but the child 
 		// mesh of the group, which is actually the jet mesh!
@@ -317,7 +330,7 @@ function update(){
 	if(keyboard.pressed("E")){
 		var axis = new THREE.Vector3(0, 0, 1);
 		thePlayer.rotateOnAxis(axis, rotationAngle);
-	}
+	}*/
 	
 	/* check for collision?
 	// check top, left, right, bottom, front, back? 
