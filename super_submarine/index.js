@@ -264,6 +264,7 @@ Promise.all(loadedModels).then((objects) => {
 			meshMirror.add(water);
 			meshMirror.rotation.x = -Math.PI * 0.5;
 			meshMirror.position.y = 28;
+			meshMirror.name = "water";
 			
 			scene.add(meshMirror);
 			
@@ -373,6 +374,7 @@ Promise.all(loadedModels).then((objects) => {
 
 
 let lastTime = clock.getDelta();
+let hitSurface = false; // if the sub reaches the surface of the water
 function update(){
 	
 	sec = clock.getDelta();
@@ -416,11 +418,25 @@ function update(){
 	if(keyboard.pressed("W")){
 		// note that this gets called several times with one key press!
 		// I think it's because update() in requestAnimationFrames gets called quite a few times per second
-		thePlayer.translateZ(-moveDistance);
+		if(!(thePlayer.position.y >= 27 && thePlayer.rotation.x >= .45)){
+			// as long as the player is under or equal to a y-position of 27 and 
+			// their x-rotation (the angle of the submarine nose) is under 45 radians, allow forward movement
+			thePlayer.translateZ(-moveDistance);
+		}
+		
+		if(thePlayer.position.y > 27){
+			// ensure that the highest the sub can go is 27.5
+			thePlayer.position.y = 27;
+		}
 	}
 	
 	if(keyboard.pressed("S")){
-		thePlayer.translateZ(moveDistance);
+		if(thePlayer.position.y <= 24){
+			thePlayer.translateZ(moveDistance);
+		}
+		if(thePlayer.position.y > 24){
+			thePlayer.position.y = 24;
+		}
 	}
 	
 	if(keyboard.pressed("A")){
@@ -449,8 +465,10 @@ function update(){
 		// the forward vector for the mesh might be backwards and perpendicular to the front of the sub
 		// up arrow key
 		// NEED TO CLAMP ANGLE
-		let axis = new THREE.Vector3(1, 0, 0);
-		thePlayer.rotateOnAxis(axis, rotationAngle);
+		if(thePlayer.position.y < 27){
+			let axis = new THREE.Vector3(1, 0, 0);
+			thePlayer.rotateOnAxis(axis, rotationAngle);
+		}
 	}
 	
 	if(keyboard.pressed("down")){
@@ -638,7 +656,8 @@ function update(){
 	// check for collision?
 	// check top, left, right, bottom, front, back? 
 	let hasCollision = checkCollision(thePlayer.children[0], raycaster, scene);
-	if(!thePlayer.isCollided && hasCollision){
+	if(!thePlayer.isCollided && hasCollision && hasCollision.name !== "water"){
+		
 		thePlayer.children[0].material = thePlayer.hitMaterial;
 
 		// decrement player health

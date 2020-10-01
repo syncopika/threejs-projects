@@ -94,14 +94,22 @@ function getModel(modelFilePath, side, name){
 			modelFilePath,
 			function(gltf){
 				if(gltf.animations.length > 0){
-					console.log(gltf.animations);
-					animationClips = gltf.animations;
+					let clips = {};
+					gltf.animations.forEach((action) => {
+						let name = action['name'].toLowerCase();
+						name = name.substring(0, name.length - 1);
+						clips[name] = action;
+					});
+					animationClips = clips;
 				}
 				gltf.scene.traverse((child) => {
 					if(child.type === "Mesh" || child.type === "SkinnedMesh"){
 						
 						if(child.type === "SkinnedMesh"){
-							child.add(child.skeleton.bones[0]); 
+							child.add(child.skeleton.bones[0]);
+							child.scale.x *= .3;
+							child.scale.y *= .3;
+							child.scale.z *= .3;
 						}
 						
 						let material = child.material;
@@ -117,11 +125,8 @@ function getModel(modelFilePath, side, name){
 							//obj.rotateOnAxis(new THREE.Vector3(0,1,0), Math.PI);
 						}
 						
-						obj.side = side; // player or enemy mesh?
 						obj.name = name;
 						resolve(obj);
-					}else{
-						//console.log(child.type);
 					}
 				});
 			},
@@ -143,7 +148,7 @@ function getModel(modelFilePath, side, name){
 // https://threejs.org/docs/#api/en/textures/Texture
 // create a mesh, apply ocean shader on it 
 loadedModels.push(getModel('models/oceanfloor.glb', 'none', 'bg'));
-loadedModels.push(getModel('models/lowpolyhuman.gltf', 'player', 'p1'));
+loadedModels.push(getModel('models/low-poly-human.gltf', 'player', 'p1'));
 
 let thePlayer = null;
 let theNpc = null;
@@ -181,7 +186,8 @@ Promise.all(loadedModels).then((objects) => {
 			
 			state['movement'] = 'idle';
 			animationMixer = new THREE.AnimationMixer(mesh);
-			mesh.position.set(0, 4.8, -30);
+			mesh.position.set(0, 2.8, -10);
+
 			mesh.rotateOnAxis(new THREE.Vector3(0,1,0), Math.PI);
 			mesh.originalColor = mesh.material;
 			
@@ -203,38 +209,54 @@ Promise.all(loadedModels).then((objects) => {
 function updateCurrentAction(state, animationMixer, time){
 	
 	if(!state['isMoving']){
-		//animationMixer.stopAllAction();
-		animationMixer.timeScale = 1;
-		
-		for(var i = 1; i < animationClips.length; i++){
-			// stop all the non-idle motion clips
-			animationMixer.clipAction(animationClips[i]).stop();
-		}
+		if(state['movement'] === 'jump'){
+			animationMixer.clipAction(animationClips['idle']).stop();
+			animationMixer.clipAction(animationClips['walk']).stop();
+			animationMixer.clipAction(animationClips['run']).stop();
+			
+			let jumpAction = animationMixer.clipAction(animationClips['jump']);
+			jumpAction.setLoop(THREE.LoopRepeat);
+			jumpAction.play();
+			animationMixer.update(time/1.1);
+			state['movement'] = 'idle';
+		}else{
+			animationMixer.timeScale = 1;
+			
+			let actions = Object.keys(animationClips);
+			for(let i = 0; i < actions.length; i++){
+				// stop all the non-idle motion clips
+				if(actions[i] !== "idle"){
+					animationMixer.clipAction(animationClips[actions[i]]).stop();
+				}
+			}
 
-		var idleAction = animationMixer.clipAction(animationClips[0]);
-		idleAction.setLoop(THREE.LoopRepeat);
-		idleAction.play();
-		animationMixer.update(time/2.5);
+			let idleAction = animationMixer.clipAction(animationClips['idle']);
+			idleAction.setLoop(THREE.LoopRepeat);
+			idleAction.play();
+			animationMixer.update(time/2.5);
+		}
 	}else{
 	
-		var movement = state['movement'];
+		let movement = state['movement'];
 		
 		if(movement === 'walk'){
 			// make sure idle and running is stopped 
-			animationMixer.clipAction(animationClips[0]).stop();
-			animationMixer.clipAction(animationClips[1]).stop();
+			animationMixer.clipAction(animationClips['idle']).stop();
+			animationMixer.clipAction(animationClips['run']).stop();
+			animationMixer.clipAction(animationClips['jump']).stop();
 			
-			var walkAction = animationMixer.clipAction(animationClips[2]);
+			let walkAction = animationMixer.clipAction(animationClips['walk']);
 			walkAction.setLoop(THREE.LoopRepeat);
 			walkAction.play();
 			animationMixer.update(time/1.5);
 			
 		}else if(movement === 'run'){
 			// make sure idle and walking is stopped
-			animationMixer.clipAction(animationClips[0]).stop();
-			animationMixer.clipAction(animationClips[2]).stop();
+			animationMixer.clipAction(animationClips['idle']).stop();
+			animationMixer.clipAction(animationClips['walk']).stop();
+			animationMixer.clipAction(animationClips['jump']).stop();
 			
-			var runAction = animationMixer.clipAction(animationClips[1]);
+			let runAction = animationMixer.clipAction(animationClips['run']);
 			runAction.setLoop(THREE.LoopRepeat);
 			runAction.play();
 			animationMixer.update(time/1.1);
@@ -244,10 +266,10 @@ function updateCurrentAction(state, animationMixer, time){
 
 // thanks to: https://docs.panda3d.org/1.10/python/programming/pandai/pathfinding/uneven-terrain
 function checkTerrainHeight(objCenter, raycaster, scene){
-	var intersects = raycaster.intersectObject(terrain);
+	let intersects = raycaster.intersectObject(terrain);
 	raycaster.set(objCenter, new THREE.Vector3(0, -1, 0));
-	for(var i = 0; i < intersects.length; i++){
-		var height = objCenter.distanceTo(intersects[i].point);
+	for(let i = 0; i < intersects.length; i++){
+		let height = objCenter.distanceTo(intersects[i].point);
 		//console.log(height);
 		document.getElementById('height').textContent = ("current height: " + height);
 		return height;
@@ -257,23 +279,26 @@ function checkTerrainHeight(objCenter, raycaster, scene){
 
 function adjustVerticalHeightBasedOnTerrain(thePlayer, raycaster, scene){
 	// for now I'm hardcoding the expected height at level terrain 
-	var baseline = 8.8;
-	var head = getCenter(thePlayer.head);
-	var verticalDirection = checkTerrainHeight(head, raycaster, scene);
-	if(verticalDirection < 8.79){
+	let baseline = 5.13;
+	let head = getCenter(thePlayer.head);
+	let verticalDirection = checkTerrainHeight(head, raycaster, scene);
+	
+	if(verticalDirection < 5.12){
 		// go uphill so increase y
-		var deltaY = baseline - verticalDirection;
+		let deltaY = baseline - verticalDirection;
 		thePlayer.position.y += deltaY;
-	}else if(verticalDirection > 8.81){
+	}else if(verticalDirection > 5.14){
 		// go downhil so decrease y
-		var deltaY = verticalDirection - baseline;
+		let deltaY = verticalDirection - baseline;
 		thePlayer.position.y -= deltaY;
 	}
 }
 
 function moveBasedOnState(state, thePlayer, speed, reverse){
+	
 	state['isMoving'] = true;
-	var action = state['movement'];
+	
+	let action = state['movement'];
 	
 	if(action === 'idle'){
 		action = 'walk';
@@ -281,6 +306,9 @@ function moveBasedOnState(state, thePlayer, speed, reverse){
 	}
 	
 	if(action === 'walk' || action === 'run'){
+		if(action === 'run'){
+			speed += 0.12;
+		}	
 		if(reverse){
 			animationMixer.timeScale = -1;
 			thePlayer.translateZ(-speed);
@@ -314,13 +342,12 @@ document.addEventListener("keydown", turnOnRun);
 document.addEventListener("keyup", turnOffRun);
 
 
-var lastTime = clock.getDelta();
 function update(){
 	sec = clock.getDelta();
 	moveDistance = 8 * sec;
 	rotationAngle = (Math.PI / 2) * sec;
-	var changeCameraView = false;
-	
+	let changeCameraView = false;
+	adjustVerticalHeightBasedOnTerrain(thePlayer, raycaster, scene);
 	if(keyboard.pressed("z")){
 		changeCameraView = true;
 	}
@@ -328,7 +355,6 @@ function update(){
 	if(keyboard.pressed("W")){
 		// note that this gets called several times with one key press!
 		// I think it's because update() in requestAnimationFrames gets called quite a few times per second
-		
 		moveBasedOnState(state, thePlayer, moveDistance, false);
 		
 		// adjust player's vertical position based on terrain height
@@ -336,24 +362,27 @@ function update(){
 	}
 	
 	if(keyboard.pressed("S")){
-		
 		moveBasedOnState(state, thePlayer, moveDistance, true);
-		
 		adjustVerticalHeightBasedOnTerrain(thePlayer, raycaster, scene);
 	}
 	
-	if(!keyboard.pressed("W") && !keyboard.pressed("S")){
+	if(keyboard.pressed("J")){
+		state['isMoving'] = false;
+		state['movement'] = 'jump';
+		//moveBasedOnState(state, thePlayer, moveDistance, true);
+		//adjustVerticalHeightBasedOnTerrain(thePlayer, raycaster, scene);
+	}else if(!keyboard.pressed("W") && !keyboard.pressed("S")){
 		state['isMoving'] = false;
 		state['movement'] = 'idle';
 	}
 	
 	if(keyboard.pressed("A")){
-		var axis = new THREE.Vector3(0, 1, 0);
+		let axis = new THREE.Vector3(0, 1, 0);
 		thePlayer.rotateOnAxis(axis, rotationAngle);
 	}
 	
 	if(keyboard.pressed("D")){
-		var axis = new THREE.Vector3(0, 1, 0);
+		let axis = new THREE.Vector3(0, 1, 0);
 		thePlayer.rotateOnAxis(axis, -rotationAngle);
 	}
 	
@@ -363,18 +392,18 @@ function update(){
 		// mesh of the group, which is actually the jet mesh!
 		// if you try to move in all sorts of directions, after a while
 		// the camera gets off center and axes seem to get messed up :/
-		var axis = new THREE.Vector3(0, 0, 1);
+		let axis = new THREE.Vector3(0, 0, 1);
 		thePlayer.rotateOnAxis(axis, -rotationAngle);
 	}
 	
 	if(keyboard.pressed("E")){
-		var axis = new THREE.Vector3(0, 0, 1);
+		let axis = new THREE.Vector3(0, 0, 1);
 		thePlayer.rotateOnAxis(axis, rotationAngle);
 	}*/
 	
 	/* check for collision?
 	// check top, left, right, bottom, front, back? 
-	var hasCollision = checkCollision(thePlayer, raycaster);
+	let hasCollision = checkCollision(thePlayer, raycaster);
 	if(hasCollision){
 		thePlayer.material = thePlayer.hitMaterial;
 	}else{
@@ -385,14 +414,14 @@ function update(){
 	updateCurrentAction(state, animationMixer, sec);
 	
 	// how about first-person view?
-	var relCameraOffset;
+	let relCameraOffset;
 	if(!changeCameraView){
 		relCameraOffset = new THREE.Vector3(0, 3, -15);
 	}else{
 		relCameraOffset = new THREE.Vector3(0, 3, 15);
 	}
 	
-	var cameraOffset = relCameraOffset.applyMatrix4(thePlayer.matrixWorld);
+	let cameraOffset = relCameraOffset.applyMatrix4(thePlayer.matrixWorld);
 	camera.position.x = cameraOffset.x;
 	camera.position.y = cameraOffset.y;
 	camera.position.z = cameraOffset.z;
