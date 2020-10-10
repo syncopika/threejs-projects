@@ -1,3 +1,5 @@
+import { AnimationController } from './AnimationController.js';
+
 
 // https://github.com/evanw/webgl-water
 // https://github.com/donmccurdy/three-gltf-viewer/blob/master/src/viewer.js
@@ -8,6 +10,7 @@ const keyboard = new THREEx.KeyboardState();
 const container = document.querySelector('#container');
 const raycaster = new THREE.Raycaster();
 const loadingManager = new THREE.LoadingManager();
+let animationController;
 
 
 // https://stackoverflow.com/questions/35575065/how-to-make-a-loading-screen-in-three-js
@@ -101,6 +104,7 @@ function getModel(modelFilePath, side, name){
 						clips[name] = action;
 					});
 					animationClips = clips;
+					console.log(animationClips);
 				}
 				gltf.scene.traverse((child) => {
 					if(child.type === "Mesh" || child.type === "SkinnedMesh"){
@@ -114,7 +118,7 @@ function getModel(modelFilePath, side, name){
 						
 						let material = child.material;
 						let geometry = child.geometry;
-						obj = child;
+						let obj = child;
 						
 						if(name === "bg"){
 							obj.scale.x = child.scale.x * 10;
@@ -148,7 +152,7 @@ function getModel(modelFilePath, side, name){
 // https://threejs.org/docs/#api/en/textures/Texture
 // create a mesh, apply ocean shader on it 
 loadedModels.push(getModel('models/oceanfloor.glb', 'none', 'bg'));
-loadedModels.push(getModel('models/low-poly-human.gltf', 'player', 'p1'));
+loadedModels.push(getModel('models/humanoid-rig-with-gun-test.gltf', 'player', 'p1'));
 
 let thePlayer = null;
 let theNpc = null;
@@ -186,8 +190,9 @@ Promise.all(loadedModels).then((objects) => {
 			
 			state['movement'] = 'idle';
 			animationMixer = new THREE.AnimationMixer(mesh);
-			mesh.position.set(0, 2.8, -10);
+			animationController = new AnimationController(thePlayer, animationMixer, animationClips, clock);
 
+			mesh.position.set(0, 2.8, -10);
 			mesh.rotateOnAxis(new THREE.Vector3(0,1,0), Math.PI);
 			mesh.originalColor = mesh.material;
 			
@@ -374,6 +379,8 @@ function update(){
 	}else if(!keyboard.pressed("W") && !keyboard.pressed("S")){
 		state['isMoving'] = false;
 		state['movement'] = 'idle';
+		
+		animationController.changeState('idle');
 	}
 	
 	if(keyboard.pressed("A")){
@@ -385,6 +392,8 @@ function update(){
 		let axis = new THREE.Vector3(0, 1, 0);
 		thePlayer.rotateOnAxis(axis, -rotationAngle);
 	}
+	
+	animationController.update();
 	
 	/*
 	if(keyboard.pressed("Q")){
@@ -411,7 +420,7 @@ function update(){
 	}*/
 	
 	// update character motion
-	updateCurrentAction(state, animationMixer, sec);
+	//updateCurrentAction(state, animationMixer, sec);
 	
 	// how about first-person view?
 	let relCameraOffset;
