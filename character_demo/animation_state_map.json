@@ -1,0 +1,46 @@
+{
+	"states": {
+		"normal": {
+			"idle": {
+				"actionName": "idle",
+				"loop": "repeat"
+			},
+			"run": {
+				"actionName": "run", 
+				"loop": "repeat"
+			},
+			"walk": {
+				"actionName": "walk",
+				"loop": "repeat"
+			},
+			"jump": {
+				"actionName": "jump",
+				"loop": "once"
+			},
+			"drawgun": {
+				"actionName": "drawgun",
+				"loop": "once"
+			}
+		},
+		"equip": {
+			"idle": {
+				"actionName": "idlegu",
+				"loop": "repeat"
+			},
+			"walk": {
+				"actionName": "walkgu",
+				"loop": "repeat"
+			},
+			"reload": {
+				"actionName": "reloadgu",
+				"loop": "once"
+			},
+			"drawgun": {
+				"actionName": "drawgun",
+				"loop": "once"
+			}
+		},
+		"crouch": {},
+		"prone": {}
+	}
+}
