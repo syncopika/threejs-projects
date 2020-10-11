@@ -211,63 +211,7 @@ Promise.all(loadedModels).then((objects) => {
 	})
 });
 
-function updateCurrentAction(state, animationMixer, time){
-	
-	if(!state['isMoving']){
-		if(state['movement'] === 'jump'){
-			animationMixer.clipAction(animationClips['idle']).stop();
-			animationMixer.clipAction(animationClips['walk']).stop();
-			animationMixer.clipAction(animationClips['run']).stop();
-			
-			let jumpAction = animationMixer.clipAction(animationClips['jump']);
-			jumpAction.setLoop(THREE.LoopRepeat);
-			jumpAction.play();
-			animationMixer.update(time/1.1);
-			state['movement'] = 'idle';
-		}else{
-			animationMixer.timeScale = 1;
-			
-			let actions = Object.keys(animationClips);
-			for(let i = 0; i < actions.length; i++){
-				// stop all the non-idle motion clips
-				if(actions[i] !== "idle"){
-					animationMixer.clipAction(animationClips[actions[i]]).stop();
-				}
-			}
 
-			let idleAction = animationMixer.clipAction(animationClips['idle']);
-			idleAction.setLoop(THREE.LoopRepeat);
-			idleAction.play();
-			animationMixer.update(time/2.5);
-		}
-	}else{
-	
-		let movement = state['movement'];
-		
-		if(movement === 'walk'){
-			// make sure idle and running is stopped 
-			animationMixer.clipAction(animationClips['idle']).stop();
-			animationMixer.clipAction(animationClips['run']).stop();
-			animationMixer.clipAction(animationClips['jump']).stop();
-			
-			let walkAction = animationMixer.clipAction(animationClips['walk']);
-			walkAction.setLoop(THREE.LoopRepeat);
-			walkAction.play();
-			animationMixer.update(time/1.5);
-			
-		}else if(movement === 'run'){
-			// make sure idle and walking is stopped
-			animationMixer.clipAction(animationClips['idle']).stop();
-			animationMixer.clipAction(animationClips['walk']).stop();
-			animationMixer.clipAction(animationClips['jump']).stop();
-			
-			let runAction = animationMixer.clipAction(animationClips['run']);
-			runAction.setLoop(THREE.LoopRepeat);
-			runAction.play();
-			animationMixer.update(time/1.1);
-		}
-	}
-}
 
 // thanks to: https://docs.panda3d.org/1.10/python/programming/pandai/pathfinding/uneven-terrain
 function checkTerrainHeight(objCenter, raycaster, scene){
@@ -284,67 +228,72 @@ function checkTerrainHeight(objCenter, raycaster, scene){
 
 function adjustVerticalHeightBasedOnTerrain(thePlayer, raycaster, scene){
 	// for now I'm hardcoding the expected height at level terrain 
-	let baseline = 5.13;
+	let baseline = 2.75;
 	let head = getCenter(thePlayer.head);
 	let verticalDirection = checkTerrainHeight(head, raycaster, scene);
 	
-	if(verticalDirection < 5.12){
+	if(verticalDirection < 2.74){
 		// go uphill so increase y
 		let deltaY = baseline - verticalDirection;
 		thePlayer.position.y += deltaY;
-	}else if(verticalDirection > 5.14){
+	}else if(verticalDirection > 2.76){
 		// go downhil so decrease y
 		let deltaY = verticalDirection - baseline;
 		thePlayer.position.y -= deltaY;
 	}
 }
 
-function moveBasedOnState(state, thePlayer, speed, reverse){
+function moveBasedOnState(controller, thePlayer, speed, reverse){
 	
-	state['isMoving'] = true;
-	
-	let action = state['movement'];
-	
-	if(action === 'idle'){
-		action = 'walk';
-		state['movement'] = 'walk';
-	}
+	let action = controller.currState;
 	
 	if(action === 'walk' || action === 'run'){
 		if(action === 'run'){
 			speed += 0.12;
 		}	
 		if(reverse){
-			animationMixer.timeScale = -1;
 			thePlayer.translateZ(-speed);
 		}else{
-			animationMixer.timeScale = 1;
 			thePlayer.translateZ(speed);
 		}
 	}
 }
 
-function turnOnRun(evt){
+function keydown(evt){
 	if(evt.keyCode === 16){
 		// shift key
 		// toggle between walk and run while moving
-		if(state['movement'] === 'walk'){
-			state['movement'] = 'run';
-			//console.log("running...");
+		if(animationController.currState === 'walk'){
+			animationController.changeState('run');
+			animationController.setUpdateTimeDivisor(.12);
 		}
+	}else if(evt.keyCode === 71){
+		// g key
+		// for toggling weapon draw or hide
+		// the weapon-draw/hide animation should lead directly to the corresponding idle animation
+		// since I have the event listener for a 'finished' action set up
+		// interesting: https://github.com/mrdoob/three.js/issues/8931 - looponce + reverse animation is not so straightforward
+		if(animationController.currState === 'idlegu'){
+			// weapon currently drawn
+			animationController.changeState('drawgun', -1); // put away weapon
+		}else{
+			animationController.changeState('drawgun', 1);
+		}
+		animationController.setUpdateTimeDivisor(.12);
 	}
 }
 
-function turnOffRun(evt){
+function keyup(evt){
 	if(evt.keyCode === 16){
-		if(state['movement'] === 'run'){
-			state['movement'] = 'walk';
+		if(animationController.currState === 'run'){
+			animationController.changeState('walk');
+			animationController.setUpdateTimeDivisor(.12);
 		}
 	}
 }
 
-document.addEventListener("keydown", turnOnRun);
-document.addEventListener("keyup", turnOffRun);
+document.addEventListener("keydown", keydown);
+document.addEventListener("keyup", keyup);
 
 
 function update(){
@@ -352,7 +301,7 @@ function update(){
 	moveDistance = 8 * sec;
 	rotationAngle = (Math.PI / 2) * sec;
 	let changeCameraView = false;
-	adjustVerticalHeightBasedOnTerrain(thePlayer, raycaster, scene);
+	
 	if(keyboard.pressed("z")){
 		changeCameraView = true;
 	}
@@ -360,27 +309,34 @@ function update(){
 	if(keyboard.pressed("W")){
 		// note that this gets called several times with one key press!
 		// I think it's because update() in requestAnimationFrames gets called quite a few times per second
-		moveBasedOnState(state, thePlayer, moveDistance, false);
+		if(animationController.currState !== "run"){
+			animationController.changeState('walk');
+		}
+		animationController.setUpdateTimeDivisor(.10);
+		moveBasedOnState(animationController, thePlayer, moveDistance, false);
 		
-		// adjust player's vertical position based on terrain height
-		adjustVerticalHeightBasedOnTerrain(thePlayer, raycaster, scene);
-	}
-	
-	if(keyboard.pressed("S")){
-		moveBasedOnState(state, thePlayer, moveDistance, true);
-		adjustVerticalHeightBasedOnTerrain(thePlayer, raycaster, scene);
+	}else if(keyboard.pressed("S")){
+		if(animationController.currState !== "run"){
+			animationController.changeState('walk', -1);
+		}
+		animationController.setUpdateTimeDivisor(.10);
+		moveBasedOnState(animationController, thePlayer, moveDistance, true);
+		
+	}else if(!keyboard.pressed("W") && !keyboard.pressed("S")){
+		if(animationController.currState !== 'drawgun' &&  animationController.currState.indexOf('idle') < 0){
+			animationController.changeState('idle');
+			animationController.setUpdateTimeDivisor(.50);
+		}
 	}
 	
 	if(keyboard.pressed("J")){
-		state['isMoving'] = false;
-		state['movement'] = 'jump';
-		//moveBasedOnState(state, thePlayer, moveDistance, true);
-		//adjustVerticalHeightBasedOnTerrain(thePlayer, raycaster, scene);
-	}else if(!keyboard.pressed("W") && !keyboard.pressed("S")){
-		state['isMoving'] = false;
-		state['movement'] = 'idle';
+		//state['isMoving'] = false;
+		//state['movement'] = 'jump';
 		
-		animationController.changeState('idle');
+		animationController.changeState('jump');
+		animationController.setUpdateTimeDivisor(.12);
+		//moveBasedOnState(state, thePlayer, moveDistance, true);
+		
 	}
 	
 	if(keyboard.pressed("A")){
@@ -393,6 +349,7 @@ function update(){
 		thePlayer.rotateOnAxis(axis, -rotationAngle);
 	}
 	
+	adjustVerticalHeightBasedOnTerrain(thePlayer, raycaster, scene);
 	animationController.update();
 	
 	/*
@@ -410,17 +367,6 @@ function update(){
 		thePlayer.rotateOnAxis(axis, rotationAngle);
 	}*/
 	
-	/* check for collision?
-	// check top, left, right, bottom, front, back? 
-	let hasCollision = checkCollision(thePlayer, raycaster);
-	if(hasCollision){
-		thePlayer.material = thePlayer.hitMaterial;
-	}else{
-		thePlayer.material = thePlayer.originalMaterial;
-	}*/
-	
-	// update character motion
-	//updateCurrentAction(state, animationMixer, sec);
 	
 	// how about first-person view?
 	let relCameraOffset;
