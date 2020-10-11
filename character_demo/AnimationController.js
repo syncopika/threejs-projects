@@ -21,23 +21,11 @@ class AnimationController {
 		this.currActionTimescale = 1;
 		this.animationMap = null;
 		
-		/* prep some actions' properties
-		// i.e. some actions only need to play once, like draw/reload gun
-		for(let action in this.clips){
-			if(action !== "drawgun" && action !== "reloadgu"){
-				this.mixer.clipAction(this.clips[action]).setLoop(THREE.LoopRepeat);
-			}else{
-				this.mixer.clipAction(this.clips[action]).paused = false;
-				this.mixer.clipAction(this.clips[action]).setLoop(THREE.LoopOnce);
-				//this.mixer.clipAction(this.clips[action]).clampWhenFinished = true;
-			}
-		}*/
-		
 		fetch('animation_state_map.json')
 			.then(response => response.json())
 			.then(data => {
 				this.animationMap = data.states;
-				console.log(this.animationMap);
+				//console.log(this.animationMap);
 				
 				// modify some clips as needed according to the animation map
 				for(let state in data.states){
@@ -50,7 +38,6 @@ class AnimationController {
 						}
 					}
 				}
-				
 			});
 		
 		// since we can equip a weapon,
@@ -108,7 +95,6 @@ class AnimationController {
 			// https://stackoverflow.com/questions/31274674/reverse-keyframe-animation-in-three-js
 			if(action.time === 0 && timeScale === -1) {
 				action.time = action.getClip().duration;
-				//console.log(action.getClip().duration);
 			}
 			
 			action.timeScale = timeScale;

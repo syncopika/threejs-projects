@@ -81,12 +81,6 @@ let sec = clock.getDelta();
 let moveDistance = 60 * sec;
 let rotationAngle = (Math.PI / 2) * sec;
 
-// need to keep some state 
-const state = {
-	"movement": "idle",
-	"isMoving": false
-};
-
 let loadedModels = [];
 let animationMixer = null;
 let animationClips = null;
@@ -96,7 +90,7 @@ function getModel(modelFilePath, side, name){
 		loader.load(
 			modelFilePath,
 			function(gltf){
-				if(gltf.animations.length > 0){
+				if(gltf.animations.length > 0 && name === "p1"){
 					let clips = {};
 					gltf.animations.forEach((action) => {
 						let name = action['name'].toLowerCase();
@@ -104,16 +98,24 @@ function getModel(modelFilePath, side, name){
 						clips[name] = action;
 					});
 					animationClips = clips;
-					console.log(animationClips);
+					//console.log(animationClips);
 				}
+				
 				gltf.scene.traverse((child) => {
 					if(child.type === "Mesh" || child.type === "SkinnedMesh"){
 						
 						if(child.type === "SkinnedMesh"){
-							child.add(child.skeleton.bones[0]);
-							child.scale.x *= .3;
-							child.scale.y *= .3;
-							child.scale.z *= .3;
+							child.add(child.skeleton.bones[0]); // add pelvis to mesh as a child
+							
+							if(name !== "obj"){
+								child.scale.x *= .3;
+								child.scale.y *= .3;
+								child.scale.z *= .3;
+							}else{
+								// need to re-orient tool to equip
+								child.rotateOnAxis(new THREE.Vector3(0,1,0), Math.PI/2);
+								child.rotateOnAxis(new THREE.Vector3(0,0,-1), Math.PI/2);
+							}
 						}
 						
 						let material = child.material;
@@ -133,6 +135,7 @@ function getModel(modelFilePath, side, name){
 						resolve(obj);
 					}
 				});
+				
 			},
 			// called while loading is progressing
 			function(xhr){
@@ -153,9 +156,11 @@ function getModel(modelFilePath, side, name){
 // create a mesh, apply ocean shader on it 
 loadedModels.push(getModel('models/oceanfloor.glb', 'none', 'bg'));
 loadedModels.push(getModel('models/humanoid-rig-with-gun-test.gltf', 'player', 'p1'));
+loadedModels.push(getModel('models/m4carbine-final.gltf', 'tool', 'obj'));
 
 let thePlayer = null;
 let theNpc = null;
+let tool = null;
 let terrain = null;
 let bgAxesHelper;
 let playerAxesHelper;
@@ -169,11 +174,16 @@ Promise.all(loadedModels).then((objects) => {
 			terrain = mesh;
 		}else if(mesh.name === "npc"){
 			// npcs?
+		}else if(mesh.name === "obj"){
+			// tools that can be equipped
+			//mesh.position.set(0, 2, -5);
+			tool = mesh;
+			tool.visible = false;
 		}else{
 			console.log(mesh);
 			thePlayer = mesh;
-			
-			// add a 3d object to serve as a marker for the 
+
+			// add a 3d object (cube) to serve as a marker for the 
 			// location of the head of the mesh. we'll use this to 
 			// create a vertical ray towards the ground
 			// this ray can tell us the current height.
@@ -188,7 +198,6 @@ Promise.all(loadedModels).then((objects) => {
 			mesh.head = head;
 			head.position.set(0, 4, 0);
 			
-			state['movement'] = 'idle';
 			animationMixer = new THREE.AnimationMixer(mesh);
 			animationController = new AnimationController(thePlayer, animationMixer, animationClips, clock);
 			animationController.changeState("normal"); // set normal state by default for animations. see animation_state_map.json
@@ -201,6 +210,14 @@ Promise.all(loadedModels).then((objects) => {
 			let hitMaterial = new THREE.MeshBasicMaterial({color: 0xff0000});
 			mesh.hitMaterial = hitMaterial;
 			mesh.originalMaterial = mesh.material;
+			
+			// add hand bone to equip tool with as a child of the player mesh
+			for(let bone of thePlayer.skeleton.bones){
+				if(bone.name === "HandR001"){ // lol why is it like this??
+					thePlayer.hand = bone; // set an arbitrary new property to access the hand bone
+					break;
+				}
+			}
 
 			animate();
 		}
@@ -269,15 +286,31 @@ function keydown(evt){
 		}
 	}else if(evt.keyCode === 71){
 		// g key
-		// for toggling weapon draw or hide
+		// for toggling weapon/tool equip
+		
+		// attach the tool
+		// try attaching tool to player's hand?
+		// https://stackoverflow.com/questions/19031198/three-js-attaching-object-to-bone
+		// https://stackoverflow.com/questions/54270675/three-js-parenting-mesh-to-bone
+		let handBone = thePlayer.hand;
+		if(handBone.children.length === 0){
+			handBone.add(tool);
+		}
+		
+		// adjust location of tool 
+		tool.position.set(0, 0.8, 0);
+		
 		// the weapon-draw/hide animation should lead directly to the corresponding idle animation
 		// since I have the event listener for a 'finished' action set up
 		let timeScale = 1;
+		
 		if(animationController.currState === "normal"){
+			tool.visible = true;
 			animationController.changeState("equip"); // equip weapon
 		}else{
 			animationController.changeState("normal"); // go back to normal state
 			timeScale = -1; // need to play equip animation backwards to put away weapon
+			tool.visible = false; // this is too early - should be done after the "drawgun" anim is finished
 		}
 		animationController.setUpdateTimeDivisor(.20);
 		animationController.changeAction("drawgun", timeScale);
@@ -303,13 +336,14 @@ function update(){
 	rotationAngle = (Math.PI / 2) * sec;
 	let changeCameraView = false;
 	
+
+	
 	if(keyboard.pressed("z")){
 		changeCameraView = true;
 	}
 	
 	if(keyboard.pressed("W")){
-		// note that this gets called several times with one key press!
-		// I think it's because update() in requestAnimationFrames gets called quite a few times per second
+		// moving forwards
 		if(animationController.currAction !== "run"){
 			animationController.changeAction('walk');
 		}
@@ -317,6 +351,7 @@ function update(){
 		moveBasedOnAction(animationController, thePlayer, moveDistance, false);
 		
 	}else if(keyboard.pressed("S")){
+		// moving backwards
 		if(animationController.currAction !== "run"){
 			animationController.changeAction('walk', -1);
 		}
@@ -324,6 +359,7 @@ function update(){
 		moveBasedOnAction(animationController, thePlayer, moveDistance, true);
 		
 	}else if(!keyboard.pressed("W") && !keyboard.pressed("S")){
+		// for idle pose
 		// can we make this less specific i.e. don't explicitly check for "drawgun"?
 		if(animationController.currAction !== 'idle' && animationController.currAction !== "drawgun"){
 			animationController.changeAction('idle');
@@ -332,13 +368,14 @@ function update(){
 	}
 	
 	if(keyboard.pressed("J")){
-		//state['isMoving'] = false;
-		//state['movement'] = 'jump';
-		
+		// for jumping
+		// this one is not yet working and a bit tricky to think about for me - the animation 
+		// is currently set to loop once and I'm not really sure yet how 
+		// to set up the transition. maybe I need to keep a reference to 
+		// the previous action before I trigger the jump?
 		animationController.changeAction('jump');
 		animationController.setUpdateTimeDivisor(.12);
 		//moveBasedOnState(state, thePlayer, moveDistance, true);
-		
 	}
 	
 	if(keyboard.pressed("A")){
@@ -352,6 +389,8 @@ function update(){
 	}
 	
 	adjustVerticalHeightBasedOnTerrain(thePlayer, raycaster, scene);
+	
+	// keep the current animation running
 	animationController.update();
 	
 	/*
