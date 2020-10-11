@@ -272,7 +272,6 @@ function keydown(evt){
 		// for toggling weapon draw or hide
 		// the weapon-draw/hide animation should lead directly to the corresponding idle animation
 		// since I have the event listener for a 'finished' action set up
-		// interesting: https://github.com/mrdoob/three.js/issues/8931 - looponce + reverse animation is not so straightforward
 		if(animationController.currState === 'idlegu'){
 			// weapon currently drawn
 			animationController.changeState('drawgun', -1); // put away weapon

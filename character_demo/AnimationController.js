@@ -25,7 +25,7 @@ class AnimationController {
 			}else{
 				this.mixer.clipAction(this.clips[action]).paused = false;
 				this.mixer.clipAction(this.clips[action]).setLoop(THREE.LoopOnce);
-				//this.mixer.clipAction(this.clips[action]).clampWhenFinished = true;
+				this.mixer.clipAction(this.clips[action]).clampWhenFinished = true;
 			}
 		}
 		
@@ -66,11 +66,16 @@ class AnimationController {
 	// https://stackoverflow.com/questions/25417547/observer-pattern-vs-mediator-pattern
 	playAnimation(state, time, timeScale){
 		this.currActionTimescale = timeScale;
-		this.mixer.stopAllAction();
+		this.mixer.stopAllAction();		
 		
 		let action = this.mixer.clipAction(this.clips[state]);
+		
+		// https://stackoverflow.com/questions/31274674/reverse-keyframe-animation-in-three-js
+		if(action.time === 0 && timeScale === -1) {
+			action.time = action.getClip().duration;
+		}
+		
 		action.timeScale = timeScale;
-
 		action.play();
 		
 		this.currState = state;
