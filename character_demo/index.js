@@ -191,6 +191,7 @@ Promise.all(loadedModels).then((objects) => {
 			state['movement'] = 'idle';
 			animationMixer = new THREE.AnimationMixer(mesh);
 			animationController = new AnimationController(thePlayer, animationMixer, animationClips, clock);
+			animationController.changeState("normal"); // set normal state by default for animations. see animation_state_map.json
 
 			mesh.position.set(0, 2.8, -10);
 			mesh.rotateOnAxis(new THREE.Vector3(0,1,0), Math.PI);
@@ -210,7 +211,6 @@ Promise.all(loadedModels).then((objects) => {
 		renderer.render(scene, camera);
 	})
 });
-
 
 
 // thanks to: https://docs.panda3d.org/1.10/python/programming/pandai/pathfinding/uneven-terrain
@@ -243,14 +243,14 @@ function adjustVerticalHeightBasedOnTerrain(thePlayer, raycaster, scene){
 	}
 }
 
-function moveBasedOnState(controller, thePlayer, speed, reverse){
+function moveBasedOnAction(controller, thePlayer, speed, reverse){
 	
-	let action = controller.currState;
+	let action = controller.currAction;
 	
 	if(action === 'walk' || action === 'run'){
 		if(action === 'run'){
 			speed += 0.12;
-		}	
+		}
 		if(reverse){
 			thePlayer.translateZ(-speed);
 		}else{
@@ -263,8 +263,8 @@ function keydown(evt){
 	if(evt.keyCode === 16){
 		// shift key
 		// toggle between walk and run while moving
-		if(animationController.currState === 'walk'){
-			animationController.changeState('run');
+		if(animationController.currAction === 'walk'){
+			animationController.changeAction('run');
 			animationController.setUpdateTimeDivisor(.12);
 		}
 	}else if(evt.keyCode === 71){
@@ -272,20 +272,22 @@ function keydown(evt){
 		// for toggling weapon draw or hide
 		// the weapon-draw/hide animation should lead directly to the corresponding idle animation
 		// since I have the event listener for a 'finished' action set up
-		if(animationController.currState === 'idlegu'){
-			// weapon currently drawn
-			animationController.changeState('drawgun', -1); // put away weapon
+		let timeScale = 1;
+		if(animationController.currState === "normal"){
+			animationController.changeState("equip"); // equip weapon
 		}else{
-			animationController.changeState('drawgun', 1);
+			animationController.changeState("normal"); // go back to normal state
+			timeScale = -1; // need to play equip animation backwards to put away weapon
 		}
-		animationController.setUpdateTimeDivisor(.12);
+		animationController.setUpdateTimeDivisor(.20);
+		animationController.changeAction("drawgun", timeScale);
 	}
 }
 
 function keyup(evt){
 	if(evt.keyCode === 16){
-		if(animationController.currState === 'run'){
-			animationController.changeState('walk');
+		if(animationController.currAction === 'run'){
+			animationController.changeAction('walk');
 			animationController.setUpdateTimeDivisor(.12);
 		}
 	}
@@ -308,22 +310,23 @@ function update(){
 	if(keyboard.pressed("W")){
 		// note that this gets called several times with one key press!
 		// I think it's because update() in requestAnimationFrames gets called quite a few times per second
-		if(animationController.currState !== "run"){
-			animationController.changeState('walk');
+		if(animationController.currAction !== "run"){
+			animationController.changeAction('walk');
 		}
 		animationController.setUpdateTimeDivisor(.10);
-		moveBasedOnState(animationController, thePlayer, moveDistance, false);
+		moveBasedOnAction(animationController, thePlayer, moveDistance, false);
 		
 	}else if(keyboard.pressed("S")){
-		if(animationController.currState !== "run"){
-			animationController.changeState('walk', -1);
+		if(animationController.currAction !== "run"){
+			animationController.changeAction('walk', -1);
 		}
 		animationController.setUpdateTimeDivisor(.10);
-		moveBasedOnState(animationController, thePlayer, moveDistance, true);
+		moveBasedOnAction(animationController, thePlayer, moveDistance, true);
 		
 	}else if(!keyboard.pressed("W") && !keyboard.pressed("S")){
-		if(animationController.currState !== 'drawgun' &&  animationController.currState.indexOf('idle') < 0){
-			animationController.changeState('idle');
+		// can we make this less specific i.e. don't explicitly check for "drawgun"?
+		if(animationController.currAction !== 'idle' && animationController.currAction !== "drawgun"){
+			animationController.changeAction('idle');
 			animationController.setUpdateTimeDivisor(.50);
 		}
 	}
@@ -332,7 +335,7 @@ function update(){
 		//state['isMoving'] = false;
 		//state['movement'] = 'jump';
 		
-		animationController.changeState('jump');
+		animationController.changeAction('jump');
 		animationController.setUpdateTimeDivisor(.12);
 		//moveBasedOnState(state, thePlayer, moveDistance, true);
 		
