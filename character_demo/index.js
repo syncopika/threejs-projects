@@ -98,43 +98,66 @@ function getModel(modelFilePath, side, name){
 						clips[name] = action;
 					});
 					animationClips = clips;
-					//console.log(animationClips);
 				}
 				
+				// if a scene has multiple meshes you want (like for the m4 carbine),
+				// do the traversal and attach the magazine mesh as a child or something to the m4 mesh.
+				// then resolve the thing outside the traverse.
+				let carbine = [];
 				gltf.scene.traverse((child) => {
+					
 					if(child.type === "Mesh" || child.type === "SkinnedMesh"){
 						
-						if(child.type === "SkinnedMesh"){
-							child.add(child.skeleton.bones[0]); // add pelvis to mesh as a child
-							
-							if(name !== "obj"){
-								child.scale.x *= .3;
-								child.scale.y *= .3;
-								child.scale.z *= .3;
-							}else{
-								// need to re-orient tool to equip
-								child.rotateOnAxis(new THREE.Vector3(0,1,0), Math.PI/2);
-								child.rotateOnAxis(new THREE.Vector3(0,0,-1), Math.PI/2);
-							}
-						}
-						
-						let material = child.material;
-						let geometry = child.geometry;
-						let obj = child;
-						
-						if(name === "bg"){
-							obj.scale.x = child.scale.x * 10;
-							obj.scale.y = child.scale.y * 10;
-							obj.scale.z = child.scale.z * 10;
-							//obj.rotateOnAxis(new THREE.Vector3(0,1,0), Math.PI);
+						if(name === "obj"){
+							let material = child.material;
+							let geometry = child.geometry;
+							let obj = child;
+							carbine.push(obj);
 						}else{
-							//obj.rotateOnAxis(new THREE.Vector3(0,1,0), Math.PI);
-						}
 						
-						obj.name = name;
-						resolve(obj);
+							if(child.type === "SkinnedMesh"){
+								child.add(child.skeleton.bones[0]); // add pelvis to mesh as a child
+							
+								if(name !== "obj"){
+									child.scale.x *= .3;
+									child.scale.y *= .3;
+									child.scale.z *= .3;
+								}
+							}
+							
+							let material = child.material;
+							let geometry = child.geometry;
+							let obj = child;
+							
+							if(name === "bg"){
+								obj.scale.x = child.scale.x * 10;
+								obj.scale.y = child.scale.y * 10;
+								obj.scale.z = child.scale.z * 10;
+								//obj.rotateOnAxis(new THREE.Vector3(0,1,0), Math.PI);
+							}
+							
+							obj.name = name;
+							
+							resolve(obj); // this will return only one mesh. if you expect a scene to yield multiple meshes, this will fail.
+						}
 					}
 				});
+				
+				// for the carbine (or really any scene with multiple meshes)
+				if(name === "obj"){
+					let m4carbine = carbine[0];
+					m4carbine.add(m4carbine.skeleton.bones[0]);
+					m4carbine.name = name;
+					
+					let magazine = carbine[1];
+					m4carbine.magazine = magazine;
+					m4carbine.skeleton.bones[0].add(magazine);
+
+					m4carbine.rotateOnAxis(new THREE.Vector3(0,1,0), Math.PI/2);
+					m4carbine.rotateOnAxis(new THREE.Vector3(0,0,-1), Math.PI/2);
+
+					resolve(m4carbine);
+				}
 				
 			},
 			// called while loading is progressing
@@ -151,9 +174,7 @@ function getModel(modelFilePath, side, name){
 }
 
 
-
 // https://threejs.org/docs/#api/en/textures/Texture
-// create a mesh, apply ocean shader on it 
 loadedModels.push(getModel('models/oceanfloor.glb', 'none', 'bg'));
 loadedModels.push(getModel('models/humanoid-rig-with-gun-test.gltf', 'player', 'p1'));
 loadedModels.push(getModel('models/m4carbine-final.gltf', 'tool', 'obj'));
@@ -165,6 +186,7 @@ let terrain = null;
 let bgAxesHelper;
 let playerAxesHelper;
 let playerGroupAxesHelper;
+let firstPersonViewOn = false;
 
 Promise.all(loadedModels).then((objects) => {
 	objects.forEach((mesh) => {
@@ -176,11 +198,9 @@ Promise.all(loadedModels).then((objects) => {
 			// npcs?
 		}else if(mesh.name === "obj"){
 			// tools that can be equipped
-			//mesh.position.set(0, 2, -5);
 			tool = mesh;
 			tool.visible = false;
 		}else{
-			console.log(mesh);
 			thePlayer = mesh;
 
 			// add a 3d object (cube) to serve as a marker for the 
@@ -295,6 +315,11 @@ function keydown(evt){
 		let handBone = thePlayer.hand;
 		if(handBone.children.length === 0){
 			handBone.add(tool);
+			
+			// also register the tool in the animationcontroller so we can hide it at the 
+			// right time when de-equipping
+			// yeah, doing it this way is still kinda weird. :/
+			animationController.addObject(tool);
 		}
 		
 		// adjust location of tool 
@@ -310,10 +335,11 @@ function keydown(evt){
 		}else{
 			animationController.changeState("normal"); // go back to normal state
 			timeScale = -1; // need to play equip animation backwards to put away weapon
-			tool.visible = false; // this is too early - should be done after the "drawgun" anim is finished
 		}
 		animationController.setUpdateTimeDivisor(.20);
 		animationController.changeAction("drawgun", timeScale);
+	}else if(evt.keyCode === 49){
+		firstPersonViewOn = !firstPersonViewOn;
 	}
 }
 
@@ -331,12 +357,11 @@ document.addEventListener("keyup", keyup);
 
 
 function update(){
+	
 	sec = clock.getDelta();
 	moveDistance = 8 * sec;
 	rotationAngle = (Math.PI / 2) * sec;
 	let changeCameraView = false;
-	
-
 	
 	if(keyboard.pressed("z")){
 		changeCameraView = true;
@@ -408,10 +433,15 @@ function update(){
 		thePlayer.rotateOnAxis(axis, rotationAngle);
 	}*/
 	
-	
-	// how about first-person view?
 	let relCameraOffset;
-	if(!changeCameraView){
+	
+	if(firstPersonViewOn){
+		let newPos = new THREE.Vector3();
+		newPos.copy(thePlayer.head.position);
+		newPos.z += 1;
+		newPos.y -= 0.5;
+		relCameraOffset = newPos;
+	}else if(!changeCameraView){
 		relCameraOffset = new THREE.Vector3(0, 3, -15);
 	}else{
 		relCameraOffset = new THREE.Vector3(0, 3, 15);
@@ -421,10 +451,8 @@ function update(){
 	camera.position.x = cameraOffset.x;
 	camera.position.y = cameraOffset.y;
 	camera.position.z = cameraOffset.z;
-	camera.lookAt(thePlayer.position);
 	
-	// hmm can we take the player's rotation (since it's the group's rotation) and just apply 
-	// it to the camera? just make sure the camera is behind the player. (instead of using lookAt)
+	if(!firstPersonViewOn) camera.lookAt(thePlayer.position);
 
 }
 

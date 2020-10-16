@@ -21,11 +21,13 @@ class AnimationController {
 		this.currActionTimescale = 1;
 		this.animationMap = null;
 		
+		this.objects = []; // objects that should have visibility turned on/off at some point
+		
 		fetch('animation_state_map.json')
 			.then(response => response.json())
 			.then(data => {
+
 				this.animationMap = data.states;
-				//console.log(this.animationMap);
 				
 				// modify some clips as needed according to the animation map
 				for(let state in data.states){
@@ -46,6 +48,13 @@ class AnimationController {
 		// what if you want to equip while walking or running though? :/
 		this.mixer.addEventListener('finished', (evt) => {
 			if(evt.action._clip.name.indexOf("DrawGun") > -1){
+				
+				if(this.currActionTimescale === -1){
+					// de-equip == this animation played backwards
+					// hide the weapon when de-equipping
+					this.toggleObjectVisibility();
+				}
+				
 				// draw gun then go to idle with gun
 				// we just want to play the gun draw animation once
 				this.timeDivisor = .60;
@@ -53,7 +62,16 @@ class AnimationController {
 			}
 		});
 	}
-
+	
+	toggleObjectVisibility(){
+		for(let obj of this.objects){
+			obj.visible = !obj.visible;
+		}
+	}
+	
+	addObject(obj){
+		this.objects.push(obj);
+	}
 
 	setUpdateTimeDivisor(num){
 		this.timeDivisor = num;
