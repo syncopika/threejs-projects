@@ -112,6 +112,9 @@ function getModel(modelFilePath, side, name){
 							let material = child.material;
 							let geometry = child.geometry;
 							let obj = child;
+							obj.scale.x = child.scale.x * 1.1;
+							obj.scale.y = child.scale.y * 1.1;
+							obj.scale.z = child.scale.z * 1.1;
 							carbine.push(obj);
 						}else{
 						
@@ -146,12 +149,13 @@ function getModel(modelFilePath, side, name){
 				// for the carbine (or really any scene with multiple meshes)
 				if(name === "obj"){
 					let m4carbine = carbine[0];
+					console.log(m4carbine.skeleton);
 					m4carbine.add(m4carbine.skeleton.bones[0]);
 					m4carbine.name = name;
 					
 					let magazine = carbine[1];
 					m4carbine.magazine = magazine;
-					m4carbine.skeleton.bones[0].add(magazine);
+					m4carbine.skeleton.bones[1].add(magazine); // add magazine to the mag bone
 
 					m4carbine.rotateOnAxis(new THREE.Vector3(0,1,0), Math.PI/2);
 					m4carbine.rotateOnAxis(new THREE.Vector3(0,0,-1), Math.PI/2);
@@ -176,7 +180,7 @@ function getModel(modelFilePath, side, name){
 
 // https://threejs.org/docs/#api/en/textures/Texture
 loadedModels.push(getModel('models/oceanfloor.glb', 'none', 'bg'));
-loadedModels.push(getModel('models/humanoid-rig-with-gun-test.gltf', 'player', 'p1'));
+loadedModels.push(getModel('models/humanoid-rig-with-gun.gltf', 'player', 'p1'));
 loadedModels.push(getModel('models/m4carbine-final.gltf', 'tool', 'obj'));
 
 let thePlayer = null;
@@ -186,7 +190,12 @@ let terrain = null;
 let bgAxesHelper;
 let playerAxesHelper;
 let playerGroupAxesHelper;
+
 let firstPersonViewOn = false;
+let sideViewOn = false;
+
+ // cheap hack for now to set up the rotation and position of the camera in first-person once only
+let firstPersonViewSet = false;
 
 Promise.all(loadedModels).then((objects) => {
 	objects.forEach((mesh) => {
@@ -323,7 +332,7 @@ function keydown(evt){
 		}
 		
 		// adjust location of tool 
-		tool.position.set(0, 0.8, 0);
+		tool.position.set(0, 0.2, -0.3); // the coordinate system is a bit out of whack for the weapon...
 		
 		// the weapon-draw/hide animation should lead directly to the corresponding idle animation
 		// since I have the event listener for a 'finished' action set up
@@ -338,8 +347,28 @@ function keydown(evt){
 		}
 		animationController.setUpdateTimeDivisor(.20);
 		animationController.changeAction("drawgun", timeScale);
+		
 	}else if(evt.keyCode === 49){
+		// toggle first-person view
 		firstPersonViewOn = !firstPersonViewOn;
+		sideViewOn = false;
+		
+		// make sure camera is in the head position
+		// and that the camera is parented to the character mesh
+		// so that it can rotate with the mesh
+		if(firstPersonViewOn){
+			//thePlayer.add(camera);
+			//camera.position.copy(thePlayer.head.position);
+			//camera.rotation.copy(thePlayer.rotation);
+		}else{
+			//scene.add(camera);
+		}
+		
+	}else if(evt.keyCode === 50){
+		// toggle side view
+		firstPersonViewOn = false;
+		sideViewOn = !sideViewOn;
+		
 	}
 }
 
@@ -406,11 +435,19 @@ function update(){
 	if(keyboard.pressed("A")){
 		let axis = new THREE.Vector3(0, 1, 0);
 		thePlayer.rotateOnAxis(axis, rotationAngle);
+
+		if(firstPersonViewOn){
+			camera.rotateOnAxis(axis, rotationAngle/0.9);
+		}
 	}
 	
 	if(keyboard.pressed("D")){
 		let axis = new THREE.Vector3(0, 1, 0);
 		thePlayer.rotateOnAxis(axis, -rotationAngle);
+		
+		if(firstPersonViewOn){
+			camera.rotateOnAxis(axis, -rotationAngle/0.9);
+		}
 	}
 	
 	adjustVerticalHeightBasedOnTerrain(thePlayer, raycaster, scene);
@@ -441,16 +478,21 @@ function update(){
 		newPos.z += 1;
 		newPos.y -= 0.5;
 		relCameraOffset = newPos;
+		//camera.rotation.copy(thePlayer.rotation);
+	}else if(sideViewOn){
+		relCameraOffset = new THREE.Vector3(-10, 3, 0);
 	}else if(!changeCameraView){
 		relCameraOffset = new THREE.Vector3(0, 3, -15);
 	}else{
 		relCameraOffset = new THREE.Vector3(0, 3, 15);
 	}
 	
-	let cameraOffset = relCameraOffset.applyMatrix4(thePlayer.matrixWorld);
-	camera.position.x = cameraOffset.x;
-	camera.position.y = cameraOffset.y;
-	camera.position.z = cameraOffset.z;
+	//if(!firstPersonViewOn){
+		let cameraOffset = relCameraOffset.applyMatrix4(thePlayer.matrixWorld);
+		camera.position.x = cameraOffset.x;
+		camera.position.y = cameraOffset.y;
+		camera.position.z = cameraOffset.z;
+	//}
 	
 	if(!firstPersonViewOn) camera.lookAt(thePlayer.position);
 
