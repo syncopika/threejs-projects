@@ -194,8 +194,6 @@ let playerGroupAxesHelper;
 let firstPersonViewOn = false;
 let sideViewOn = false;
 
- // cheap hack for now to set up the rotation and position of the camera in first-person once only
-let firstPersonViewSet = false;
 
 Promise.all(loadedModels).then((objects) => {
 	objects.forEach((mesh) => {
