@@ -57,13 +57,27 @@ scene.add(plane);
 let cubeGeometry = new THREE.BoxGeometry(5,5,5);
 let material = new THREE.MeshBasicMaterial({color: 0x0000ff});
 material.wireframe = true;
-let thePlayer = new THREE.Mesh(cubeGeometry, material); 
+let thePlayer = new THREE.Mesh(cubeGeometry, material);
+
+
+let cube2g = new THREE.BoxGeometry(2,2,2);
+let mat = new THREE.MeshBasicMaterial({color: 0xff0000});
+let cube = new THREE.Mesh(cube2g, mat);
+
+thePlayer.add(cube);
+cube.position.set(0, 3, 0);
+
 thePlayer.position.set(0, 2, 0);
 scene.add(thePlayer);
 
 let bgAxesHelper;
-let playerAxesHelper;
-let playerGroupAxesHelper;
+
+let playerAxesHelper = new THREE.AxesHelper(5);
+let playerGroupAxesHelper = new THREE.AxesHelper(5);
+let playerCameraAxesHelper = new THREE.AxesHelper(5);
+
+thePlayer.add(playerAxesHelper);
+cube.add(playerGroupAxesHelper);
 
 let firstPersonViewOn = false;
 
@@ -77,10 +91,17 @@ function keydown(evt){
 		// so that it can rotate with the mesh
 		if(firstPersonViewOn){
 			thePlayer.add(camera);
+			
+			//thePlayer.add(cube);
+			//cube.position.set(0, 2, 0);
+			
 			//camera.position.copy(thePlayer.head.position);
 			//camera.rotation.copy(thePlayer.rotation);
+			camera.rotation.set(0, Math.PI, 0);
+			camera.position.set(0, 2, 0);
 		}else{
 			scene.add(camera);
+			//scene.add(cube);
 		}
 	}
 }

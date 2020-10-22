@@ -1,8 +1,5 @@
 import { AnimationController } from './AnimationController.js';
 
-
-// https://github.com/evanw/webgl-water
-// https://github.com/donmccurdy/three-gltf-viewer/blob/master/src/viewer.js
 const el = document.getElementById("container");
 const fov = 60;
 const defaultCamera = new THREE.PerspectiveCamera(fov, el.clientWidth / el.clientHeight, 0.01, 1000);
@@ -13,7 +10,6 @@ const loadingManager = new THREE.LoadingManager();
 let animationController;
 
 
-// https://stackoverflow.com/questions/35575065/how-to-make-a-loading-screen-in-three-js
 loadingManager.onStart = (url, itemsLoaded, itemsTotal) => {
 	// set up a loading bar
 	let container = document.getElementById("container");
@@ -47,11 +43,6 @@ const renderer = new THREE.WebGLRenderer();
 renderer.shadowMap.enabled = true;
 renderer.setSize(el.clientWidth, el.clientHeight);	
 container.appendChild(renderer.domElement);
-
-
-//https://threejs.org/docs/#examples/en/controls/OrbitControls
-// or this?: https://github.com/mrdoob/three.js/blob/dev/examples/jsm/controls/TrackballControls.js
-//const controls = new OrbitControls(defaultCamera, renderer.domElement);
 
 const camera = defaultCamera;
 camera.position.set(0,5,20);
@@ -136,7 +127,6 @@ function getModel(modelFilePath, side, name){
 								obj.scale.x = child.scale.x * 10;
 								obj.scale.y = child.scale.y * 10;
 								obj.scale.z = child.scale.z * 10;
-								//obj.rotateOnAxis(new THREE.Vector3(0,1,0), Math.PI);
 							}
 							
 							obj.name = name;
@@ -355,11 +345,13 @@ function keydown(evt){
 		// and that the camera is parented to the character mesh
 		// so that it can rotate with the mesh
 		if(firstPersonViewOn){
-			//thePlayer.add(camera);
-			//camera.position.copy(thePlayer.head.position);
-			//camera.rotation.copy(thePlayer.rotation);
+			thePlayer.add(camera);
+			camera.position.copy(thePlayer.head.position);
+			camera.position.z += 1.0;
+			camera.position.y -= 0.4;
+			camera.rotation.set(0, Math.PI, 0);
 		}else{
-			//scene.add(camera);
+			scene.add(camera);
 		}
 		
 	}else if(evt.keyCode === 50){
@@ -433,19 +425,11 @@ function update(){
 	if(keyboard.pressed("A")){
 		let axis = new THREE.Vector3(0, 1, 0);
 		thePlayer.rotateOnAxis(axis, rotationAngle);
-
-		if(firstPersonViewOn){
-			camera.rotateOnAxis(axis, rotationAngle/0.9);
-		}
 	}
 	
 	if(keyboard.pressed("D")){
 		let axis = new THREE.Vector3(0, 1, 0);
 		thePlayer.rotateOnAxis(axis, -rotationAngle);
-		
-		if(firstPersonViewOn){
-			camera.rotateOnAxis(axis, -rotationAngle/0.9);
-		}
 	}
 	
 	adjustVerticalHeightBasedOnTerrain(thePlayer, raycaster, scene);
@@ -471,12 +455,7 @@ function update(){
 	let relCameraOffset;
 	
 	if(firstPersonViewOn){
-		let newPos = new THREE.Vector3();
-		newPos.copy(thePlayer.head.position);
-		newPos.z += 1;
-		newPos.y -= 0.5;
-		relCameraOffset = newPos;
-		//camera.rotation.copy(thePlayer.rotation);
+		// nothing to do
 	}else if(sideViewOn){
 		relCameraOffset = new THREE.Vector3(-10, 3, 0);
 	}else if(!changeCameraView){
@@ -485,12 +464,12 @@ function update(){
 		relCameraOffset = new THREE.Vector3(0, 3, 15);
 	}
 	
-	//if(!firstPersonViewOn){
+	if(!firstPersonViewOn){
 		let cameraOffset = relCameraOffset.applyMatrix4(thePlayer.matrixWorld);
 		camera.position.x = cameraOffset.x;
 		camera.position.y = cameraOffset.y;
 		camera.position.z = cameraOffset.z;
-	//}
+	}
 	
 	if(!firstPersonViewOn) camera.lookAt(thePlayer.position);
 
