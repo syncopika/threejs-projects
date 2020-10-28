@@ -152,17 +152,14 @@ function getModel(modelFilePath, side, name){
 			function(gltf){
 				gltf.scene.traverse((child) => {
 
-					let material = child.material;
-					let geometry = child.geometry;
 					let obj;
 						
 					if(child.type === "SkinnedMesh"){
 						// whale shark
-						console.log(child);
 						obj = child;
 						
 						// https://stackoverflow.com/questions/46317927/what-is-the-correct-way-to-bind-a-skeleton-to-a-skinnedmesh-in-three-js
-						obj.add(obj.skeleton.bones[0]); 
+						obj.add(child.skeleton.bones[0]); 
 						
 						obj.scale.x = child.scale.x * 20;
 						obj.scale.y = child.scale.y * 20;
@@ -173,11 +170,8 @@ function getModel(modelFilePath, side, name){
 						obj.rotateOnAxis(new THREE.Vector3(0,1,0), Math.PI); // turn around 180 deg.
 						
 						whaleSharkClips = gltf.animations;
-					}
-					
-					if(child.type === "Mesh"){
-						obj = new THREE.Mesh(geometry, material);
-						
+					}else if(child.type === "Mesh"){
+						obj = child;
 						obj.scale.x = child.scale.x * 20;
 						obj.scale.y = child.scale.y * 20;
 						obj.scale.z = child.scale.z * 20;

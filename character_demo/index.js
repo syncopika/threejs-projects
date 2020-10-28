@@ -98,30 +98,25 @@ function getModel(modelFilePath, side, name){
 				gltf.scene.traverse((child) => {
 					
 					if(child.type === "Mesh" || child.type === "SkinnedMesh"){
-						
+
+						let obj = child;
+
 						if(name === "obj"){
-							let material = child.material;
-							let geometry = child.geometry;
-							let obj = child;
 							obj.scale.x = child.scale.x * 1.1;
 							obj.scale.y = child.scale.y * 1.1;
 							obj.scale.z = child.scale.z * 1.1;
 							carbine.push(obj);
 						}else{
-						
 							if(child.type === "SkinnedMesh"){
-								child.add(child.skeleton.bones[0]); // add pelvis to mesh as a child
+							
+								obj.add(child.skeleton.bones[0]); // add pelvis to mesh as a child
 							
 								if(name !== "obj"){
-									child.scale.x *= .3;
-									child.scale.y *= .3;
-									child.scale.z *= .3;
+									obj.scale.x *= .3;
+									obj.scale.y *= .3;
+									obj.scale.z *= .3;
 								}
 							}
-							
-							let material = child.material;
-							let geometry = child.geometry;
-							let obj = child;
 							
 							if(name === "bg"){
 								obj.scale.x = child.scale.x * 10;
@@ -139,7 +134,7 @@ function getModel(modelFilePath, side, name){
 				// for the carbine (or really any scene with multiple meshes)
 				if(name === "obj"){
 					let m4carbine = carbine[0];
-					console.log(m4carbine.skeleton);
+					//console.log(m4carbine.skeleton);
 					m4carbine.add(m4carbine.skeleton.bones[0]);
 					m4carbine.name = name;
 					
