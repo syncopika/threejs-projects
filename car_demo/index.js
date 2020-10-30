@@ -131,6 +131,7 @@ loadedModels.push(getModel('models/porsche.gltf', 'car'));
 let thePlayer = null;
 let terrain = null;
 let wheelAxesHelper = new THREE.AxesHelper(2);
+let carAxesHelper = new THREE.AxesHelper(4);
 
 let firstPersonViewOn = false;
 let sideViewOn = false;
@@ -172,12 +173,16 @@ Promise.all(loadedModels).then((objects) => {
 					// front
 					child.position.set(2, 0, -1.8);
 					thePlayer.frontWheels.push(child);
-					//child.add(wheelAxesHelper); // good for debugging rotations!
+					child.add(wheelAxesHelper); // good for debugging rotations!
+					
+					createInternalVector(child);
 				}else if(child.name === "Cube002"){
 					// front
 					child.rotateY(Math.PI);
 					child.position.set(2, 0, 1.8);
 					thePlayer.frontWheels.push(child);
+					
+					createInternalVector(child);
 				}else if(child.name === "Cube003"){
 					// rear
 					child.rotateY(Math.PI);
@@ -185,6 +190,11 @@ Promise.all(loadedModels).then((objects) => {
 				}else if(child.name === "Cube004"){
 					// rear
 					child.position.set(-2.9, 0, -1.7);
+				}else{
+					// car body
+					child.add(carAxesHelper);
+					createInternalVector(child);
+					thePlayer.body = child;
 				}
 			});
 
@@ -193,10 +203,6 @@ Promise.all(loadedModels).then((objects) => {
 			
 			animate();
 		}
-		
-		
-		//mesh.receiveShadow = true;
-		//renderer.render(scene, camera);
 	})
 });
 
@@ -221,13 +227,56 @@ function keydown(evt){
 document.addEventListener("keydown", keydown);
 
 
+function createInternalVector(mesh){
+	//let p1 = new THREE.Object3D();
+	//let p2 = new THREE.Object3D();
+	
+	let cubeGeometry = new THREE.BoxGeometry(0.2,0.2,0.2);
+	let material = new THREE.MeshBasicMaterial({color: 0x00ff00});
+	let p1 = new THREE.Mesh(cubeGeometry, material); 
+	
+	let material2 = new THREE.MeshBasicMaterial({color: 0xff0000});
+	let p2 = new THREE.Mesh(cubeGeometry, material2); 
+	
+	mesh.add(p1);
+	mesh.add(p2);
+	
+	// we're make assumptions about the initial position/coordinate system
+	// here of the mesh.
+	p1.position.set(0, 3, 0);
+	p2.position.set(-3, 3, 0);
+	
+	mesh.internalVectorPts = [p1, p2];
+}
+
+function getInternalVectorDirection(p1, p2){
+	let diff = p1.clone();
+	diff.sub(p2);
+	diff.normalize();
+	return diff;
+}
+
+
 function move(car, rotationAngle){
 	// rotate the wheels of the car
 	car.wheels.forEach((wheel) => {
 		wheel.rotateZ(rotationAngle*5);
 	});
 	
-	car.translateX(moveDistance * -(Math.abs(rotationAngle) / rotationAngle)); // divide rotationangle to get sign
+	// the 'forward' vector is based on the z-axis, but unfortunately
+	// the meshes aren't 'facing' the z-axis in a 'forward' manner
+	// so, what we can do instead is:
+	// since we know the initial setup of the meshes, we can create 
+	// some initial 'forward' vectors. uh how to do that?
+	// I think this should work:
+	// we can construct internal vectors for the front wheel and the car body.
+	// to make those vectors we can use 2 Object3ds for each mesh. 
+	
+	
+	let frontWheelVec = car.frontWheels[0].internalVectorPts.map(x => x.position);
+	let direction = getInternalVectorDirection(...frontWheelVec);//getForward(car.frontWheels[0]);
+	direction.multiplyScalar(moveDistance); // pass in moveDistance??
+	car.position.add(direction);
 }
 
 
@@ -237,13 +286,37 @@ function update(){
 	moveDistance = 8 * sec;
 	rotationAngle = (Math.PI / 2) * sec;
 	let changeCameraView = false;
+	let maxRad = 0.56; // max/min radians for wheel angle
 	
 	if(keyboard.pressed("z")){
 		changeCameraView = true;
 	}
 	
 	if(keyboard.pressed("W")){
+		
+		// check alignment of car body with the front wheels!
+		// if they are NOT parallel, rotate the body slowly? so
+		// that it eventually aligns with the direction and angle of the
+		// front wheels.
+		
+		// we can just use one of the front wheels since they should always be parallel
+		let frontWheelVec = thePlayer.frontWheels[0].internalVectorPts.map(x => x.position);
+		let wheelDirection = getInternalVectorDirection(...frontWheelVec)
+		
+		let carVec = thePlayer.body.internalVectorPts.map(x => x.position);
+		let carDirection = getInternalVectorDirection(...carVec);
+		let y = getForward(thePlayer);
+
+		//console.log(wheelDirection.dot(carDirection));
+		
+		if(wheelDirection.dot(carDirection) !== 1){
+			thePlayer.rotateY(rotationAngle/1.8);
+		}
+		
+		//console.log("------------");
+		
 		move(thePlayer, -rotationAngle);
+		
 	}else if(keyboard.pressed("S")){
 		move(thePlayer, rotationAngle);
 	}
@@ -255,19 +328,31 @@ function update(){
 			// rotate about the world's axis, which I think would be at 0,0,0 of the whole scene.
 			// glad the function works the way it does but was a bit surprised. :)
 			// was worried I'd have to do a pivot point thing and a bunch of transformations
-			wheel.rotateOnWorldAxis(new THREE.Vector3(0, 1, 0), rotationAngle/1.8); // TODO: need to clamp!
+			
+			if(wheel.rotation.y >= -maxRad && wheel.rotation.y <= maxRad){
+				wheel.rotateOnWorldAxis(new THREE.Vector3(0, 1, 0), rotationAngle/1.8);
+				
+				if(Math.abs(wheel.rotation.y) > maxRad){
+					wheel.rotation.y = wheel.rotation.y < 0 ? -maxRad + 0.01 : maxRad - 0.01;
+				}
+			}
 		});
 		// also this movement isn't quite right (I think it's easier to see going backwards)
 		// the front wheels should rotate and then the direction of the car should align to the 
 		// direction of the wheels I think?
-		thePlayer.rotateY(rotationAngle);
+		//thePlayer.rotateY(rotationAngle);
 	}
 	
 	if(keyboard.pressed("D")){
 		thePlayer.frontWheels.forEach((wheel) => {
-			wheel.rotateOnWorldAxis(new THREE.Vector3(0, 1, 0), -rotationAngle/1.8);
+			if(wheel.rotation.y >= -maxRad && wheel.rotation.y <= maxRad){
+				wheel.rotateOnWorldAxis(new THREE.Vector3(0, 1, 0), -rotationAngle/1.8);
+				
+				if(Math.abs(wheel.rotation.y) > maxRad){
+					wheel.rotation.y = wheel.rotation.y < 0 ? -maxRad + 0.01 : maxRad - 0.01;
+				}
+			}
 		});
-		thePlayer.rotateY(-rotationAngle);
 	}
 	
 	let relCameraOffset;
