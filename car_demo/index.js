@@ -79,16 +79,14 @@ function getModel(modelFilePath, name){
 			modelFilePath,
 			function(gltf){	
 			
-				let car = new THREE.Group();
-				
-				// the car and its wheels are separate meshes.
-				// make a group and add all of them to it
-				gltf.scene.traverse((child) => {
+				if(name === "car"){
+			
+					let car = new THREE.Group();
 					
-					if(child.type === "Mesh"){
-						
-						if(name === "car"){
-							
+					// the car and its wheels are separate meshes.
+					// make a group and add all of them to it
+					gltf.scene.traverse((child) => {
+						if(child.type === "Mesh"){
 							let geometry = child.geometry;
 							let material = child.material;
 							let obj = new THREE.Mesh(geometry, material);
@@ -101,13 +99,19 @@ function getModel(modelFilePath, name){
 							
 							car.add(obj);
 						}
-					}
-				});
-				
-				// for the car (or really any scene with multiple meshes)
-				if(name === "car"){
+					});
+
 					console.log(car);
 					resolve(car);
+
+				}else if(name === "racetrack"){
+					// handle racetrack
+					gltf.scene.traverse((child) => {
+						if(child.type === "Mesh"){
+							child.name = name;
+							resolve(child);
+						}
+					});
 				}
 				
 			},
@@ -124,9 +128,20 @@ function getModel(modelFilePath, name){
 	});
 }
 
+function addPlane(scene){
+	let planeGeometry = new THREE.PlaneGeometry(400, 400);
+	let texture = new THREE.TextureLoader().load('models/grass2.jpg');
+	//let texture = new THREE.TextureLoader().load('models/depositphotos_65970561-stock-photo-asphalt-texture.jpg');
+	let material = new THREE.MeshBasicMaterial({map: texture}); //color: 0x787878});
+	let plane = new THREE.Mesh(planeGeometry, material); 
+	plane.position.set(-100, -1.5, 0);
+	plane.rotateX((3*Math.PI)/2);
+	scene.add(plane);
+}
 
-// https://threejs.org/docs/#api/en/textures/Texture
+// load in models
 loadedModels.push(getModel('models/porsche.gltf', 'car'));
+loadedModels.push(getModel('models/racetrack.gltf', 'racetrack'));
 
 let thePlayer = null;
 let terrain = null;
@@ -139,8 +154,8 @@ let bottomViewOn = false;
 
 Promise.all(loadedModels).then((objects) => {
 	objects.forEach((mesh) => {
-		if(mesh.name === "bg"){
-			mesh.position.set(0, 0, 0);
+		if(mesh.name === "racetrack"){
+			mesh.position.set(6, -1.2, -7);
 			mesh.receiveShadow = true;
 			terrain = mesh;
 			scene.add(mesh);
@@ -148,17 +163,11 @@ Promise.all(loadedModels).then((objects) => {
 			console.log(mesh);
 			thePlayer = mesh;
 
-			// add a plane
-			let planeGeometry = new THREE.PlaneGeometry(80, 80);
-			let texture = new THREE.TextureLoader().load('depositphotos_65970561-stock-photo-asphalt-texture.jpg');
-			let material = new THREE.MeshBasicMaterial({map: texture}); //color: 0x787878});
-			let plane = new THREE.Mesh(planeGeometry, material); 
-			plane.position.set(0, -1, 0);
-			plane.rotateX((3*Math.PI)/2);
-			scene.add(plane);
+			// add a plane for grass
+			addPlane(scene);
 			
 			// remember that the car is a THREE.Group!
-			thePlayer.position.set(0, -0.5, -8);
+			thePlayer.position.set(0, 0, -8);
 			
 			thePlayer.frontWheels = [];
 			thePlayer.wheels = [];
@@ -189,10 +198,20 @@ Promise.all(loadedModels).then((objects) => {
 					child.position.set(-2.9, 0, -1.7);
 				}else{
 					// car body
-					child.add(carAxesHelper);
 					thePlayer.body = child;
+					thePlayer.add(carAxesHelper);
 				}
 			});
+			
+			// also add an Object3D to serve as a marker for checking 
+			// terrain height
+			let cubeGeometry = new THREE.BoxGeometry(0.2,0.2,0.2);
+			let material = new THREE.MeshBasicMaterial({color: 0x00ff00});
+			let marker = new THREE.Mesh(cubeGeometry, material);
+			//marker.visible = false;
+			thePlayer.body.add(marker);
+			marker.position.set(0, 2, 0);
+			thePlayer.heightMarker = marker;
 
 			thePlayer.castShadow = true;
 			scene.add(thePlayer);
@@ -202,6 +221,28 @@ Promise.all(loadedModels).then((objects) => {
 	})
 });
 
+function adjustVerticalHeightBasedOnTerrain(thePlayer, raycaster, terrain){
+	// for now I'm hardcoding the expected height at level terrain 
+	let baseline = 3.5;
+	let markerCenter = getCenter(thePlayer.heightMarker);
+	
+	let verticalDirection = checkTerrainHeight(markerCenter, raycaster, terrain);
+	//console.log(verticalDirection);
+	
+	if(verticalDirection === 0){
+		return;
+	}
+	
+	if(verticalDirection < 3.3){
+		// go uphill so increase y
+		let deltaY = baseline - verticalDirection;
+		thePlayer.position.y += deltaY;
+	}else if(verticalDirection > 3.7){
+		// go downhill so decrease y
+		let deltaY = verticalDirection - baseline;
+		thePlayer.position.y -= deltaY;
+	}
+}
 
 function keydown(evt){
 	if(evt.keyCode === 16){
@@ -223,6 +264,8 @@ function keydown(evt){
 document.addEventListener("keydown", keydown);
 
 
+let lastDirection = 0; // use this when turning the wheel to determine if the angle at which the car should
+					   // follow should be negative or positive (carForward.angleTo(wheelForward) always returns a positive angle)
 
 function move(car, rotationAngle){
 	// rotate the wheels of the car
@@ -241,20 +284,24 @@ function move(car, rotationAngle){
 	// so we get it pointing in the direction we want
 	// this issue probably has to do with the model?
 	wheelForward.applyAxisAngle(new THREE.Vector3(0, 1, 0), Math.PI/2);
-	console.log(wheelForward);
+	//console.log(wheelForward);
 	
 	// also rotate the car so it eventually lines up with the
 	// front wheels in terms of angle (their forward vectors should be parallel)
 	let carForward = getForward(car.body);
 	carForward.applyAxisAngle(new THREE.Vector3(0, 1, 0), Math.PI/2);
-	console.log(carForward);
-	console.log("-----------");
+	//console.log(carForward);
+	//console.log("-----------");
 	
-	console.log(carForward.angleTo(wheelForward));
+	//console.log(carForward.angleTo(wheelForward));
 	let angleToWheel = carForward.angleTo(wheelForward);
-	if(angleToWheel > 0.17){
-		car.rotateY(rotationAngle/2);
+	if(angleToWheel > 0.15){
+		//car.body.visible = false;
+		car.rotateY((rotationAngle * lastDirection));
 	}
+	
+	// check vertical height
+	adjustVerticalHeightBasedOnTerrain(car, raycaster, terrain);
 	
 	// move car based on wheel forward vector
 	wheelForward.multiplyScalar(0.2 * (rotationAngle < 0 ? 1 : -1)); // we should allow variable speed?
@@ -275,37 +322,15 @@ function update(){
 	}
 	
 	if(keyboard.pressed("W")){
-		
-		// check alignment of car body with the front wheels!
-		// if they are NOT parallel, rotate the body slowly? so
-		// that it eventually aligns with the direction and angle of the
-		// front wheels.
-		
-		/*
-		// we can just use one of the front wheels since they should always be parallel
-		let frontWheelVec = thePlayer.frontWheels[0].internalVectorPts.map(x => x.position);
-		let wheelDirection = getInternalVectorDirection(...frontWheelVec)
-		
-		let carVec = thePlayer.body.internalVectorPts.map(x => x.position);
-		let carDirection = getInternalVectorDirection(...carVec);
-		let y = getForward(thePlayer);
-
-		//console.log(wheelDirection.dot(carDirection));
-		
-		if(wheelDirection.dot(carDirection) !== 1){
-			thePlayer.rotateY(rotationAngle/1.8);
-		}
-		
-		//console.log("------------");
-		*/
-		
 		move(thePlayer, -rotationAngle);
-		
 	}else if(keyboard.pressed("S")){
 		move(thePlayer, rotationAngle);
 	}
 	
 	if(keyboard.pressed("A")){
+		lastDirection = -1;  // angle from car body to wheel forward vector should be positive
+		                    // because the body needs to be rotated counterclockwise. multiply -1 because rotationAngle is negative.
+		
 		thePlayer.frontWheels.forEach((wheel) => {
 			// check this out: https://stackoverflow.com/questions/56426088/rotate-around-world-axis
 			// I was a bit confused by the behavior of rotateOnWorldAxis because I thought it meant
@@ -328,6 +353,7 @@ function update(){
 	}
 	
 	if(keyboard.pressed("D")){
+		lastDirection = 1; // clockwise rotation for the car body to align with front wheel rotation about y
 		thePlayer.frontWheels.forEach((wheel) => {
 			if(wheel.rotation.y >= -maxRad && wheel.rotation.y <= maxRad){
 				wheel.rotateOnWorldAxis(new THREE.Vector3(0, 1, 0), -rotationAngle/1.8);

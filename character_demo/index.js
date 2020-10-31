@@ -246,25 +246,12 @@ Promise.all(loadedModels).then((objects) => {
 	})
 });
 
-
-// thanks to: https://docs.panda3d.org/1.10/python/programming/pandai/pathfinding/uneven-terrain
-function checkTerrainHeight(objCenter, raycaster, scene){
-	let intersects = raycaster.intersectObject(terrain);
-	raycaster.set(objCenter, new THREE.Vector3(0, -1, 0));
-	for(let i = 0; i < intersects.length; i++){
-		let height = objCenter.distanceTo(intersects[i].point);
-		//console.log(height);
-		document.getElementById('height').textContent = ("current height: " + height);
-		return height;
-	}
-	return 0;
-}
-
+// checkTerrainHeight comes from utils.js in /lib
 function adjustVerticalHeightBasedOnTerrain(thePlayer, raycaster, scene){
 	// for now I'm hardcoding the expected height at level terrain 
 	let baseline = 2.75;
 	let head = getCenter(thePlayer.head);
-	let verticalDirection = checkTerrainHeight(head, raycaster, scene);
+	let verticalDirection = checkTerrainHeight(head, raycaster, terrain, document.getElementById('height'));
 	
 	if(verticalDirection < 2.74){
 		// go uphill so increase y
