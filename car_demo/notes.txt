@@ -1,0 +1,20 @@
+for car turning physics later to make things more realistic/complicated:
+https://physics.stackexchange.com/questions/182689/what-causes-a-cars-velocity-to-follow-the-front-wheels-direction
+https://physics.stackexchange.com/questions/454887/the-dynamics-of-a-cornering-wheel
+
+What I want to do is to program at least somewhat realistic turning for the car.
+I thought to start with I could just rotate the car to match the rotation of the front wheels. this is tricky because
+I'm having trouble figuring out how a car's body rotates when turning. it should be independent of the front wheels' rotation I think?
+
+TODO:
+ - fix the car rotation thing when turning. if you try turning the wheels from one side to another (i.e. keep alternating between
+   A and D) after turning, the car's forward vector is stuck at an angle, which influences the forward movement. I think it has
+   to do with the if condition I set up to determine whether the car should rotate to align with the front wheels. need to investigate
+   further though.
+
+ - fix lateral rotation. it kind of works but I still don't know what situations trigger the car to flip over, which happens sometimes.
+   additionally, when you try to move the car along the big sloped turn, the lateral rotation usually looks pretty ok but then it looks
+   as if the car got rotated about the Z axis where it's tipped forward at an angle. 
+
+   I think car.rotateY in move() might be the culprit. when the car is tilted about X, rotating Y can have such a consequence
+   possibly (cause the axes will be tilted as well?)

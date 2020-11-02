@@ -108,7 +108,10 @@ function getModel(modelFilePath, name){
 					// handle racetrack
 					gltf.scene.traverse((child) => {
 						if(child.type === "Mesh"){
+							child.material.shininess = 0; // doesn't seem to work? maybe a lighting issue?
 							child.name = name;
+							
+							console.log(child.material); //check doubleface
 							resolve(child);
 						}
 					});
@@ -136,6 +139,7 @@ function addPlane(scene){
 	let plane = new THREE.Mesh(planeGeometry, material); 
 	plane.position.set(-100, -1.5, 0);
 	plane.rotateX((3*Math.PI)/2);
+	plane.name = "grass";
 	scene.add(plane);
 }
 
@@ -151,6 +155,7 @@ let carAxesHelper = new THREE.AxesHelper(4);
 let firstPersonViewOn = false;
 let sideViewOn = false;
 let bottomViewOn = false;
+let topViewOn = false;
 
 Promise.all(loadedModels).then((objects) => {
 	objects.forEach((mesh) => {
@@ -167,7 +172,7 @@ Promise.all(loadedModels).then((objects) => {
 			addPlane(scene);
 			
 			// remember that the car is a THREE.Group!
-			thePlayer.position.set(0, 0, -8);
+			thePlayer.position.set(0, -0.3, -10);
 			
 			thePlayer.frontWheels = [];
 			thePlayer.wheels = [];
@@ -209,9 +214,25 @@ Promise.all(loadedModels).then((objects) => {
 			let material = new THREE.MeshBasicMaterial({color: 0x00ff00});
 			let marker = new THREE.Mesh(cubeGeometry, material);
 			//marker.visible = false;
+			
 			thePlayer.body.add(marker);
 			marker.position.set(0, 2, 0);
 			thePlayer.heightMarker = marker;
+			
+			// for lateral modifications if the road is elevated on one side
+			// we want the car to be parallel with the road
+			let material2 = new THREE.MeshBasicMaterial({color: 0xff0000});
+			let markerRight = new THREE.Mesh(cubeGeometry, material2);			
+			markerRight.position.set(0, 2, 1.5);
+
+			let material3 = new THREE.MeshBasicMaterial({color: 0x0000ff});
+			let markerLeft = new THREE.Mesh(cubeGeometry, material3);
+			markerLeft.position.set(0, 2, -1.5);
+			
+			thePlayer.body.add(markerLeft);
+			thePlayer.body.add(markerRight);
+			thePlayer.leftHeightMarker = markerLeft;
+			thePlayer.rightHeightMarker = markerRight;
 
 			thePlayer.castShadow = true;
 			scene.add(thePlayer);
@@ -244,6 +265,88 @@ function adjustVerticalHeightBasedOnTerrain(thePlayer, raycaster, terrain){
 	}
 }
 
+
+const raycaster1 = new THREE.Raycaster();
+const raycaster2 = new THREE.Raycaster();
+const leftMarkerVec = new THREE.Vector3();
+const rightMarkerVec = new THREE.Vector3();
+//const raycaster3 = new THREE.Raycaster();
+function adjustLateralRotationBasedOnTerrain(thePlayer, terrain){
+	// take left, right and height markers and get their heights
+	// form a vector from left to right based on the points given by their heights
+	// if that vector is at an angle, rotate the car accordingly about the x axis
+	// so that the vector of left to right markers are parallel to the vector formed
+	// from the heights of the raycasts
+	let left = thePlayer.leftHeightMarker.getWorldPosition(leftMarkerVec);
+	let right = thePlayer.rightHeightMarker.getWorldPosition(rightMarkerVec);
+	
+	//console.log(left);
+	//console.log(thePlayer.leftHeightMarker.position);
+	//console.log("====================");
+	//console.log(leftMarkerVec);
+	raycaster1.set(left, new THREE.Vector3(0, -1 ,0));
+	raycaster2.set(right, new THREE.Vector3(0, -1, 0));
+	//console.log(raycaster1.intersectObjects(scene.children));
+	
+	let lp = raycaster1.intersectObject(terrain);
+	let rp = raycaster2.intersectObject(terrain);
+	//let mp = raycaster3.intersectObject(terrain);
+	
+	if(lp.length === 0 || rp.length === 0){
+		// if we go off the racetrack
+		return;
+	}
+	
+	let leftPt, rightPt;
+	console.log("----------------------------");
+	
+	// note that the raycaster will catch both sides of the racetrack! so you'll get back the top face and the bottom face. 
+	// we want the top face only!
+	for(let obj of lp){
+		if(obj.object.name === "racetrack"){
+			leftPt = obj.point; 
+		}
+		console.log(obj);
+		break;
+	}
+	
+	for(let obj of rp){
+		if(obj.object.name === "racetrack"){
+			rightPt = obj.point; 
+		}	
+		console.log(obj); 
+		break; 
+	}
+	
+	let line = drawVector(leftPt, rightPt, 0x0000ff);
+	let line2 = drawVector(leftMarkerVec, rightMarkerVec, 0x00ff00);
+	
+	scene.add(line);
+	scene.add(line2);
+	
+	let terrainSlopeVector = rightPt.sub(leftPt).normalize();
+	//console.log(terrainSlopeVector);
+	let markerSlopeVector = right.sub(left).normalize();
+	//console.log(markerSlopeVector);
+	console.log(markerSlopeVector.dot(terrainSlopeVector));
+	//console.log(markerSlopeVector.angleTo(terrainSlopeVector));
+	
+	//console.log("----------------------------");
+	if(markerSlopeVector.dot(terrainSlopeVector) < 0.998){//markerSlopeVector.angleTo(terrainSlopeVector) >= 0.02){
+		// need to prevent the possibility of being flipped upside down.
+		
+		console.log("need to rotate x on car!");
+		//console.log(thePlayer.rotation);
+		//console.log(markerSlopeVector.angleTo(terrainSlopeVector));
+		if(leftPt.y < rightPt.y){
+			thePlayer.rotateOnAxis(new THREE.Vector3(1, 0, 0), -markerSlopeVector.angleTo(terrainSlopeVector));
+		}else{
+			thePlayer.rotateOnAxis(new THREE.Vector3(1, 0, 0), markerSlopeVector.angleTo(terrainSlopeVector));
+		}
+		//console.log(thePlayer.rotation);
+	}
+}
+
 function keydown(evt){
 	if(evt.keyCode === 16){
 		// shift key	
@@ -253,25 +356,41 @@ function keydown(evt){
 		// toggle side view
 		firstPersonViewOn = false;
 		bottomViewOn = false;
+		topViewOn = false;
 		sideViewOn = !sideViewOn;
 	}else if(evt.keyCode === 51){
+		// bottom view
 		firstPersonViewOn = false;
 		sideViewOn = false;
+		topViewOn = false;
 		bottomViewOn = !bottomViewOn;
+	}else if(evt.keyCode === 52){
+		// top view
+		firstPersonViewOn = false;
+		sideViewOn = false;
+		bottomViewOn = false;
+		topViewOn = !topViewOn;
+	}else if(evt.keyCode === 80){
+		// p key
+		// toggle car body visibility
+		thePlayer.body.visible = !thePlayer.body.visible;
+	}else if(evt.keyCode === 84){
+		// t key
+		// toggle racetrack visibility
+		terrain.visible = !terrain.visible;
 	}
 }
 
 document.addEventListener("keydown", keydown);
 
 
-let lastDirection = 0; // use this when turning the wheel to determine if the angle at which the car should
-					   // follow should be negative or positive (carForward.angleTo(wheelForward) always returns a positive angle)
+// use this when turning the wheel to determine if the angle at which the car should
+// follow should be negative or positive (carForward.angleTo(wheelForward) always returns a positive angle)
+let lastDirection = 0;
 
 function move(car, rotationAngle){
-	// rotate the wheels of the car
-	// the rear wheels should act as a pivot point for the front wheels to go around!
-	// so that way when the front wheels are turned, they will always end up moving in a 
-	// circle, as what happens in real life :)
+	
+	adjustLateralRotationBasedOnTerrain(car, terrain);
 	
 	car.wheels.forEach((wheel) => {
 		wheel.rotateZ(rotationAngle*5);
@@ -284,28 +403,25 @@ function move(car, rotationAngle){
 	// so we get it pointing in the direction we want
 	// this issue probably has to do with the model?
 	wheelForward.applyAxisAngle(new THREE.Vector3(0, 1, 0), Math.PI/2);
-	//console.log(wheelForward);
 	
 	// also rotate the car so it eventually lines up with the
 	// front wheels in terms of angle (their forward vectors should be parallel)
 	let carForward = getForward(car.body);
 	carForward.applyAxisAngle(new THREE.Vector3(0, 1, 0), Math.PI/2);
-	//console.log(carForward);
-	//console.log("-----------");
 	
 	//console.log(carForward.angleTo(wheelForward));
 	let angleToWheel = carForward.angleTo(wheelForward);
-	if(angleToWheel > 0.15){
-		//car.body.visible = false;
+	if(angleToWheel >= 0.16){
 		car.rotateY((rotationAngle * lastDirection));
 	}
 	
-	// check vertical height
-	adjustVerticalHeightBasedOnTerrain(car, raycaster, terrain);
-	
 	// move car based on wheel forward vector
-	wheelForward.multiplyScalar(0.2 * (rotationAngle < 0 ? 1 : -1)); // we should allow variable speed?
+	wheelForward.multiplyScalar(0.3 * (rotationAngle < 0 ? 1 : -1)); // we should allow variable speed?
+
 	car.position.add(wheelForward);
+	
+	adjustVerticalHeightBasedOnTerrain(car, raycaster, terrain); // pass in terrain as arg?
+	
 }
 
 
@@ -317,7 +433,7 @@ function update(){
 	let changeCameraView = false;
 	let maxRad = 0.56; // max/min radians for wheel angle
 	
-	if(keyboard.pressed("z")){
+	if(keyboard.pressed("Z")){
 		changeCameraView = true;
 	}
 	
@@ -339,24 +455,20 @@ function update(){
 			// was worried I'd have to do a pivot point thing and a bunch of transformations
 			
 			if(wheel.rotation.y >= -maxRad && wheel.rotation.y <= maxRad){
-				wheel.rotateOnWorldAxis(new THREE.Vector3(0, 1, 0), rotationAngle/1.8);
+				wheel.rotateOnWorldAxis(new THREE.Vector3(0, 1, 0), rotationAngle/1.2);
 				
 				if(Math.abs(wheel.rotation.y) > maxRad){
 					wheel.rotation.y = wheel.rotation.y < 0 ? -maxRad + 0.01 : maxRad - 0.01;
 				}
 			}
 		});
-		// also this movement isn't quite right (I think it's easier to see going backwards)
-		// the front wheels should rotate and then the direction of the car should align to the 
-		// direction of the wheels I think?
-		//thePlayer.rotateY(rotationAngle);
 	}
 	
 	if(keyboard.pressed("D")){
 		lastDirection = 1; // clockwise rotation for the car body to align with front wheel rotation about y
 		thePlayer.frontWheels.forEach((wheel) => {
 			if(wheel.rotation.y >= -maxRad && wheel.rotation.y <= maxRad){
-				wheel.rotateOnWorldAxis(new THREE.Vector3(0, 1, 0), -rotationAngle/1.8);
+				wheel.rotateOnWorldAxis(new THREE.Vector3(0, 1, 0), -rotationAngle/1.2);
 				
 				if(Math.abs(wheel.rotation.y) > maxRad){
 					wheel.rotation.y = wheel.rotation.y < 0 ? -maxRad + 0.01 : maxRad - 0.01;
@@ -369,14 +481,20 @@ function update(){
 	
 	if(firstPersonViewOn){
 		// nothing to do
-	}else if(sideViewOn){
-		relCameraOffset = new THREE.Vector3(-10, 3, 0);
+	}else if(sideViewOn && !changeCameraView){
+		relCameraOffset = new THREE.Vector3(-10, 2, 0);
 	}else if(bottomViewOn){
 		relCameraOffset = new THREE.Vector3(0, -6, 0);
+	}else if(topViewOn){
+		relCameraOffset = new THREE.Vector3(0, 15, 0);
 	}else if(!changeCameraView){
 		relCameraOffset = new THREE.Vector3(0, 3, -12);
 	}else{
-		relCameraOffset = new THREE.Vector3(0, 3, 12);
+		if(sideViewOn){
+			relCameraOffset = new THREE.Vector3(10, 2, 0);
+		}else{
+			relCameraOffset = new THREE.Vector3(0, 3, 12);
+		}		
 	}
 	
 	if(!firstPersonViewOn){
