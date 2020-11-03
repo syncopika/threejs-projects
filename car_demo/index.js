@@ -172,7 +172,7 @@ Promise.all(loadedModels).then((objects) => {
 			addPlane(scene);
 			
 			// remember that the car is a THREE.Group!
-			thePlayer.position.set(0, -0.3, -10);
+			thePlayer.position.set(0, -0.5, -10);
 			
 			thePlayer.frontWheels = [];
 			thePlayer.wheels = [];
@@ -265,18 +265,56 @@ function adjustVerticalHeightBasedOnTerrain(thePlayer, raycaster, terrain){
 	}
 }
 
-
 const raycaster1 = new THREE.Raycaster();
 const raycaster2 = new THREE.Raycaster();
 const leftMarkerVec = new THREE.Vector3();
 const rightMarkerVec = new THREE.Vector3();
-//const raycaster3 = new THREE.Raycaster();
+const markerVec = new THREE.Vector3();
+let normalMatrix = new THREE.Matrix3();
+let worldNormal = new THREE.Matrix3();
 function adjustLateralRotationBasedOnTerrain(thePlayer, terrain){
 	// take left, right and height markers and get their heights
 	// form a vector from left to right based on the points given by their heights
 	// if that vector is at an angle, rotate the car accordingly about the x axis
 	// so that the vector of left to right markers are parallel to the vector formed
 	// from the heights of the raycasts
+	
+	let mid = thePlayer.heightMarker.getWorldPosition(markerVec);
+	console.log(mid);
+	raycaster1.set(mid, new THREE.Vector3(0, -1 ,0));
+	
+	let mp = raycaster1.intersectObject(terrain);
+	
+	if(mp.length === 0){
+		return;
+	}
+	
+	let midPt;
+	for(let obj of mp){
+		if(obj.object.name === "racetrack"){
+			midPt = obj;
+		}
+		console.log(obj);
+		break;
+	}
+	
+
+	normalMatrix.getNormalMatrix(terrain.matrixWorld);
+	
+	let v1 = midPt.face.normal.clone().applyMatrix3(normalMatrix).normalize();
+
+	let v2 = v1.clone().multiplyScalar(6);
+
+	let line = drawVector(v1, v2, 0xff0000);
+	
+	line.position.copy(mid);
+	line.position.y -= 3;
+	//line.position.x += 10;
+	scene.add(line);
+	
+	thePlayer.position.y = midPt.point.y + 0.5
+	
+	/*
 	let left = thePlayer.leftHeightMarker.getWorldPosition(leftMarkerVec);
 	let right = thePlayer.rightHeightMarker.getWorldPosition(rightMarkerVec);
 	
@@ -345,6 +383,7 @@ function adjustLateralRotationBasedOnTerrain(thePlayer, terrain){
 		}
 		//console.log(thePlayer.rotation);
 	}
+	*/
 }
 
 function keydown(evt){
@@ -378,6 +417,10 @@ function keydown(evt){
 		// t key
 		// toggle racetrack visibility
 		terrain.visible = !terrain.visible;
+	}else if(evt.keyCode === 88){
+		// x key
+		// display wireframe of track
+		terrain.material.wireframe = !terrain.material.wireframe;
 	}
 }
 
@@ -419,8 +462,7 @@ function move(car, rotationAngle){
 	wheelForward.multiplyScalar(0.3 * (rotationAngle < 0 ? 1 : -1)); // we should allow variable speed?
 
 	car.position.add(wheelForward);
-	
-	adjustVerticalHeightBasedOnTerrain(car, raycaster, terrain); // pass in terrain as arg?
+	//adjustVerticalHeightBasedOnTerrain(car, raycaster, terrain); // pass in terrain as arg?
 	
 }
 

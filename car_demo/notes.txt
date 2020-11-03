@@ -14,7 +14,21 @@ TODO:
 
  - fix lateral rotation. it kind of works but I still don't know what situations trigger the car to flip over, which happens sometimes.
    additionally, when you try to move the car along the big sloped turn, the lateral rotation usually looks pretty ok but then it looks
-   as if the car got rotated about the Z axis where it's tipped forward at an angle. 
+   as if the car got rotated about the Z axis where it's tipped forward at an angle. I think this has to do with the track having
+   a bunch of segments such that the turns are very 'angular' and not smooth. so what might be level on one face is not on the next.
 
-   I think car.rotateY in move() might be the culprit. when the car is tilted about X, rotating Y can have such a consequence
-   possibly (cause the axes will be tilted as well?)
+   objective: get car to be parallel with whatever plane it's on. sounds simple but it's so hard ;_;
+   unity might help: https://answers.unity.com/questions/168097/orient-vehicle-to-ground-normal.html
+                     https://www.google.com/search?biw=2133&bih=1076&ei=jIyfX9PlBJ-oytMP_u6SwA4&q=unity+get+car+to+be+parallel+with+curved+plane&oq=unity+get+car+to+be+parallel+with+curved+plane&gs_lcp=CgZwc3ktYWIQAzIFCCEQoAEyBQghEKABOgQIABBHOgUIIRCrAjoICCEQFhAdEB46BwghEAoQoAFQijVYy1RgxlVoA3ACeACAAWGIAZELkgECMjCYAQCgAQGqAQdnd3Mtd2l6yAEIwAEB&sclient=psy-ab&ved=0ahUKEwjT29GyhOPsAhUflHIEHX63BOgQ4dUDCA0&uact=5
+
+   this too? https://github.com/mrdoob/three.js/issues/1486
+   
+   new strategy: try raycast down once, get the normal of the face the raycast hits. do something with that info?
+                 you can definitely adjust the car's y position with that info so I don't need a separate function to adjust height.
+
+   maybe: https://stackoverflow.com/questions/46336560/three-js-how-to-add-an-object-perpendicular-to-a-face-normal
+          https://stackoverflow.com/questions/16268482/three-js-convert-face-normal-from-local-space-to-world-space
+          https://stackoverflow.com/questions/23139442/how-to-get-correct-values-for-normals-in-threejs
+
+   hmm this looks similar: https://stackoverflow.com/questions/23592427/rotate-an-object-according-to-a-plane-normal
+   and this: https://answers.unity.com/questions/27340/rotating-an-object-to-equal-normals-of-object-belo.html
