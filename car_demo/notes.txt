@@ -32,3 +32,24 @@ TODO:
 
    hmm this looks similar: https://stackoverflow.com/questions/23592427/rotate-an-object-according-to-a-plane-normal
    and this: https://answers.unity.com/questions/27340/rotating-an-object-to-equal-normals-of-object-belo.html
+
+   ok, so now I can get a normal vector for each face of the racetrack that my raycast hits. great! and each normal vector looks like
+   it's angled properly along the sloped parts of the track. now what I would like to happen is have the car rotate itself about
+   the x-axis so that it's angled just like the normal for the face below it (i.e. the local y-axis of the car should be parallel
+   to the normal)
+   this is helpful! https://stackoverflow.com/questions/9038465/three-js-object3d-cylinder-rotation-to-align-to-a-vector
+
+   cool, using thePlayer.quaternion.setFromUnitVectors seems to get the car to align with the normal vector of the surface it's on.
+   but now a new problem - this rotation alignment causes issues with movement; it's forcing the car to face a certain way based 
+   on the normal vector.
+
+   ok I'm very dumb lol. I ended up where I was like a couple days ago. I'm pretty sure the initial idea with getting the lateral rotation
+   is fine (I just changed what I had to use quaternions lol) and is working - the 'tilting' forward of the car is due to the angled
+   segments of the track and the fact that I'm only checking the angle of the car and the surface it's on in the middle of the car mesh.
+   I think I should try adding a marker above the front and rear wheels? but then more rotations if the front wheels should be higher
+   than the rear wheels ughhhhhhhhhhhhhhhhhh ;_;. I just need to get the car more leveled about the z-axis (check z-axis rotations?).
+
+   other/maybe helpful:
+        https://stackoverflow.com/questions/25199173/how-to-find-rotation-matrix-between-two-vectors-in-three-js
+	https://stackoverflow.com/questions/52977759/three-js-how-to-find-out-xyz-rotations-between-two-vectors
+        https://stackoverflow.com/questions/43606135/split-quaternion-into-axis-rotations

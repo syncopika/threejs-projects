@@ -272,6 +272,7 @@ const rightMarkerVec = new THREE.Vector3();
 const markerVec = new THREE.Vector3();
 let normalMatrix = new THREE.Matrix3();
 let worldNormal = new THREE.Matrix3();
+let quat = new THREE.Quaternion();
 function adjustLateralRotationBasedOnTerrain(thePlayer, terrain){
 	// take left, right and height markers and get their heights
 	// form a vector from left to right based on the points given by their heights
@@ -298,33 +299,31 @@ function adjustLateralRotationBasedOnTerrain(thePlayer, terrain){
 		break;
 	}
 	
-
+	// the normal vector here is being converted to world space
 	normalMatrix.getNormalMatrix(terrain.matrixWorld);
-	
 	let v1 = midPt.face.normal.clone().applyMatrix3(normalMatrix).normalize();
-
-	let v2 = v1.clone().multiplyScalar(6);
-
-	let line = drawVector(v1, v2, 0xff0000);
+	let v2 = v1.clone().multiplyScalar(3);
+	let normal = drawVector(v1, v2, 0xff0000);
 	
-	line.position.copy(mid);
-	line.position.y -= 3;
-	//line.position.x += 10;
-	scene.add(line);
+	let car1 = mid;
+	let car2 = mid.clone();
+	car2.y = 0;
+	let carLine = drawVector(car1, car2, 0x00ffff);
 	
-	thePlayer.position.y = midPt.point.y + 0.5
+	normal.position.copy(mid);
+	normal.position.y -= 3;
 	
-	/*
+	// show track normal vs car normal
+	//scene.add(normal);
+	//scene.add(carLine);
+	
+	thePlayer.position.y = midPt.point.y + 0.5;
+	
 	let left = thePlayer.leftHeightMarker.getWorldPosition(leftMarkerVec);
 	let right = thePlayer.rightHeightMarker.getWorldPosition(rightMarkerVec);
 	
-	//console.log(left);
-	//console.log(thePlayer.leftHeightMarker.position);
-	//console.log("====================");
-	//console.log(leftMarkerVec);
 	raycaster1.set(left, new THREE.Vector3(0, -1 ,0));
 	raycaster2.set(right, new THREE.Vector3(0, -1, 0));
-	//console.log(raycaster1.intersectObjects(scene.children));
 	
 	let lp = raycaster1.intersectObject(terrain);
 	let rp = raycaster2.intersectObject(terrain);
@@ -359,31 +358,21 @@ function adjustLateralRotationBasedOnTerrain(thePlayer, terrain){
 	let line = drawVector(leftPt, rightPt, 0x0000ff);
 	let line2 = drawVector(leftMarkerVec, rightMarkerVec, 0x00ff00);
 	
-	scene.add(line);
-	scene.add(line2);
+	//scene.add(line);
+	//scene.add(line2);
 	
 	let terrainSlopeVector = rightPt.sub(leftPt).normalize();
-	//console.log(terrainSlopeVector);
 	let markerSlopeVector = right.sub(left).normalize();
-	//console.log(markerSlopeVector);
-	console.log(markerSlopeVector.dot(terrainSlopeVector));
-	//console.log(markerSlopeVector.angleTo(terrainSlopeVector));
-	
+
 	//console.log("----------------------------");
 	if(markerSlopeVector.dot(terrainSlopeVector) < 0.998){//markerSlopeVector.angleTo(terrainSlopeVector) >= 0.02){
 		// need to prevent the possibility of being flipped upside down.
-		
 		console.log("need to rotate x on car!");
-		//console.log(thePlayer.rotation);
-		//console.log(markerSlopeVector.angleTo(terrainSlopeVector));
-		if(leftPt.y < rightPt.y){
-			thePlayer.rotateOnAxis(new THREE.Vector3(1, 0, 0), -markerSlopeVector.angleTo(terrainSlopeVector));
-		}else{
-			thePlayer.rotateOnAxis(new THREE.Vector3(1, 0, 0), markerSlopeVector.angleTo(terrainSlopeVector));
-		}
-		//console.log(thePlayer.rotation);
+		
+		quat.setFromUnitVectors(markerSlopeVector, terrainSlopeVector);
+		thePlayer.applyQuaternion(quat);
 	}
-	*/
+	
 }
 
 function keydown(evt){
@@ -524,7 +513,8 @@ function update(){
 	if(firstPersonViewOn){
 		// nothing to do
 	}else if(sideViewOn && !changeCameraView){
-		relCameraOffset = new THREE.Vector3(-10, 2, 0);
+		// actually rear view
+		relCameraOffset = new THREE.Vector3(-10, 1, 0);
 	}else if(bottomViewOn){
 		relCameraOffset = new THREE.Vector3(0, -6, 0);
 	}else if(topViewOn){
@@ -533,7 +523,8 @@ function update(){
 		relCameraOffset = new THREE.Vector3(0, 3, -12);
 	}else{
 		if(sideViewOn){
-			relCameraOffset = new THREE.Vector3(10, 2, 0);
+			// actually front view
+			relCameraOffset = new THREE.Vector3(10, 1, 0);
 		}else{
 			relCameraOffset = new THREE.Vector3(0, 3, 12);
 		}		
