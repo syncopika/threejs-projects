@@ -49,6 +49,14 @@ TODO:
    I think I should try adding a marker above the front and rear wheels? but then more rotations if the front wheels should be higher
    than the rear wheels ughhhhhhhhhhhhhhhhhh ;_;. I just need to get the car more leveled about the z-axis (check z-axis rotations?).
 
+   -----
+   so it turns out it's pretty easy. just add a couple more height markers (one for the front and one for the rear of the car), just like
+   what you do for the lateral rotation. and solve the problem the same way, except you're dealing with vectors that go along the x-axis.
+   yay! :) the result looks pretty good.
+
+   all that's left is to try to figure out how to get my rotations with the car and the front wheels (which rotate separately)
+   when turning lined up properly.
+
    other/maybe helpful:
         https://stackoverflow.com/questions/25199173/how-to-find-rotation-matrix-between-two-vectors-in-three-js
 	https://stackoverflow.com/questions/52977759/three-js-how-to-find-out-xyz-rotations-between-two-vectors

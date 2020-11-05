@@ -134,8 +134,7 @@ function getModel(modelFilePath, name){
 function addPlane(scene){
 	let planeGeometry = new THREE.PlaneGeometry(400, 400);
 	let texture = new THREE.TextureLoader().load('models/grass2.jpg');
-	//let texture = new THREE.TextureLoader().load('models/depositphotos_65970561-stock-photo-asphalt-texture.jpg');
-	let material = new THREE.MeshBasicMaterial({map: texture}); //color: 0x787878});
+	let material = new THREE.MeshBasicMaterial({map: texture}); 
 	let plane = new THREE.Mesh(planeGeometry, material); 
 	plane.position.set(-100, -1.5, 0);
 	plane.rotateX((3*Math.PI)/2);
@@ -149,8 +148,8 @@ loadedModels.push(getModel('models/racetrack.gltf', 'racetrack'));
 
 let thePlayer = null;
 let terrain = null;
-let wheelAxesHelper = new THREE.AxesHelper(2);
-let carAxesHelper = new THREE.AxesHelper(4);
+const wheelAxesHelper = new THREE.AxesHelper(2);
+const carAxesHelper = new THREE.AxesHelper(4);
 
 let firstPersonViewOn = false;
 let sideViewOn = false;
@@ -224,13 +223,32 @@ Promise.all(loadedModels).then((objects) => {
 			let material2 = new THREE.MeshBasicMaterial({color: 0xff0000});
 			let markerRight = new THREE.Mesh(cubeGeometry, material2);			
 			markerRight.position.set(0, 2, 1.5);
-
+			markerRight.visible = false;
+			
 			let material3 = new THREE.MeshBasicMaterial({color: 0x0000ff});
 			let markerLeft = new THREE.Mesh(cubeGeometry, material3);
 			markerLeft.position.set(0, 2, -1.5);
+			markerLeft.visible = false;
+			
+			// for forward rotation (about z-axis) adjustments
+			let material4 = new THREE.MeshBasicMaterial({color: 0xffff00});
+			let markerFront = new THREE.Mesh(cubeGeometry, material4);
+			markerFront.position.set(2, 2, 0);
+			markerFront.visible = false;
+			
+			let material5 = new THREE.MeshBasicMaterial({color: 0x00ffff});
+			let markerRear = new THREE.Mesh(cubeGeometry, material5);
+			markerRear.position.set(-2, 2, 0);
+			markerRear.visible = false;
 			
 			thePlayer.body.add(markerLeft);
 			thePlayer.body.add(markerRight);
+			thePlayer.body.add(markerFront);
+			thePlayer.body.add(markerRear);
+			
+			// maybe store these in a map?
+			thePlayer.frontHeightMarker = markerFront;
+			thePlayer.rearHeightMarker = markerRear;
 			thePlayer.leftHeightMarker = markerLeft;
 			thePlayer.rightHeightMarker = markerRight;
 
@@ -242,37 +260,17 @@ Promise.all(loadedModels).then((objects) => {
 	})
 });
 
-function adjustVerticalHeightBasedOnTerrain(thePlayer, raycaster, terrain){
-	// for now I'm hardcoding the expected height at level terrain 
-	let baseline = 3.5;
-	let markerCenter = getCenter(thePlayer.heightMarker);
-	
-	let verticalDirection = checkTerrainHeight(markerCenter, raycaster, terrain);
-	//console.log(verticalDirection);
-	
-	if(verticalDirection === 0){
-		return;
-	}
-	
-	if(verticalDirection < 3.3){
-		// go uphill so increase y
-		let deltaY = baseline - verticalDirection;
-		thePlayer.position.y += deltaY;
-	}else if(verticalDirection > 3.7){
-		// go downhill so decrease y
-		let deltaY = verticalDirection - baseline;
-		thePlayer.position.y -= deltaY;
-	}
-}
 
 const raycaster1 = new THREE.Raycaster();
 const raycaster2 = new THREE.Raycaster();
-const leftMarkerVec = new THREE.Vector3();
+const leftMarkerVec = new THREE.Vector3(); // probably just need 2 and can keep reusing them
 const rightMarkerVec = new THREE.Vector3();
+const frontMarkerVec = new THREE.Vector3();
+const rearMarkerVec = new THREE.Vector3();
 const markerVec = new THREE.Vector3();
-let normalMatrix = new THREE.Matrix3();
-let worldNormal = new THREE.Matrix3();
-let quat = new THREE.Quaternion();
+const normalMatrix = new THREE.Matrix3();
+const quat = new THREE.Quaternion();
+
 function adjustLateralRotationBasedOnTerrain(thePlayer, terrain){
 	// take left, right and height markers and get their heights
 	// form a vector from left to right based on the points given by their heights
@@ -280,8 +278,10 @@ function adjustLateralRotationBasedOnTerrain(thePlayer, terrain){
 	// so that the vector of left to right markers are parallel to the vector formed
 	// from the heights of the raycasts
 	
+	// fix rotation about Z. (need to be leveled)
+	//console.log(thePlayer.rotation.z);
+	
 	let mid = thePlayer.heightMarker.getWorldPosition(markerVec);
-	console.log(mid);
 	raycaster1.set(mid, new THREE.Vector3(0, -1 ,0));
 	
 	let mp = raycaster1.intersectObject(terrain);
@@ -295,11 +295,10 @@ function adjustLateralRotationBasedOnTerrain(thePlayer, terrain){
 		if(obj.object.name === "racetrack"){
 			midPt = obj;
 		}
-		console.log(obj);
 		break;
 	}
 	
-	// the normal vector here is being converted to world space
+	/* the normal vector here is being converted to world space
 	normalMatrix.getNormalMatrix(terrain.matrixWorld);
 	let v1 = midPt.face.normal.clone().applyMatrix3(normalMatrix).normalize();
 	let v2 = v1.clone().multiplyScalar(3);
@@ -316,6 +315,7 @@ function adjustLateralRotationBasedOnTerrain(thePlayer, terrain){
 	// show track normal vs car normal
 	//scene.add(normal);
 	//scene.add(carLine);
+	*/
 	
 	thePlayer.position.y = midPt.point.y + 0.5;
 	
@@ -334,45 +334,83 @@ function adjustLateralRotationBasedOnTerrain(thePlayer, terrain){
 		return;
 	}
 	
-	let leftPt, rightPt;
-	console.log("----------------------------");
-	
 	// note that the raycaster will catch both sides of the racetrack! so you'll get back the top face and the bottom face. 
 	// we want the top face only!
+	let leftPt, rightPt;
 	for(let obj of lp){
 		if(obj.object.name === "racetrack"){
 			leftPt = obj.point; 
 		}
-		console.log(obj);
 		break;
 	}
 	
 	for(let obj of rp){
 		if(obj.object.name === "racetrack"){
 			rightPt = obj.point; 
-		}	
-		console.log(obj); 
+		}
 		break; 
 	}
 	
-	let line = drawVector(leftPt, rightPt, 0x0000ff);
-	let line2 = drawVector(leftMarkerVec, rightMarkerVec, 0x00ff00);
-	
+	//let line = drawVector(leftPt, rightPt, 0x0000ff);
+	//let line2 = drawVector(leftMarkerVec, rightMarkerVec, 0x00ff00);
 	//scene.add(line);
 	//scene.add(line2);
 	
 	let terrainSlopeVector = rightPt.sub(leftPt).normalize();
 	let markerSlopeVector = right.sub(left).normalize();
 
-	//console.log("----------------------------");
-	if(markerSlopeVector.dot(terrainSlopeVector) < 0.998){//markerSlopeVector.angleTo(terrainSlopeVector) >= 0.02){
-		// need to prevent the possibility of being flipped upside down.
+	// rotate car about its x-axis so it aligns with the track
+	if(markerSlopeVector.dot(terrainSlopeVector) < 0.998){
 		console.log("need to rotate x on car!");
 		
 		quat.setFromUnitVectors(markerSlopeVector, terrainSlopeVector);
 		thePlayer.applyQuaternion(quat);
 	}
 	
+}
+
+function adjustForwardRotation(thePlayer, terrain){
+	// rotate about z-axis to prevent 'tilting' of the car
+	// use front and rear height markers of car to determine how to rotate the 
+	// car about the z-axis so it lines up with the surface it's on
+	
+	let front = thePlayer.frontHeightMarker.getWorldPosition(frontMarkerVec);
+	let rear = thePlayer.rearHeightMarker.getWorldPosition(rearMarkerVec);
+	
+	raycaster1.set(front, new THREE.Vector3(0, -1 ,0));
+	raycaster2.set(rear, new THREE.Vector3(0, -1, 0));
+	
+	let fp = raycaster1.intersectObject(terrain);
+	let rp = raycaster2.intersectObject(terrain);
+	
+	if(fp.length === 0 || rp.length === 0){
+		// if we go off the racetrack
+		return;
+	}
+
+	let frontPt, rearPt;
+	for(let obj of fp){
+		if(obj.object.name === "racetrack"){
+			frontPt = obj.point; 
+		}
+		break;
+	}
+	
+	for(let obj of rp){
+		if(obj.object.name === "racetrack"){
+			rearPt = obj.point; 
+		}
+		break; 
+	}
+	
+	let terrainSlopeVector = rearPt.sub(frontPt).normalize();
+	let markerSlopeVector = rear.sub(front).normalize();
+
+	// rotate car about its x-axis so it aligns with the track
+	if(markerSlopeVector.dot(terrainSlopeVector) < 0.998){
+		quat.setFromUnitVectors(markerSlopeVector, terrainSlopeVector);
+		thePlayer.applyQuaternion(quat);
+	}
 }
 
 function keydown(evt){
@@ -423,6 +461,7 @@ let lastDirection = 0;
 function move(car, rotationAngle){
 	
 	adjustLateralRotationBasedOnTerrain(car, terrain);
+	adjustForwardRotation(car, terrain);
 	
 	car.wheels.forEach((wheel) => {
 		wheel.rotateZ(rotationAngle*5);
@@ -480,11 +519,6 @@ function update(){
 		
 		thePlayer.frontWheels.forEach((wheel) => {
 			// check this out: https://stackoverflow.com/questions/56426088/rotate-around-world-axis
-			// I was a bit confused by the behavior of rotateOnWorldAxis because I thought it meant
-			// rotate about the world's axis, which I think would be at 0,0,0 of the whole scene.
-			// glad the function works the way it does but was a bit surprised. :)
-			// was worried I'd have to do a pivot point thing and a bunch of transformations
-			
 			if(wheel.rotation.y >= -maxRad && wheel.rotation.y <= maxRad){
 				wheel.rotateOnWorldAxis(new THREE.Vector3(0, 1, 0), rotationAngle/1.2);
 				
@@ -514,7 +548,7 @@ function update(){
 		// nothing to do
 	}else if(sideViewOn && !changeCameraView){
 		// actually rear view
-		relCameraOffset = new THREE.Vector3(-10, 1, 0);
+		relCameraOffset = new THREE.Vector3(-10, 2, 0);
 	}else if(bottomViewOn){
 		relCameraOffset = new THREE.Vector3(0, -6, 0);
 	}else if(topViewOn){
@@ -524,7 +558,7 @@ function update(){
 	}else{
 		if(sideViewOn){
 			// actually front view
-			relCameraOffset = new THREE.Vector3(10, 1, 0);
+			relCameraOffset = new THREE.Vector3(10, 2, 0);
 		}else{
 			relCameraOffset = new THREE.Vector3(0, 3, 12);
 		}		
