@@ -1,0 +1,49 @@
+<html>
+
+	<head>
+		<title>car demo</title>
+		<script src="https://code.jquery.com/jquery-3.4.1.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script>
+		<script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js" integrity="sha256-VazP97ZCwtekAsvgPBSUwPFKdrwD3unUfSGVYrahUqU=" crossorigin="anonymous"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r120/three.min.js" integrity="sha512-kgjZw3xjgSUDy9lTU085y+UCVPz3lhxAtdOVkcO4O2dKl2VSBcNsQ9uMg/sXIM4SoOmCiYfyFO/n1/3GSXZtSg==" crossorigin="anonymous"></script>
+		<script src='../lib/utils.js'></script>
+		<script src='../lib/GLTFLoader.js'></script>
+		<script src="../lib/threex.keyboardstate.js"></script>
+	</head>
+	
+	<style>
+		canvas{
+			display: block;
+			border: 1px solid #000;
+		}
+		#container{
+			width: 1200px;
+			height: 800px;
+			text-align: center;
+			margin: 0 auto;
+		}
+		#instructions, #info{
+			font-family: monospace;
+			text-align: center;
+		}
+	</style>
+	
+	<body>
+		<div id='container'>
+		</div>
+		
+		<div id='info'>
+			<p> still a work-in-progress. </p>
+		</div>
+		
+		<div id='instructions'>
+			<h3> controls: </h3>
+			<p> keys 1-4 control different camera views. </p>
+			<p>	w,s for forwards/backwards. a,d for turning left, right. p to toggle car body visibility. t to toggle racetrack visibility. </p>
+			<p> x for toggling racetrack wireframe. c for debug mode. </p> 
+		</div>
+	</body>
+	
+	<script type="module" src="index.js">
+	</script>
+
+</html>
