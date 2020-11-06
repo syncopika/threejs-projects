@@ -1,5 +1,4 @@
 
-
 const el = document.getElementById("container");
 const fov = 60;
 const defaultCamera = new THREE.PerspectiveCamera(fov, el.clientWidth / el.clientHeight, 0.01, 1000);
@@ -51,7 +50,7 @@ scene.add(camera);
 
 
 let pointLight = new THREE.PointLight(0xffffff, 1, 0);
-pointLight.position.set(0, 20, -25);
+pointLight.position.set(0, 60, -25);
 pointLight.castShadow = true;
 pointLight.shadow.mapSize.width = 0;
 pointLight.shadow.mapSize.height = 0;
@@ -155,6 +154,7 @@ let firstPersonViewOn = false;
 let sideViewOn = false;
 let bottomViewOn = false;
 let topViewOn = false;
+let debugMode = false;
 
 Promise.all(loadedModels).then((objects) => {
 	objects.forEach((mesh) => {
@@ -164,16 +164,16 @@ Promise.all(loadedModels).then((objects) => {
 			terrain = mesh;
 			scene.add(mesh);
 		}else{
-			console.log(mesh);
 			thePlayer = mesh;
 
 			// add a plane for grass
 			addPlane(scene);
 			
 			// remember that the car is a THREE.Group!
-			thePlayer.position.set(0, -0.5, -10);
+			thePlayer.position.set(3, -0.3, -10);
 			
 			thePlayer.frontWheels = [];
+			thePlayer.rearWheels = [];
 			thePlayer.wheels = [];
 			
 			// set the wheels right 
@@ -197,9 +197,11 @@ Promise.all(loadedModels).then((objects) => {
 					// rear
 					child.rotateY(Math.PI);
 					child.position.set(-2.9, 0, 1.7);
+					thePlayer.rearWheels.push(child);
 				}else if(child.name === "Cube004"){
 					// rear
 					child.position.set(-2.9, 0, -1.7);
+					thePlayer.rearWheels.push(child);
 				}else{
 					// car body
 					thePlayer.body = child;
@@ -207,12 +209,11 @@ Promise.all(loadedModels).then((objects) => {
 				}
 			});
 			
-			// also add an Object3D to serve as a marker for checking 
-			// terrain height
+			// also add an Object3D to serve as a marker for checking terrain height
 			let cubeGeometry = new THREE.BoxGeometry(0.2,0.2,0.2);
 			let material = new THREE.MeshBasicMaterial({color: 0x00ff00});
 			let marker = new THREE.Mesh(cubeGeometry, material);
-			//marker.visible = false;
+			marker.visible = false;
 			
 			thePlayer.body.add(marker);
 			marker.position.set(0, 2, 0);
@@ -277,10 +278,6 @@ function adjustLateralRotationBasedOnTerrain(thePlayer, terrain){
 	// if that vector is at an angle, rotate the car accordingly about the x axis
 	// so that the vector of left to right markers are parallel to the vector formed
 	// from the heights of the raycasts
-	
-	// fix rotation about Z. (need to be leveled)
-	//console.log(thePlayer.rotation.z);
-	
 	let mid = thePlayer.heightMarker.getWorldPosition(markerVec);
 	raycaster1.set(mid, new THREE.Vector3(0, -1 ,0));
 	
@@ -298,24 +295,25 @@ function adjustLateralRotationBasedOnTerrain(thePlayer, terrain){
 		break;
 	}
 	
-	/* the normal vector here is being converted to world space
-	normalMatrix.getNormalMatrix(terrain.matrixWorld);
-	let v1 = midPt.face.normal.clone().applyMatrix3(normalMatrix).normalize();
-	let v2 = v1.clone().multiplyScalar(3);
-	let normal = drawVector(v1, v2, 0xff0000);
-	
-	let car1 = mid;
-	let car2 = mid.clone();
-	car2.y = 0;
-	let carLine = drawVector(car1, car2, 0x00ffff);
-	
-	normal.position.copy(mid);
-	normal.position.y -= 3;
-	
-	// show track normal vs car normal
-	//scene.add(normal);
-	//scene.add(carLine);
-	*/
+	// the normal vector here is being converted to world space
+	if(debugMode){
+		normalMatrix.getNormalMatrix(terrain.matrixWorld);
+		let v1 = midPt.face.normal.clone().applyMatrix3(normalMatrix).normalize();
+		let v2 = v1.clone().multiplyScalar(3);
+		let normal = drawVector(v1, v2, 0xff0000);
+		
+		let car1 = mid;
+		let car2 = mid.clone();
+		car2.y = 0;
+		let carLine = drawVector(car1, car2, 0x00ffff);
+		
+		normal.position.copy(mid);
+		normal.position.y -= 3;
+		
+		// show track normal vs car normal
+		scene.add(normal);
+		scene.add(carLine);
+	}
 	
 	thePlayer.position.y = midPt.point.y + 0.5;
 	
@@ -327,7 +325,6 @@ function adjustLateralRotationBasedOnTerrain(thePlayer, terrain){
 	
 	let lp = raycaster1.intersectObject(terrain);
 	let rp = raycaster2.intersectObject(terrain);
-	//let mp = raycaster3.intersectObject(terrain);
 	
 	if(lp.length === 0 || rp.length === 0){
 		// if we go off the racetrack
@@ -351,10 +348,12 @@ function adjustLateralRotationBasedOnTerrain(thePlayer, terrain){
 		break; 
 	}
 	
-	//let line = drawVector(leftPt, rightPt, 0x0000ff);
-	//let line2 = drawVector(leftMarkerVec, rightMarkerVec, 0x00ff00);
-	//scene.add(line);
-	//scene.add(line2);
+	if(debugMode){
+		let line = drawVector(leftPt, rightPt, 0x0000ff);
+		let line2 = drawVector(leftMarkerVec, rightMarkerVec, 0x00ff00);
+		scene.add(line);
+		scene.add(line2);
+	}
 	
 	let terrainSlopeVector = rightPt.sub(leftPt).normalize();
 	let markerSlopeVector = right.sub(left).normalize();
@@ -373,7 +372,6 @@ function adjustForwardRotation(thePlayer, terrain){
 	// rotate about z-axis to prevent 'tilting' of the car
 	// use front and rear height markers of car to determine how to rotate the 
 	// car about the z-axis so it lines up with the surface it's on
-	
 	let front = thePlayer.frontHeightMarker.getWorldPosition(frontMarkerVec);
 	let rear = thePlayer.rearHeightMarker.getWorldPosition(rearMarkerVec);
 	
@@ -406,7 +404,7 @@ function adjustForwardRotation(thePlayer, terrain){
 	let terrainSlopeVector = rearPt.sub(frontPt).normalize();
 	let markerSlopeVector = rear.sub(front).normalize();
 
-	// rotate car about its x-axis so it aligns with the track
+	// rotate car about its z-axis so it aligns with the track
 	if(markerSlopeVector.dot(terrainSlopeVector) < 0.998){
 		quat.setFromUnitVectors(markerSlopeVector, terrainSlopeVector);
 		thePlayer.applyQuaternion(quat);
@@ -448,6 +446,14 @@ function keydown(evt){
 		// x key
 		// display wireframe of track
 		terrain.material.wireframe = !terrain.material.wireframe;
+	}else if(evt.keyCode === 67){
+		debugMode = !debugMode;
+		
+		thePlayer.frontHeightMarker.visible = !thePlayer.frontHeightMarker.visible;
+		thePlayer.rearHeightMarker.visible = !thePlayer.rearHeightMarker.visible;
+		thePlayer.leftHeightMarker.visible = !thePlayer.leftHeightMarker.visible;
+		thePlayer.rightHeightMarker.visible = !thePlayer.rightHeightMarker.visible;
+		thePlayer.heightMarker.visible = !thePlayer.heightMarker.visible;
 	}
 }
 
@@ -480,9 +486,10 @@ function move(car, rotationAngle){
 	let carForward = getForward(car.body);
 	carForward.applyAxisAngle(new THREE.Vector3(0, 1, 0), Math.PI/2);
 	
-	//console.log(carForward.angleTo(wheelForward));
 	let angleToWheel = carForward.angleTo(wheelForward);
 	if(angleToWheel >= 0.16){
+		// TODO: this is tricky. getting the car to rotate just right when turning so it follows
+		// the front wheels' rotation is hard :/. still working on it...
 		car.rotateY((rotationAngle * lastDirection));
 	}
 	
@@ -490,7 +497,6 @@ function move(car, rotationAngle){
 	wheelForward.multiplyScalar(0.3 * (rotationAngle < 0 ? 1 : -1)); // we should allow variable speed?
 
 	car.position.add(wheelForward);
-	//adjustVerticalHeightBasedOnTerrain(car, raycaster, terrain); // pass in terrain as arg?
 	
 }
 
@@ -520,7 +526,7 @@ function update(){
 		thePlayer.frontWheels.forEach((wheel) => {
 			// check this out: https://stackoverflow.com/questions/56426088/rotate-around-world-axis
 			if(wheel.rotation.y >= -maxRad && wheel.rotation.y <= maxRad){
-				wheel.rotateOnWorldAxis(new THREE.Vector3(0, 1, 0), rotationAngle/1.2);
+				wheel.rotateOnWorldAxis(new THREE.Vector3(0, 1, 0), rotationAngle/1.4);
 				
 				if(Math.abs(wheel.rotation.y) > maxRad){
 					wheel.rotation.y = wheel.rotation.y < 0 ? -maxRad + 0.01 : maxRad - 0.01;
@@ -533,7 +539,7 @@ function update(){
 		lastDirection = 1; // clockwise rotation for the car body to align with front wheel rotation about y
 		thePlayer.frontWheels.forEach((wheel) => {
 			if(wheel.rotation.y >= -maxRad && wheel.rotation.y <= maxRad){
-				wheel.rotateOnWorldAxis(new THREE.Vector3(0, 1, 0), -rotationAngle/1.2);
+				wheel.rotateOnWorldAxis(new THREE.Vector3(0, 1, 0), -rotationAngle/1.4);
 				
 				if(Math.abs(wheel.rotation.y) > maxRad){
 					wheel.rotation.y = wheel.rotation.y < 0 ? -maxRad + 0.01 : maxRad - 0.01;
