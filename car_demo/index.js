@@ -184,23 +184,27 @@ Promise.all(loadedModels).then((objects) => {
 				}
 				
 				if(child.name === "Cube001"){
-					// front
+					// front left
 					child.position.set(2, 0, -1.8);
+					child.name = "left";
 					thePlayer.frontWheels.push(child);
 					child.add(wheelAxesHelper); // good for debugging rotations!
 				}else if(child.name === "Cube002"){
-					// front
+					// front right
 					child.rotateY(Math.PI);
 					child.position.set(2, 0, 1.8);
+					child.name = "right";
 					thePlayer.frontWheels.push(child);
 				}else if(child.name === "Cube003"){
-					// rear
+					// rear right
 					child.rotateY(Math.PI);
 					child.position.set(-2.9, 0, 1.7);
+					child.name = "right";
 					thePlayer.rearWheels.push(child);
 				}else if(child.name === "Cube004"){
-					// rear
+					// rear left
 					child.position.set(-2.9, 0, -1.7);
+					child.name = "left";
 					thePlayer.rearWheels.push(child);
 				}else{
 					// car body
@@ -481,6 +485,10 @@ function move(car, rotationAngle){
 	// this issue probably has to do with the model?
 	wheelForward.applyAxisAngle(new THREE.Vector3(0, 1, 0), Math.PI/2);
 	
+	// move car based on wheel forward vector
+	// this is the velocity of the car
+	wheelForward.multiplyScalar(0.3 * (rotationAngle < 0 ? 1 : -1)); // we should allow variable speed?
+	
 	// also rotate the car so it eventually lines up with the
 	// front wheels in terms of angle (their forward vectors should be parallel)
 	let carForward = getForward(car.body);
@@ -488,13 +496,23 @@ function move(car, rotationAngle){
 	
 	let angleToWheel = carForward.angleTo(wheelForward);
 	if(angleToWheel >= 0.16){
-		// TODO: this is tricky. getting the car to rotate just right when turning so it follows
-		// the front wheels' rotation is hard :/. still working on it...
-		car.rotateY((rotationAngle * lastDirection));
+		// the following strategy seems to work well enough. one issue is that I'm rotating the whole car,
+		// which means even the front wheels, which are already at an angle. this causes some unrealistic behavior
+		// in certain cases.
+		// https://asawicki.info/Mirror/Car%20Physics%20for%20Games/Car%20Physics%20for%20Games.html
+
+		// step 1: calculate radius of circle determined by angle of front wheels
+		let leftFront = thePlayer.frontWheels.filter((wheel) => wheel.name === "left")[0];
+		let leftRear = thePlayer.rearWheels.filter((wheel) => wheel.name === "left")[0];
+		let frontRearDist = leftFront.position.distanceTo(leftRear.position); // get distance between front and rear wheels
+		let sinAngle = Math.sin(angleToWheel);
+		let circleRadius = frontRearDist / sinAngle; // this is the radius of the circle that would be followed given the front wheel angle
+		
+		// step 2: use radius and car velocity to calculate angular velocity
+		let angVelocity = (wheelForward.length() / circleRadius) * -1;
+
+		car.rotateY((angVelocity * lastDirection));
 	}
-	
-	// move car based on wheel forward vector
-	wheelForward.multiplyScalar(0.3 * (rotationAngle < 0 ? 1 : -1)); // we should allow variable speed?
 
 	car.position.add(wheelForward);
 	

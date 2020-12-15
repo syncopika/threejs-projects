@@ -61,3 +61,6 @@ TODO:
         https://stackoverflow.com/questions/25199173/how-to-find-rotation-matrix-between-two-vectors-in-three-js
 	https://stackoverflow.com/questions/52977759/three-js-how-to-find-out-xyz-rotations-between-two-vectors
         https://stackoverflow.com/questions/43606135/split-quaternion-into-axis-rotations
+
+   for turning the car:
+   https://asawicki.info/Mirror/Car%20Physics%20for%20Games/Car%20Physics%20for%20Games.html
