@@ -10,11 +10,30 @@
 			margin-left: 2%;
 		}
 		.project {
-			text-align: center;
 			width: 100%;
 		}
 		.row {
 			display: flex;
+		}
+		
+		.caret:hover {
+			cursor: pointer;
+		}
+		
+		#displayProjectSubmarine {
+			display: none;
+		}
+		
+		#displayProjectAirshow {
+			display: none;
+		}
+		
+		#displayProjectCharacterMvmt {
+			display: none;
+		}
+		
+		#displayProjectCar {
+			display: none;
 		}
 	</style>
 </head>
@@ -25,38 +44,44 @@
 	<p> <a href='https://github.com/syncopika/threejs-projects'>source</a> </p>
 	<br />
 	
-	<div id='row1' class='row'>
-		<div class='project'>
-			<h3><a href='super_submarine/index.html'> super submarine </a></h3>
+	<div class='project'>
+		<h3><span class="caret">&#9658</span><a href='super_submarine/index.html'> super submarine </a></h3>
+		<div id="displayProjectSubmarine">
 			<p> Be a submarine and find stuff! </p>
 			</p>
-			<img id='submarine' src='super_submarine/pictures/screenshot.png' width='70%' height='70%' />
+			<img id='submarine' src='super_submarine/pictures/screenshot.gif' width='70%' height='70%' />
 		</div>
-		
-		<div class='project'>
-			<h3><a href='airshow/index.html'> airshow </a></h3>
-			<p> Fly a jet! </p>
-			<img id='airshow' src='airshow/pictures/screenshot.png' width='78%' height='78%' />
-		</div>
+	</div>
 	
+	<div class='project'>
+		<h3><span class="caret">&#9658</span><a href='airshow/index.html'> airshow </a></h3>
+		<div id="displayProjectAirshow">
+			<p> Fly a jet! </p>
+			<img id='airshow' src='airshow/pictures/screenshot.gif' width='78%' height='78%' />
+		</div>
 	</div>
 
-	<div id='row2' class='row'>
-		<div class='project'>
-			<h3><a href='character_demo/index.html'> character movement </a></h3>
+	<div class='project'>
+		<h3><span class="caret">&#9658</span><a href='character_demo/index.html'> character movement </a></h3>
+		<div id="displayProjectCharacterMvmt">
 			<p> Move a low poly human around </p>
-			<img id='character' src='character_demo/pictures/screenshot.png' width='70%' height='70%' style='border: 1px solid #000' />
-		</div>
-		<div class='project'>
-			<h3><a href='car_demo/index.html'> car demo </a></h3>
-			<p> Drive a car around on a track! </p>
-			<img id='car' src='car_demo/pictures/screenshot.png' width='73%' height='71%' style='border: 1px solid #000' />
+			<img id='character' src='character_demo/pictures/screenshot.gif' width='70%' height='70%' style='border: 1px solid #000' />
 		</div>
 	</div>
 	
+	<div class='project'>
+		<h3><span class="caret">&#9658</span><a href='car_demo/index.html'> car demo </a></h3>
+		<div id="displayProjectCar">
+			<p> Drive a car around on a track! </p>
+			<img id='car' src='car_demo/pictures/screenshot.gif' width='73%' height='71%' style='border: 1px solid #000' />
+		</div>
+	</div>
+
 </body>
 
 <script>
+
+	/*
 	Array.from(document.getElementsByTagName("img")).forEach((img) => {
 		img.addEventListener('mouseover', (evt) => {
 			let theImg = evt.target;
@@ -84,6 +109,7 @@
 			}
 		});
 	});
+	*/
 </script>
 
 

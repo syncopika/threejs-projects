@@ -435,14 +435,19 @@ function update(){
 		swimAction.play();
 		whaleSharkAnimation.update(sec);
 
-		let curr = new THREE.Matrix4();
+		let curr = new THREE.Matrix4(); // identity matrix so this represents at the origin
 		curr.extractRotation(theNpc.matrix); // need to build off of previous rotation
 
 		let rotY = new THREE.Matrix4();
 		rotY.makeRotationY(-0.01);
 	
 		let transMat = new THREE.Matrix4();
-		transMat.set(1,0,0,(30+30*(Math.cos(0.001))), 0,1,0,0, 0,0,1,(30+30*(Math.sin(0.001))), 0,0,0,1); // affect only X and Z axes!
+		transMat.set(
+			1,0,0,(30+30*(Math.cos(0.001))), 
+			0,1,0,0, 
+			0,0,1,(30+30*(Math.sin(0.001))), 
+			0,0,0,1
+		); // affect only X and Z axes!
 
 		let scale = new THREE.Matrix4();
 		scale.makeScale(theNpc.scale.x/2, theNpc.scale.y/2, theNpc.scale.z/2);
