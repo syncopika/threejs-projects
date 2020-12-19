@@ -42,14 +42,12 @@ renderer.setSize(el.clientWidth, el.clientHeight);
 container.appendChild(renderer.domElement);
 
 const camera = defaultCamera;
-camera.position.set(0,5,20);
 
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0xffffff);	
 scene.add(camera);
 
-
-let pointLight = new THREE.PointLight(0xffffff, 1, 0);
+const pointLight = new THREE.PointLight(0xffffff, 1, 0);
 pointLight.position.set(0, 60, -25);
 pointLight.castShadow = true;
 pointLight.shadow.mapSize.width = 0;
@@ -59,8 +57,7 @@ pointLight.shadow.camera.far = 100;
 pointLight.shadow.camera.fov = 70;
 scene.add(pointLight);
 
-
-let hemiLight = new THREE.HemisphereLight(0xffffff);
+const hemiLight = new THREE.HemisphereLight(0xffffff);
 hemiLight.position.set(0, 50, 0);
 scene.add(hemiLight);
 
@@ -150,7 +147,6 @@ let terrain = null;
 const wheelAxesHelper = new THREE.AxesHelper(2);
 const carAxesHelper = new THREE.AxesHelper(4);
 
-let firstPersonViewOn = false;
 let sideViewOn = false;
 let bottomViewOn = false;
 let topViewOn = false;
@@ -417,24 +413,21 @@ function adjustForwardRotation(thePlayer, terrain){
 
 function keydown(evt){
 	if(evt.keyCode === 16){
-		// shift key	
+		// shift key
 	}else if(evt.keyCode === 49){
 		// toggle first-person view
 	}else if(evt.keyCode === 50){
-		// toggle side view
-		firstPersonViewOn = false;
+		// toggle side view (2 key)
 		bottomViewOn = false;
 		topViewOn = false;
 		sideViewOn = !sideViewOn;
 	}else if(evt.keyCode === 51){
-		// bottom view
-		firstPersonViewOn = false;
+		// bottom view (3 key)
 		sideViewOn = false;
 		topViewOn = false;
 		bottomViewOn = !bottomViewOn;
 	}else if(evt.keyCode === 52){
-		// top view
-		firstPersonViewOn = false;
+		// top view (4 key)
 		sideViewOn = false;
 		bottomViewOn = false;
 		topViewOn = !topViewOn;
@@ -515,7 +508,6 @@ function move(car, rotationAngle){
 	}
 
 	car.position.add(wheelForward);
-	
 }
 
 
@@ -525,7 +517,7 @@ function update(){
 	moveDistance = 8 * sec;
 	rotationAngle = (Math.PI / 2) * sec;
 	let changeCameraView = false;
-	let maxRad = 0.56; // max/min radians for wheel angle
+	const maxRad = 0.56; // max/min radians for wheel angle
 	
 	if(keyboard.pressed("Z")){
 		changeCameraView = true;
@@ -565,37 +557,32 @@ function update(){
 			}
 		});
 	}
-	
+
 	let relCameraOffset;
-	
-	if(firstPersonViewOn){
-		// nothing to do
-	}else if(sideViewOn && !changeCameraView){
+	if(sideViewOn && !changeCameraView){
 		// actually rear view
-		relCameraOffset = new THREE.Vector3(-10, 2, 0);
+		relCameraOffset = new THREE.Vector3(0, 3, -12); //new THREE.Vector3(-10, 2, 0);
 	}else if(bottomViewOn){
 		relCameraOffset = new THREE.Vector3(0, -6, 0);
 	}else if(topViewOn){
 		relCameraOffset = new THREE.Vector3(0, 15, 0);
 	}else if(!changeCameraView){
-		relCameraOffset = new THREE.Vector3(0, 3, -12);
+		relCameraOffset = new THREE.Vector3(-10, 2, 0); //new THREE.Vector3(0, 3, -12);
 	}else{
 		if(sideViewOn){
 			// actually front view
-			relCameraOffset = new THREE.Vector3(10, 2, 0);
-		}else{
 			relCameraOffset = new THREE.Vector3(0, 3, 12);
-		}		
+		}else{
+			relCameraOffset = new THREE.Vector3(10, 2, 0); //new THREE.Vector3(0, 3, 12);
+		}
 	}
+
+	let cameraOffset = relCameraOffset.applyMatrix4(thePlayer.matrixWorld);
+	camera.position.x = cameraOffset.x;
+	camera.position.y = cameraOffset.y;
+	camera.position.z = cameraOffset.z;
 	
-	if(!firstPersonViewOn){
-		let cameraOffset = relCameraOffset.applyMatrix4(thePlayer.matrixWorld);
-		camera.position.x = cameraOffset.x;
-		camera.position.y = cameraOffset.y;
-		camera.position.z = cameraOffset.z;
-	}
-	
-	if(!firstPersonViewOn) camera.lookAt(thePlayer.position);
+	camera.lookAt(thePlayer.position);
 
 }
 
