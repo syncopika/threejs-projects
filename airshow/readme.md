@@ -14,7 +14,7 @@ example of not-so-great rotation (imo) when rotating the THREE.Group on its own 
 One issue though with the current strategy and using the THREE.Group is that during a vertical loop the orientation of the axes change, which changes the direction of motion on key press. Definitely something to investigate further.    
     
 2. takeoff and landing    
-For takeoff, the speed of the plane is increased exponentially (e^x via Math.exp()), which lookS fine to me visually. I also added a landing mode feature in which the plane descends at a constant speed while being parallel to the ground.    
+For takeoff, the speed of the plane is increased exponentially (e<sup>x</sup> via Math.exp()), which looks fine to me visually. I also added a landing mode feature in which the plane descends at a constant speed while being parallel to the ground.    
     
 3. jet engine exhaust/smoke    
 Used the partykals.js library by RonenNess (https://github.com/RonenNess/partykals)    
