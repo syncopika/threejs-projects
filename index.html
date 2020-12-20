@@ -10,77 +10,86 @@
 			margin-left: 2%;
 		}
 		.project {
-			text-align: center;
 			width: 100%;
 		}
 		.row {
 			display: flex;
 		}
+		
+		.caret:hover {
+			cursor: pointer;
+		}
+		
+		#displayProjectSubmarine {
+			display: none;
+		}
+		
+		#displayProjectAirshow {
+			display: none;
+		}
+		
+		#displayProjectCharacterMvmt {
+			display: none;
+		}
+		
+		#displayProjectCar {
+			display: none;
+		}
+
 	</style>
 </head>
 
 <body>
 	<h2> 3d projects with three.js </h2>
 	<h3> with assets created with Blender! hover over the images to see a .gif </h3>
-	<p> <a href='https://github.com/syncopika/threejs-projects'>source</a> </p>
+	<h3> <a href='https://github.com/syncopika/threejs-projects'>source</a> </h3>
 	<br />
 	
-	<div id='row1' class='row'>
-		<div class='project'>
-			<h3><a href='super_submarine/index.html'> super submarine </a></h3>
-			<p> Be a submarine and find stuff! </p>
-			</p>
-			<img id='submarine' src='super_submarine/pictures/screenshot.png' width='70%' height='70%' />
+	<div class='project'>
+		<h2><span class="caret" id="Submarine">&#9658; </span><a href='super_submarine/index.html'>super submarine </a></h2>
+		<div id="displayProjectSubmarine">
+			<h3> Be a submarine and find stuff! </h3>
+			</h3>
+			<img id='submarine' src='super_submarine/pictures/submarine_demo.gif' width='40%' height='30%' />
 		</div>
-		
-		<div class='project'>
-			<h3><a href='airshow/index.html'> airshow </a></h3>
-			<p> Fly a jet! </p>
-			<img id='airshow' src='airshow/pictures/screenshot.png' width='78%' height='78%' />
-		</div>
+	</div>
 	
+	<div class='project'>
+		<h2><span class="caret" id="Airshow">&#9658; </span><a href='airshow/index.html'>airshow </a></h2>
+		<div id="displayProjectAirshow">
+			<h3> Fly a jet! </h3>
+			<img id='airshow' src='airshow/pictures/airshow_demo.gif' width='48%' height='38%' />
+		</div>
 	</div>
 
-	<div id='row2' class='row'>
-		<div class='project'>
-			<h3><a href='character_demo/index.html'> character movement </a></h3>
-			<p> Move a low poly human around </p>
-			<img id='character' src='character_demo/pictures/screenshot.png' width='70%' height='70%' style='border: 1px solid #000' />
-		</div>
-		<div class='project'>
-			<h3><a href='car_demo/index.html'> car demo </a></h3>
-			<p> Drive a car around on a track! </p>
-			<img id='car' src='car_demo/pictures/screenshot.png' width='73%' height='71%' style='border: 1px solid #000' />
+	<div class='project'>
+		<h2><span class="caret" id="CharacterMvmt">&#9658; </span><a href='character_demo/index.html'>character movement </a></h2>
+		<div id="displayProjectCharacterMvmt">
+			<h3> Move a low poly humanoid around </h3>
+			<img id='character' src='character_demo/pictures/character_demo.gif' width='40%' height='30%' style='border: 1px solid #000' />
 		</div>
 	</div>
 	
+	<div class='project'>
+		<h2><span class="caret" id="Car">&#9658; </span><a href='car_demo/index.html'>car demo </a></h2>
+		<div id="displayProjectCar">
+			<h3> Drive a car around on a track! </h3>
+			<img id='car' src='car_demo/pictures/car_demo.gif' width='33%' height='21%' style='border: 1px solid #000' />
+		</div>
+	</div>
+
 </body>
 
 <script>
-	Array.from(document.getElementsByTagName("img")).forEach((img) => {
-		img.addEventListener('mouseover', (evt) => {
-			let theImg = evt.target;
-			if(evt.target.id === 'submarine'){
-				theImg.src = 'super_submarine/pictures/submarine_demo.gif';
-			}else if(evt.target.id === 'airshow'){
-				theImg.src = 'airshow/pictures/airshow_demo.gif';
-			}else if(evt.target.id === 'character'){
-				theImg.src = 'character_demo/pictures/character_demo.gif';
+	Array.from(document.getElementsByClassName("caret")).forEach((caret) => {
+		caret.addEventListener("click", (evt) => {
+			let targetInfoToToggle = document.getElementById("displayProject" + caret.id);
+			if(targetInfoToToggle.style.display === "block"){
+				caret.innerHTML = "&#9658; ";
+				targetInfoToToggle.style.display = "none";
 			}else{
-				theImg.src = 'car_demo/pictures/car_demo.gif';
-			}
-		});
-		
-		img.addEventListener('mouseout', (evt) => {
-			let theImg = evt.target;
-			if(evt.target.id === 'submarine'){
-				theImg.src = 'super_submarine/pictures/screenshot.png';
-			}else if(evt.target.id === 'airshow'){
-				theImg.src = 'airshow/pictures/screenshot.png';
-			}else if(evt.target.id === 'character'){
-				theImg.src = 'character_demo/pictures/screenshot.png';
-			}else{
-				theImg.src = 'car_demo/pictures/screenshot.png';
+				caret.innerHTML = "&#9660; ";
+				targetInfoToToggle.style.display = "block";
 			}
 		});
 	});

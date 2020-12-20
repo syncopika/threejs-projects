@@ -206,6 +206,7 @@ Promise.all(loadedModels).then((objects) => {
 			let cubeGeometry = new THREE.BoxGeometry(0.2,0.2,0.2);
 			let material = new THREE.MeshBasicMaterial({color: 0x00ff00});
 			let head = new THREE.Mesh(cubeGeometry, material); 
+			
 			mesh.add(head);
 			mesh.head = head;
 			head.position.set(0, 4, 0);
@@ -418,21 +419,6 @@ function update(){
 	
 	// keep the current animation running
 	animationController.update();
-	
-	/*
-	if(keyboard.pressed("Q")){
-		// notice we're not rotating about the group mesh, but the child 
-		// mesh of the group, which is actually the jet mesh!
-		// if you try to move in all sorts of directions, after a while
-		// the camera gets off center and axes seem to get messed up :/
-		let axis = new THREE.Vector3(0, 0, 1);
-		thePlayer.rotateOnAxis(axis, -rotationAngle);
-	}
-	
-	if(keyboard.pressed("E")){
-		let axis = new THREE.Vector3(0, 0, 1);
-		thePlayer.rotateOnAxis(axis, rotationAngle);
-	}*/
 	
 	let relCameraOffset;
 	

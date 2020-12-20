@@ -38,6 +38,18 @@ function createSpotlight(){
 	return spotlight;
 }
 
+function createCongratsMsg(msg, progressBar){
+	congratsMsg = document.createElement("h3");
+	congratsMsg.style.position = "absolute";
+	congratsMsg.style.top = progressBar.style.top;
+	congratsMsg.style.left = progressBar.style.left;
+	congratsMsg.style.fontFamily = "monospace";
+	congratsMsg.style.color = "#fff";
+	congratsMsg.textContent = msg;	
+	congratsMsg.style.display = "block";
+	return congratsMsg;
+}
+
 
 // https://github.com/evanw/webgl-water
 // https://github.com/donmccurdy/three-gltf-viewer/blob/master/src/viewer.js
@@ -115,7 +127,6 @@ const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x000000);	
 scene.add(camera);
 
-
 let pointLight = new THREE.PointLight(0xffffff, 1, 0); //new THREE.pointLight( 0xffffff );
 pointLight.position.set(0, 10, -35);
 pointLight.castShadow = true;
@@ -125,7 +136,6 @@ pointLight.shadow.camera.near = 10;
 pointLight.shadow.camera.far = 100;
 pointLight.shadow.camera.fov = 30;
 scene.add(pointLight);
-
 
 let hemiLight = new THREE.HemisphereLight(0xffffff);
 hemiLight.position.set(0, 100, 0);
@@ -140,8 +150,11 @@ let rotationAngle = (Math.PI / 2) * sec;
 let whaleSharkAnimation = null;
 let whaleSharkClips = null;
 
-// need to keep some state 
-const state = {}; // not currently using. use for objectives or something?
+// jellyfish animation
+let jfishAnimation = null;
+let jfishAnimation2 = null;
+let jfishAnimation3 = null;
+let jfishClips = null;
 
 let loadedModels = [];
 
@@ -155,21 +168,31 @@ function getModel(modelFilePath, side, name){
 					let obj;
 						
 					if(child.type === "SkinnedMesh"){
-						// whale shark
+						
 						obj = child;
 						
-						// https://stackoverflow.com/questions/46317927/what-is-the-correct-way-to-bind-a-skeleton-to-a-skinnedmesh-in-three-js
-						obj.add(child.skeleton.bones[0]); 
-						
-						obj.scale.x = child.scale.x * 20;
-						obj.scale.y = child.scale.y * 20;
-						obj.scale.z = child.scale.z * 20;
-					
 						// why does my skinnedmesh require a different set of initial rotations to get things looking the same as with a regular mesh!?
 						obj.rotateOnAxis(new THREE.Vector3(-1,0,0), Math.PI / 2);
 						obj.rotateOnAxis(new THREE.Vector3(0,1,0), Math.PI); // turn around 180 deg.
-						
-						whaleSharkClips = gltf.animations;
+							
+						if(side === "whaleshark"){
+							// whale shark
+							// https://stackoverflow.com/questions/46317927/what-is-the-correct-way-to-bind-a-skeleton-to-a-skinnedmesh-in-three-js
+							obj.add(child.skeleton.bones[0]);
+							
+							obj.scale.x = child.scale.x * 20;
+							obj.scale.y = child.scale.y * 20;
+							obj.scale.z = child.scale.z * 20;
+							
+							whaleSharkClips = gltf.animations;
+						}else if(side === "jellyfish"){
+							// don't have a root bone for jellyfish :(
+							child.skeleton.bones.forEach((bone) => {
+								obj.add(bone);
+							});
+
+							jfishClips = gltf.animations;
+						}
 					}else if(child.type === "Mesh"){
 						obj = child;
 						obj.scale.x = child.scale.x * 20;
@@ -179,6 +202,7 @@ function getModel(modelFilePath, side, name){
 					}
 					
 					if(obj){
+						obj.side = side;
 						obj.name = name;
 						resolve(obj);
 					}
@@ -197,6 +221,7 @@ function getModel(modelFilePath, side, name){
 	});
 }
 
+// these don't really serve a purpose lol
 let newSphere = createSphereWireframe({}, {});
 let newSphere2 = createSphereWireframe({x: 5, y: 6, z: -45}, {});
 scene.add(newSphere);
@@ -205,12 +230,14 @@ scene.add(newSphere2);
 loadedModels.push(getModel('models/submarine1.glb', 'player', 'p1'));
 loadedModels.push(getModel('models/battleship2.glb', 'player2', 'p2'));
 loadedModels.push(getModel('models/oceanfloor.glb', 'none', 'bg'));
-loadedModels.push(getModel('models/whale-shark-final.gltf', 'none', 'npc'));
+loadedModels.push(getModel('models/whale-shark-final.gltf', 'whaleshark', 'npc'));
+loadedModels.push(getModel('models/jellyfish-animated.gltf', 'jellyfish', 'npc'));
 loadedModels.push(getModel('models/dangerous-capsule-edit-final.glb', 'none', 'goalObject'));
 loadedModels.push(getModel('models/smallship-damaged.gltf', 'none', 'goalObject2'));
 
 let thePlayer = null;
 let theNpc = null;
+let jellyfishGroup = null;
 let capsuleToDisarm = null;
 let sunkenShip = null;
 let water = null;
@@ -266,17 +293,43 @@ Promise.all(loadedModels).then((objects) => {
 			// water.render();
 		
 		}else if(mesh.name === "npc"){
-			// whale shark
-			console.log(mesh);
-			whaleSharkAnimation = new THREE.AnimationMixer(mesh);
-			
-			let sharkGroup = new THREE.Group();
-			sharkGroup.add(mesh);
-			mesh = sharkGroup;
+				if(mesh.side === "whaleshark"){
+					// whale shark
+					whaleSharkAnimation = new THREE.AnimationMixer(mesh);
+					
+					let sharkGroup = new THREE.Group();
+					sharkGroup.add(mesh);
+					mesh = sharkGroup;
 
-			theNpc = mesh;
-			theNpc.matrixAutoUpdate = false;
-		
+					theNpc = mesh;
+					theNpc.matrixAutoUpdate = false;
+				}else if(mesh.side === "jellyfish"){
+					jfishAnimation = new THREE.AnimationMixer(mesh);
+					
+					let jGroup = new THREE.Group();
+					jGroup.add(mesh);
+					
+					// add more jellyfish
+					let jellyClone = THREE.SkeletonUtils.clone(mesh);
+					jfishAnimation2 = new THREE.AnimationMixer(jellyClone);
+					jGroup.add(jellyClone);
+					jellyClone.position.y += 5;
+					jellyClone.position.z -= 5;
+					
+					let jellyClone2 = THREE.SkeletonUtils.clone(mesh);
+					jfishAnimation3 = new THREE.AnimationMixer(jellyClone2);
+					jellyClone2.scale.x /= 1.5;
+					jellyClone2.scale.y /= 1.5;
+					jellyClone2.scale.z /= 1.5;
+					jGroup.add(jellyClone2);
+					jellyClone2.position.y += 3;
+					jellyClone2.position.x -= 7;
+					
+					mesh = jGroup;
+					jellyfishGroup = mesh;
+					jellyfishGroup.position.z = 120;
+					jellyfishGroup.position.x -= 20;
+				}
 		}else if(mesh.name === "goalObject"){
 			mesh.position.set(-100, -18.2, -100);
 			mesh.rotation.y = Math.PI / 6;
@@ -360,7 +413,6 @@ Promise.all(loadedModels).then((objects) => {
 		}
 		
 		mesh.castShadow = true;
-		//mesh.receiveShadow = true;
 		scene.add(mesh);
 		renderer.render(scene, camera);
 	})
@@ -378,20 +430,24 @@ function update(){
 	
 	// move the whale shark in a circle
 	if(theNpc){
-		
 		let swimAction = whaleSharkAnimation.clipAction(whaleSharkClips[0]);
 		swimAction.setLoop(THREE.LoopRepeat);
 		swimAction.play();
 		whaleSharkAnimation.update(sec);
 
-		let curr = new THREE.Matrix4();
+		let curr = new THREE.Matrix4(); // identity matrix so this represents at the origin
 		curr.extractRotation(theNpc.matrix); // need to build off of previous rotation
 
 		let rotY = new THREE.Matrix4();
 		rotY.makeRotationY(-0.01);
 	
 		let transMat = new THREE.Matrix4();
-		transMat.set(1,0,0,(30+30*(Math.cos(0.001))), 0,1,0,0, 0,0,1,(30+30*(Math.sin(0.001))), 0,0,0,1); // affect only X and Z axes!
+		transMat.set(
+			1,0,0,(30+30*(Math.cos(0.001))), 
+			0,1,0,0, 
+			0,0,1,(30+30*(Math.sin(0.001))), 
+			0,0,0,1
+		); // affect only X and Z axes!
 
 		let scale = new THREE.Matrix4();
 		scale.makeScale(theNpc.scale.x/2, theNpc.scale.y/2, theNpc.scale.z/2);
@@ -403,6 +459,28 @@ function update(){
 		curr.multiply(rotY);
 		
 		theNpc.matrix.copy(curr);
+	}
+	
+	if(jellyfishGroup){
+		let swim = jfishAnimation.clipAction(jfishClips[0]);
+		swim.setLoop(THREE.LoopRepeat);
+		swim.play();
+		
+		let swim2 = jfishAnimation2.clipAction(jfishClips[0]);
+		swim2.setLoop(THREE.LoopRepeat);
+		swim2.play();
+		
+		let swim3 = jfishAnimation3.clipAction(jfishClips[0]);
+		swim3.setLoop(THREE.LoopRepeat);
+		swim3.play();
+		
+		jfishAnimation.update(sec/2.2);
+		jfishAnimation2.update(sec/1.8);
+		jfishAnimation3.update(sec/2);
+		
+		jellyfishGroup.children[1].rotateY(rotationAngle/2);
+		
+		jellyfishGroup.position.z -= 0.03;
 	}
 	
 	if(keyboard.pressed("shift")){
@@ -458,7 +536,6 @@ function update(){
 		// rotate up (note that we're rotating on the mesh's axis. its axes might be configured weird)
 		// the forward vector for the mesh might be backwards and perpendicular to the front of the sub
 		// up arrow key
-		// NEED TO CLAMP ANGLE
 		if(thePlayer.position.y < 27){
 			let axis = new THREE.Vector3(1, 0, 0);
 			thePlayer.rotateOnAxis(axis, rotationAngle);
@@ -467,7 +544,6 @@ function update(){
 	
 	if(keyboard.pressed("down")){
 		// down arrow key
-		// CLAMP ANGLE!
 		let axis = new THREE.Vector3(1, 0, 0);
 		thePlayer.rotateOnAxis(axis, -rotationAngle);
 	}
@@ -535,15 +611,8 @@ function update(){
 								document.getElementById("disarmMessage"), 
 								false
 							);
-							
-							congratsMsg = document.createElement("h3");
-							congratsMsg.style.position = "absolute";
-							congratsMsg.style.top = disarmProgress.style.top;
-							congratsMsg.style.left = disarmProgress.style.left;
-							congratsMsg.style.fontFamily = "monospace";
-							congratsMsg.style.color = "#fff";
-							congratsMsg.textContent = "nice! you disarmed the dangerous capsule!";	
-							congratsMsg.style.display = "block";
+
+							congratsMsg = createCongratsMsg("nice! you disarmed the dangerous capsule!", disarmProgress);
 							disarmProgress.parentNode.appendChild(congratsMsg);
 							
 							setTimeout(function(){
@@ -602,14 +671,7 @@ function update(){
 								false
 							);
 							
-							congratsMsg = document.createElement("h3");
-							congratsMsg.style.position = "absolute";
-							congratsMsg.style.top = recoverProgress.style.top;
-							congratsMsg.style.left = recoverProgress.style.left;
-							congratsMsg.style.fontFamily = "monospace";
-							congratsMsg.style.color = "#fff";
-							congratsMsg.textContent = "great, you recovered the sunken ship!";	
-							congratsMsg.style.display = "block";
+							congratsMsg = createCongratsMsg("great, you recovered the sunken ship!", recoverProgress);
 							recoverProgress.parentNode.appendChild(congratsMsg);
 							
 							setTimeout(function(){

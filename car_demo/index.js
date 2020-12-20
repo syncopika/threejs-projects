@@ -42,14 +42,12 @@ renderer.setSize(el.clientWidth, el.clientHeight);
 container.appendChild(renderer.domElement);
 
 const camera = defaultCamera;
-camera.position.set(0,5,20);
 
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0xffffff);	
 scene.add(camera);
 
-
-let pointLight = new THREE.PointLight(0xffffff, 1, 0);
+const pointLight = new THREE.PointLight(0xffffff, 1, 0);
 pointLight.position.set(0, 60, -25);
 pointLight.castShadow = true;
 pointLight.shadow.mapSize.width = 0;
@@ -59,8 +57,7 @@ pointLight.shadow.camera.far = 100;
 pointLight.shadow.camera.fov = 70;
 scene.add(pointLight);
 
-
-let hemiLight = new THREE.HemisphereLight(0xffffff);
+const hemiLight = new THREE.HemisphereLight(0xffffff);
 hemiLight.position.set(0, 50, 0);
 scene.add(hemiLight);
 
@@ -150,7 +147,6 @@ let terrain = null;
 const wheelAxesHelper = new THREE.AxesHelper(2);
 const carAxesHelper = new THREE.AxesHelper(4);
 
-let firstPersonViewOn = false;
 let sideViewOn = false;
 let bottomViewOn = false;
 let topViewOn = false;
@@ -184,23 +180,27 @@ Promise.all(loadedModels).then((objects) => {
 				}
 				
 				if(child.name === "Cube001"){
-					// front
+					// front left
 					child.position.set(2, 0, -1.8);
+					child.name = "left";
 					thePlayer.frontWheels.push(child);
 					child.add(wheelAxesHelper); // good for debugging rotations!
 				}else if(child.name === "Cube002"){
-					// front
+					// front right
 					child.rotateY(Math.PI);
 					child.position.set(2, 0, 1.8);
+					child.name = "right";
 					thePlayer.frontWheels.push(child);
 				}else if(child.name === "Cube003"){
-					// rear
+					// rear right
 					child.rotateY(Math.PI);
 					child.position.set(-2.9, 0, 1.7);
+					child.name = "right";
 					thePlayer.rearWheels.push(child);
 				}else if(child.name === "Cube004"){
-					// rear
+					// rear left
 					child.position.set(-2.9, 0, -1.7);
+					child.name = "left";
 					thePlayer.rearWheels.push(child);
 				}else{
 					// car body
@@ -413,24 +413,21 @@ function adjustForwardRotation(thePlayer, terrain){
 
 function keydown(evt){
 	if(evt.keyCode === 16){
-		// shift key	
+		// shift key
 	}else if(evt.keyCode === 49){
 		// toggle first-person view
 	}else if(evt.keyCode === 50){
-		// toggle side view
-		firstPersonViewOn = false;
+		// toggle side view (2 key)
 		bottomViewOn = false;
 		topViewOn = false;
 		sideViewOn = !sideViewOn;
 	}else if(evt.keyCode === 51){
-		// bottom view
-		firstPersonViewOn = false;
+		// bottom view (3 key)
 		sideViewOn = false;
 		topViewOn = false;
 		bottomViewOn = !bottomViewOn;
 	}else if(evt.keyCode === 52){
-		// top view
-		firstPersonViewOn = false;
+		// top view (4 key)
 		sideViewOn = false;
 		bottomViewOn = false;
 		topViewOn = !topViewOn;
@@ -481,6 +478,10 @@ function move(car, rotationAngle){
 	// this issue probably has to do with the model?
 	wheelForward.applyAxisAngle(new THREE.Vector3(0, 1, 0), Math.PI/2);
 	
+	// move car based on wheel forward vector
+	// this is the velocity of the car
+	wheelForward.multiplyScalar(0.3 * (rotationAngle < 0 ? 1 : -1)); // we should allow variable speed?
+	
 	// also rotate the car so it eventually lines up with the
 	// front wheels in terms of angle (their forward vectors should be parallel)
 	let carForward = getForward(car.body);
@@ -488,16 +489,25 @@ function move(car, rotationAngle){
 	
 	let angleToWheel = carForward.angleTo(wheelForward);
 	if(angleToWheel >= 0.16){
-		// TODO: this is tricky. getting the car to rotate just right when turning so it follows
-		// the front wheels' rotation is hard :/. still working on it...
-		car.rotateY((rotationAngle * lastDirection));
+		// the following strategy seems to work well enough. one issue is that I'm rotating the whole car,
+		// which means even the front wheels, which are already at an angle. this causes some unrealistic behavior
+		// in certain cases.
+		// https://asawicki.info/Mirror/Car%20Physics%20for%20Games/Car%20Physics%20for%20Games.html
+
+		// step 1: calculate radius of circle determined by angle of front wheels
+		let leftFront = thePlayer.frontWheels.filter((wheel) => wheel.name === "left")[0];
+		let leftRear = thePlayer.rearWheels.filter((wheel) => wheel.name === "left")[0];
+		let frontRearDist = leftFront.position.distanceTo(leftRear.position); // get distance between front and rear wheels
+		let sinAngle = Math.sin(angleToWheel);
+		let circleRadius = frontRearDist / sinAngle; // this is the radius of the circle that would be followed given the front wheel angle
+		
+		// step 2: use radius and car velocity to calculate angular velocity
+		let angVelocity = (wheelForward.length() / circleRadius) * -1;
+
+		car.rotateY((angVelocity * lastDirection));
 	}
-	
-	// move car based on wheel forward vector
-	wheelForward.multiplyScalar(0.3 * (rotationAngle < 0 ? 1 : -1)); // we should allow variable speed?
 
 	car.position.add(wheelForward);
-	
 }
 
 
@@ -507,7 +517,7 @@ function update(){
 	moveDistance = 8 * sec;
 	rotationAngle = (Math.PI / 2) * sec;
 	let changeCameraView = false;
-	let maxRad = 0.56; // max/min radians for wheel angle
+	const maxRad = 0.56; // max/min radians for wheel angle
 	
 	if(keyboard.pressed("Z")){
 		changeCameraView = true;
@@ -547,37 +557,32 @@ function update(){
 			}
 		});
 	}
-	
+
 	let relCameraOffset;
-	
-	if(firstPersonViewOn){
-		// nothing to do
-	}else if(sideViewOn && !changeCameraView){
+	if(sideViewOn && !changeCameraView){
 		// actually rear view
-		relCameraOffset = new THREE.Vector3(-10, 2, 0);
+		relCameraOffset = new THREE.Vector3(0, 3, -12); //new THREE.Vector3(-10, 2, 0);
 	}else if(bottomViewOn){
 		relCameraOffset = new THREE.Vector3(0, -6, 0);
 	}else if(topViewOn){
 		relCameraOffset = new THREE.Vector3(0, 15, 0);
 	}else if(!changeCameraView){
-		relCameraOffset = new THREE.Vector3(0, 3, -12);
+		relCameraOffset = new THREE.Vector3(-10, 2, 0); //new THREE.Vector3(0, 3, -12);
 	}else{
 		if(sideViewOn){
 			// actually front view
-			relCameraOffset = new THREE.Vector3(10, 2, 0);
-		}else{
 			relCameraOffset = new THREE.Vector3(0, 3, 12);
-		}		
+		}else{
+			relCameraOffset = new THREE.Vector3(10, 2, 0); //new THREE.Vector3(0, 3, 12);
+		}
 	}
+
+	let cameraOffset = relCameraOffset.applyMatrix4(thePlayer.matrixWorld);
+	camera.position.x = cameraOffset.x;
+	camera.position.y = cameraOffset.y;
+	camera.position.z = cameraOffset.z;
 	
-	if(!firstPersonViewOn){
-		let cameraOffset = relCameraOffset.applyMatrix4(thePlayer.matrixWorld);
-		camera.position.x = cameraOffset.x;
-		camera.position.y = cameraOffset.y;
-		camera.position.z = cameraOffset.z;
-	}
-	
-	if(!firstPersonViewOn) camera.lookAt(thePlayer.position);
+	camera.lookAt(thePlayer.position);
 
 }
 
