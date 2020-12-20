@@ -5,7 +5,6 @@ You are a submarine tasked with some important objectives! you must disarm a dan
 ## notes:    
     
 1. Rotating an object on a circular path    
-    
 I wanted to get the whale shark to swim in a circle while adjusting the direction its facing (currently not perfect but I think close enough).
 To do this, during each update call I place the whale shark at the origin, rotate it, then place it at the next point along the path.
 However, in terms of matrix multiplication, these steps need to be done backwards.    

@@ -10,9 +10,9 @@ the ground. I placed a 'dummy' object (a small green cube) placed in the middle 
 If the current distance is lower than the initial distance, then the character is on higher elevation and its y-position needs to be increased and vice-versa if the current distance is greater.        
 This link is extremely helpful: https://docs.panda3d.org/1.10/python/programming/pandai/pathfinding/uneven-terrain    
     
-2. weapon attachment
+2. weapon attachment    
 Attaching a weapon is fairly straight-forward. I just attached the weapon mesh to one of the hand bones in my character mesh as a child. It was a bit difficult to position the weapon though in the hand since it seemed
 the coordinate system of the weapon was different.     
     
-3. added an animation controller
+3. added an animation controller    
 Animating with several actions and managing them became a bit difficult quickly without having an additional object to help.    
