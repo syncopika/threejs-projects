@@ -4,5 +4,5 @@
 the user can create markers and paths between markers.    
 ![screenshot of markers and paths](screenshot.png)    
     
-camera view when following the above path:    
+camera view when following a path:    
 ![camera view on path](26-12-2020_231935.gif)   
