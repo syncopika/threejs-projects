@@ -1,0 +1,7 @@
+https://stackoverflow.com/questions/42309715/how-to-correctly-pass-mouse-coordinates-to-webgl
+https://stackoverflow.com/questions/57381278/threejs-2d-pixels-to-3d-coordinates-conversion
+https://stackoverflow.com/questions/27409074/converting-3d-position-to-2d-screen-position-r69
+https://stackoverflow.com/questions/11638883/thickness-of-lines-using-three-linebasicmaterial
+https://github.com/mrdoob/three.js/blob/master/examples/webgl_interactive_cubes.html
+https://stackoverflow.com/questions/43414174/animate-object-along-a-path-in-three-js
+https://stackoverflow.com/questions/29656301/move-a-mesh-on-a-line-three-js
