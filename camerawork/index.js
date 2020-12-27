@@ -193,33 +193,52 @@ class MarkerManager {
 			this.mainCamera.position.copy(firstPos);
 			
 			// make sure to look at target
-			//this.mainCamera.lookAt(targetObj); // TODO: assign target object to path object
+			//this.mainCamera.lookAt(targetObj); // TODO: assign target object to path object?
 		}
 		
+		let timeAccumulator = 0; // use this to help schedule each path's camera movement
 		let timers = [];
-		
 		this.paths.forEach((path) => {
 			// figure out distance to
 			let start = path.start.position.clone();
 			let end = path.end.position.clone();
-			
 			let duration = path.duration; // in seconds!
 			let vectorTo = end.sub(start);
-			console.log(vectorTo);
+			let isStatic = (path.linkMesh === null);
 			
 			// get a vector segment based on duration of path
 			let segmentVector = vectorTo.divideScalar(duration);
 			
-			// set interval/clear interval to schedule camera movement
-			let newTimer = setInterval(() => {
-				this.mainCamera.position.add(segmentVector);
-				//this.mainCamera.lookAt(targetObj); // TODO: use path target object property
-			}, 1000);
-			
+			// use settimeout to schedule when the new path animation interval should be run
+			// this will not be very accurate though
 			setTimeout(() => {
-				clearInterval(newTimer);
-				console.log("stopping setinterval function");
-			}, duration*1000);
+				//console.log("starting a new timer!");
+				timers.forEach((timer) => {
+					// prevent any interleaving by clearing preexisting timers
+					//console.log("clearing a timer");
+					clearInterval(timer);
+				});
+					
+				let newTimer = setInterval(() => {
+					// move the camera every second based on the segmentVector
+					//console.log(segmentVector);
+					if(isStatic){
+						this.mainCamera.position.copy(start); // move the camera to the start marker of this path since there is no link path to travel on
+					}else{
+						this.mainCamera.position.add(segmentVector);
+					}
+					//this.mainCamera.lookAt(targetObj); // TODO: use path target object property?
+				}, 1000);
+				timers.push(newTimer);
+				
+				setTimeout(() => {
+					clearInterval(newTimer);
+				}, duration*1000);
+			},
+			timeAccumulator);
+			//console.log("setting a new timer at: " + timeAccumulator + "ms in and stopping after: " + (timeAccumulator + duration*1000) + "ms in.");
+			
+			timeAccumulator += duration*1000;
 		});
 	}
 }
