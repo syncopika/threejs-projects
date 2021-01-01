@@ -7,6 +7,10 @@ const container = document.querySelector('#container');
 const raycaster = new THREE.Raycaster();
 const loadingManager = new THREE.LoadingManager();
 
+const stats = new Stats();
+stats.showPanel(0);
+document.body.appendChild(stats.dom);
+
 loadingManager.onStart = (url, itemsLoaded, itemsTotal) => {
 	// set up a loading bar
 	let container = document.getElementById("container");
@@ -587,7 +591,9 @@ function update(){
 }
 
 function animate(){
+	stats.begin();
 	requestAnimationFrame(animate);
 	renderer.render(scene, camera);
 	update();
+	stats.end();
 }

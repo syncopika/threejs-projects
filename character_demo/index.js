@@ -7,8 +7,12 @@ const keyboard = new THREEx.KeyboardState();
 const container = document.querySelector('#container');
 const raycaster = new THREE.Raycaster();
 const loadingManager = new THREE.LoadingManager();
-let animationController;
 
+const stats = new Stats();
+stats.showPanel(0);
+document.body.appendChild(stats.dom);
+
+let animationController;
 
 loadingManager.onStart = (url, itemsLoaded, itemsTotal) => {
 	// set up a loading bar
@@ -444,6 +448,8 @@ function update(){
 }
 
 function animate(){
+	stats.begin();
+	stats.end();
 	requestAnimationFrame(animate);
 	renderer.render(scene, camera);
 	update();

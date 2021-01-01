@@ -1,6 +1,7 @@
 // super submarine!
 // relies on some functions defined in ../lib/utils.js
 // and Water defined in ../lib/Water.js
+// and stats defined in ../lib/stats.js
 
 // check if spotlight hits the dangerous capsule or the sunken ship
 // source = position of source obj, dir = direction vector
@@ -61,6 +62,9 @@ const container = document.querySelector('#container');
 const raycaster = new THREE.Raycaster();
 const loadingManager = new THREE.LoadingManager();
 
+const stats = new Stats();
+stats.showPanel(0);
+document.body.appendChild(stats.dom);
 
 // https://stackoverflow.com/questions/35575065/how-to-make-a-loading-screen-in-three-js
 loadingManager.onStart = (url, itemsLoaded, itemsTotal) => {
@@ -221,12 +225,6 @@ function getModel(modelFilePath, side, name){
 	});
 }
 
-// these don't really serve a purpose lol
-let newSphere = createSphereWireframe({}, {});
-let newSphere2 = createSphereWireframe({x: 5, y: 6, z: -45}, {});
-scene.add(newSphere);
-scene.add(newSphere2);
-
 loadedModels.push(getModel('models/submarine1.glb', 'player', 'p1'));
 loadedModels.push(getModel('models/battleship2.glb', 'player2', 'p2'));
 loadedModels.push(getModel('models/oceanfloor.glb', 'none', 'bg'));
@@ -328,7 +326,7 @@ Promise.all(loadedModels).then((objects) => {
 					mesh = jGroup;
 					jellyfishGroup = mesh;
 					jellyfishGroup.position.z = 120;
-					jellyfishGroup.position.x -= 20;
+					jellyfishGroup.position.x -= 80;
 				}
 		}else if(mesh.name === "goalObject"){
 			mesh.position.set(-100, -18.2, -100);
@@ -443,9 +441,9 @@ function update(){
 	
 		let transMat = new THREE.Matrix4();
 		transMat.set(
-			1,0,0,(30+30*(Math.cos(0.001))), 
+			1,0,0,(10+20*(Math.cos(0.001))), 
 			0,1,0,0, 
-			0,0,1,(30+30*(Math.sin(0.001))), 
+			0,0,1,(10+20*(Math.sin(0.001))), 
 			0,0,0,1
 		); // affect only X and Z axes!
 
@@ -753,6 +751,8 @@ function update(){
 }
 
 function animate(){
+	stats.begin();
+	stats.end();
 	requestAnimationFrame(animate);
 	renderer.render(scene, camera);
 	update();
