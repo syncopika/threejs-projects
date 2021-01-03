@@ -12,16 +12,6 @@ class Path {
 		// add a target property?
 		// it should represent the object to look at while the camera moves along this path
 	}
-	
-	getStartPosGlobal(){
-		let pos = new THREE.Vector3();
-		return this.start.getWorldPosition(pos);
-	}
-	
-	getEndPosGlobal(){
-		let pos = new THREE.Vector3();
-		return this.end.getWorldPosition(pos);
-	}
 }
 
 class MarkerManager {
@@ -218,7 +208,10 @@ class MarkerManager {
 					//console.log("clearing a timer");
 					clearInterval(timer);
 				});
-					
+				
+				// rotate camera based on start marker for this path
+				camera.rotation.copy(path.start.rotation);
+				
 				let newTimer = setInterval(() => {
 					// move the camera every second based on the segmentVector
 					//console.log(segmentVector);
@@ -232,6 +225,11 @@ class MarkerManager {
 				timers.push(newTimer);
 				
 				setTimeout(() => {
+					if(isStatic){
+						this.mainCamera.position.copy(start);
+					}else{
+						this.mainCamera.position.add(segmentVector);
+					}
 					clearInterval(newTimer);
 				}, duration*1000);
 			},
@@ -394,6 +392,16 @@ function update(){
 	
 	if(keyboard.pressed("D")){
 		let axis = new THREE.Vector3(0, 1, 0);
+		camera.rotateOnAxis(axis, -rotationAngle);
+	}
+	
+	if(keyboard.pressed("Q")){
+		let axis = new THREE.Vector3(0, 0, 1);
+		camera.rotateOnAxis(axis, rotationAngle);
+	}
+	
+	if(keyboard.pressed("E")){
+		let axis = new THREE.Vector3(0, 0, 1);
 		camera.rotateOnAxis(axis, -rotationAngle);
 	}
 }
