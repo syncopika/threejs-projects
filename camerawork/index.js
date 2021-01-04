@@ -155,10 +155,28 @@ class MarkerManager {
 		return {x, y};
 	}
 
-	hideMarkers(){
+	toggleMarkers(){
+		// make a set containing all markers and then toggle visibility
+		let markerSet = new Set();
+		for(let path of this.paths){
+			if(path.start){
+				markerSet.add(path.start);
+			}
+			if(path.end){
+				markerSet.add(path.end);
+			}
+		}
+		for(let marker of markerSet){
+			marker.visible = !marker.visible;
+		}
 	}
 
-	showMarkers(){	
+	togglePaths(){
+		for(let path of this.paths){
+			if(path.linkMesh){
+				path.linkMesh.visible = !path.linkMesh.visible;
+			}
+		}
 	}
 	
 	// markerStart and markerEnd should be threejs Mesh objects
@@ -225,6 +243,7 @@ class MarkerManager {
 				timers.push(newTimer);
 				
 				setTimeout(() => {
+					camera.rotation.copy(path.end.rotation);
 					if(isStatic){
 						this.mainCamera.position.copy(start);
 					}else{
@@ -440,4 +459,12 @@ document.getElementById('createPath').addEventListener('click', (evt) => {
 
 document.getElementById('ridePath').addEventListener('click', (evt) => {
 	markerManager.ridePath();
+});
+
+document.getElementById('toggleMarkerVisibility').addEventListener('click', (evt) => {
+	markerManager.toggleMarkers();
+});
+
+document.getElementById('togglePathVisibility').addEventListener('click', (evt) => {
+	markerManager.togglePaths();
 });

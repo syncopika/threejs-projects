@@ -5,3 +5,12 @@ https://stackoverflow.com/questions/11638883/thickness-of-lines-using-three-line
 https://github.com/mrdoob/three.js/blob/master/examples/webgl_interactive_cubes.html
 https://stackoverflow.com/questions/43414174/animate-object-along-a-path-in-three-js
 https://stackoverflow.com/questions/29656301/move-a-mesh-on-a-line-three-js
+
+
+todo:
+- import/export of marker+path data so we can demonstrate some useful ideas
+- make a useful demo
+- add some ui components to represent 'scenes'? i.e. 1 path == 1 scene?
+- be able to change speed
+- make camera movement smoother? that probably has to do with speed...
+- smooth turning about angles? bezier curves?
