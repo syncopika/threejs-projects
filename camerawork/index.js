@@ -1,6 +1,6 @@
 
 class Path {
-	constructor(start, end, linkMesh){
+	constructor(start, end, linkMesh, target=null){
 		this.start = start; // a threejs mesh object
 		this.end = end; // a threejs mesh object
 		
@@ -11,6 +11,7 @@ class Path {
 		
 		// add a target property?
 		// it should represent the object to look at while the camera moves along this path
+		this.target = target;
 	}
 }
 
@@ -72,7 +73,7 @@ class MarkerManager {
 		});
 	}
 
-	connectMarkers(markerList){
+	connectMarkers(markerList, target=null){
 		// what if we want a path with just 1 marker? i.e. for a static camera scene
 		if(markerList.length === 1){
 			// create some kinda path marker for it? like a sphere hovering over the marker maybe?
@@ -103,7 +104,7 @@ class MarkerManager {
 				scene.add(line);
 				
 				// add to list of paths
-				this.createPath(start, end, line);
+				this.createPath(start, end, line, target);
 			}
 		}
 		
@@ -180,8 +181,8 @@ class MarkerManager {
 	}
 	
 	// markerStart and markerEnd should be threejs Mesh objects
-	createPath(markerStart, markerEnd, linkMesh){
-		let path = new Path(markerStart, markerEnd, linkMesh);
+	createPath(markerStart, markerEnd, linkMesh, target=null){
+		let path = new Path(markerStart, markerEnd, linkMesh, target);
 		this.paths.push(path);
 	}
 	
@@ -199,23 +200,21 @@ class MarkerManager {
 		if(this.paths[0]){
 			let firstPos = this.paths[0].start.position;
 			this.mainCamera.position.copy(firstPos);
-			
-			// make sure to look at target
-			//this.mainCamera.lookAt(targetObj); // TODO: assign target object to path object?
 		}
 		
 		let timeAccumulator = 0; // use this to help schedule each path's camera movement
 		let timers = [];
 		this.paths.forEach((path) => {
 			// figure out distance to
-			let start = path.start.position.clone();
-			let end = path.end.position.clone();
-			let duration = path.duration; // in seconds!
-			let vectorTo = end.sub(start);
-			let isStatic = (path.linkMesh === null);
+			const start = path.start.position.clone();
+			const end = path.end.position.clone();
+			const duration = path.duration; // in seconds!
+			const target = path.target;
+			const vectorTo = end.sub(start);
+			const isStatic = (path.linkMesh === null);
 			
 			// get a vector segment based on duration of path
-			let segmentVector = vectorTo.divideScalar(duration);
+			const segmentVector = vectorTo.divideScalar(duration);
 			
 			// use settimeout to schedule when the new path animation interval should be run
 			// this will not be very accurate though
@@ -239,6 +238,12 @@ class MarkerManager {
 						this.mainCamera.position.add(segmentVector);
 					}
 					//this.mainCamera.lookAt(targetObj); // TODO: use path target object property?
+					if(target){
+						let targetPosWorld = new THREE.Vector3();
+						target.getWorldPosition(targetPosWorld);
+						this.mainCamera.lookAt(targetPosWorld);
+					}
+					
 				}, 1000);
 				timers.push(newTimer);
 				
@@ -453,7 +458,7 @@ document.getElementById('selectMarker').addEventListener('click', (evt) => {
 document.getElementById('createPath').addEventListener('click', (evt) => {
 	if(markerManager.mode === "select"){
 		// take all selected markers and create a path between them in the order they are in
-		markerManager.connectMarkers(markerManager.selectedMarkers);
+		markerManager.connectMarkers(markerManager.selectedMarkers, targetObj);
 	}
 });
 
