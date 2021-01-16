@@ -7,16 +7,14 @@ class Path {
 		this.linkMesh = linkMesh // a threejs line mesh object
 		
 		// other parameters to describe the path
-		this.duration = 5; // seconds
+		this.duration = 3; // the seconds it takes to traverse the path
 		
-		// add a target property?
-		// it should represent the object to look at while the camera moves along this path
+		// the object to look at while the camera moves along this path
 		this.target = target;
 	}
 }
 
 class MarkerManager {
-
 	constructor(scene, mainCamera){
 		this.scene = scene; // threejs scene
 		this.mainCamera = mainCamera; // the camera the user will use to move around with
@@ -58,6 +56,7 @@ class MarkerManager {
 	}
 	
 	removeMarker(markerToRemove){
+		// TODO
 		// also remove from paths any path that contains this marker
 	}
 	
@@ -138,6 +137,12 @@ class MarkerManager {
 		return cube;
 	}
 	
+	focusOnTarget(target){
+		let targetPosWorld = new THREE.Vector3();
+		target.getWorldPosition(targetPosWorld);
+		this.mainCamera.lookAt(targetPosWorld);
+	}
+	
 	// https://stackoverflow.com/questions/42309715/how-to-correctly-pass-mouse-coordinates-to-webgl
 	getCoordsOnMouseClick(event){
 		let target = event.target;
@@ -147,7 +152,6 @@ class MarkerManager {
 		let posY = (y1 * target.height) / target.clientHeight;
 
 		let gl = target.getContext("webgl2"); // might be webgl in other browsers (not chrome)?
-		
 		let x = (posX / gl.canvas.width) * 2 - 1;
 		let y = (posY / gl.canvas.height) * -2 + 1;
 		
@@ -215,7 +219,7 @@ class MarkerManager {
 			const segmentVector = vectorTo.divideScalar(duration);
 			
 			// use settimeout to schedule when the new path animation interval should be run
-			// this will not be very accurate though
+			// this might not be very accurate though
 			setTimeout(() => {
 				timers.forEach((timer) => {
 					// prevent any interleaving by clearing preexisting timers
@@ -227,7 +231,6 @@ class MarkerManager {
 				
 				let newTimer = setInterval(() => {
 					// move the camera every second based on the segmentVector
-					//console.log(segmentVector);
 					if(isStatic){
 						this.mainCamera.position.copy(start); // move the camera to the start marker of this path since there is no link path to travel on
 					}else{
@@ -237,12 +240,10 @@ class MarkerManager {
 					if(target){
 						// if there is a target that the camera should be following,
 						// this will allow the camera to stay focused on that target
-						let targetPosWorld = new THREE.Vector3();
-						target.getWorldPosition(targetPosWorld);
-						this.mainCamera.lookAt(targetPosWorld);
+						this.focusOnTarget(target);
 					}
-					
 				}, 1000);
+				
 				timers.push(newTimer);
 				
 				setTimeout(() => {
@@ -264,18 +265,15 @@ class MarkerManager {
 }
 
 class UIManager {
-
-	constructor(){
-	}
+	constructor(){}
 
 	// update UI with new changes
 	// i.e. for customizing path properties, markers, etc.
-	updateUI(){
-	}
+	updateUI(){}
 }
 
 function setupSceneLights(scene){
-	let pointLight = new THREE.PointLight(0xffffff, 1, 0);
+	const pointLight = new THREE.PointLight(0xffffff, 1, 0);
 	pointLight.position.set(0, 20, -25);
 	pointLight.castShadow = true;
 	pointLight.shadow.mapSize.width = 0;
@@ -285,42 +283,50 @@ function setupSceneLights(scene){
 	pointLight.shadow.camera.fov = 70;
 	scene.add(pointLight);
 
-	let hemiLight = new THREE.HemisphereLight(0xffffff);
+	const hemiLight = new THREE.HemisphereLight(0xffffff);
 	hemiLight.position.set(0, 50, 0);
 	scene.add(hemiLight);
 }
 
 function setupTerrain(scene){
-	let texture = new THREE.TextureLoader().load('texture.png');
-	let terrainMat = new THREE.MeshBasicMaterial({map: texture});
-	let terrain = new THREE.PlaneGeometry(200, 200, 1);
-	let plane = new THREE.Mesh(terrain, terrainMat);
+	const texture = new THREE.TextureLoader().load('texture.png');
+	const terrainMat = new THREE.MeshBasicMaterial({map: texture});
+	const terrain = new THREE.PlaneGeometry(200, 200, 1);
+	const plane = new THREE.Mesh(terrain, terrainMat);
 	plane.position.set(0, -1, 0);
 	plane.rotateX((3*Math.PI)/2);
 	scene.add(plane);
 }
 
 function setupDemoMesh(scene){
-	let cubeGeometry = new THREE.BoxGeometry(5,5,5);
-	let material = new THREE.MeshBasicMaterial({color: 0x0000ff});
+	const cubeGeometry = new THREE.BoxGeometry(5,5,5);
+	const material = new THREE.MeshBasicMaterial({color: 0x0000ff});
 	material.wireframe = true;
-	let thePlayer = new THREE.Mesh(cubeGeometry, material);
+	const mainTarget = new THREE.Mesh(cubeGeometry, material);
 
-	let cube2g = new THREE.BoxGeometry(2,2,2);
-	let mat = new THREE.MeshBasicMaterial({color: 0xff0000});
-	let cube = new THREE.Mesh(cube2g, mat);
+	const cube2g = new THREE.BoxGeometry(2,2,2);
+	const mat = new THREE.MeshBasicMaterial({color: 0xff0000});
+	const cube = new THREE.Mesh(cube2g, mat);
 
-	thePlayer.add(cube);
+	mainTarget.add(cube);
 	cube.position.set(0, 3, 0);
 
-	thePlayer.position.set(0, 2, 0);
-	scene.add(thePlayer);
+	mainTarget.position.set(0, 2, 0);
+	scene.add(mainTarget);
 	
-	let playerAxesHelper = new THREE.AxesHelper(5);
-	let playerGroupAxesHelper = new THREE.AxesHelper(5);
-	thePlayer.add(playerAxesHelper);
-	cube.add(playerGroupAxesHelper);
-	return thePlayer;
+	// add a moving ball to the mesh
+	const sphereGeom = new THREE.SphereGeometry(3, 64, 64);
+	const texture = new THREE.TextureLoader().load('texture.png');
+	const sphereMat = new THREE.MeshBasicMaterial({map: texture});
+	const sphere = new THREE.Mesh(sphereGeom, sphereMat);
+	mainTarget.add(sphere);
+	sphere.position.set(0, 10, 0);
+	sphere.rotateY(-Math.PI/4);
+	mainTarget.movingSphere = sphere;
+	
+	const targetAxesHelper = new THREE.AxesHelper(5);
+	mainTarget.add(targetAxesHelper);
+	return mainTarget;
 }
 
 let addMarker = true;
@@ -358,7 +364,6 @@ let sec = clock.getDelta();
 let moveDistance = 60 * sec;
 let rotationAngle = (Math.PI / 2) * sec;
 
-
 renderer.domElement.addEventListener("click", (evt) => {
 	let coords = markerManager.getCoordsOnMouseClick(evt);
 	if(markerManager.mode === "add"){
@@ -381,10 +386,14 @@ renderer.domElement.addEventListener("click", (evt) => {
 });
 
 const markerManager = new MarkerManager(scene, camera);
+const radius = 5;
+let t = 0;
 function update(){
 	sec = clock.getDelta();
 	moveDistance = 8 * sec;
 	rotationAngle = (Math.PI / 2) * sec;
+	t += 0.008;
+	
 	let changeCameraView = false;
 	
 	if(keyboard.pressed("W")){
@@ -426,6 +435,14 @@ function update(){
 		let axis = new THREE.Vector3(0, 0, 1);
 		camera.rotateOnAxis(axis, -rotationAngle);
 	}
+	
+	// move the targetObj's sphere in a circle
+	targetObj.movingSphere.position.set(
+		Math.cos(t)*radius,
+		targetObj.movingSphere.position.y,
+		Math.sin(t)*radius
+	);
+	targetObj.movingSphere.rotateY(rotationAngle);
 }
 
 function animate(){

@@ -420,7 +420,6 @@ Promise.all(loadedModels).then((objects) => {
 let lastTime = clock.getDelta();
 let hitSurface = false; // if the sub reaches the surface of the water
 function update(){
-	
 	sec = clock.getDelta();
 	moveDistance = 20 * sec;
 	rotationAngle = (Math.PI / 2) * sec;
@@ -439,6 +438,9 @@ function update(){
 		let rotY = new THREE.Matrix4();
 		rotY.makeRotationY(-0.01);
 	
+		// TODO: understand why this transMat gets me the result I want?
+		// having a variable like t that increases by 0.005 in Math.cos and Math.sin
+		// doesn't get me a satisfactory result :/
 		let transMat = new THREE.Matrix4();
 		transMat.set(
 			1,0,0,(10+20*(Math.cos(0.001))), 
