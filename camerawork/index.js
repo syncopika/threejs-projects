@@ -113,8 +113,6 @@ class MarkerManager {
 			marker.material.color.setHex(0x00ff00);
 		});
 		
-		//console.log(this);
-		
 		this.selectedMarkers = [];
 	}
 	
@@ -219,10 +217,8 @@ class MarkerManager {
 			// use settimeout to schedule when the new path animation interval should be run
 			// this will not be very accurate though
 			setTimeout(() => {
-				//console.log("starting a new timer!");
 				timers.forEach((timer) => {
 					// prevent any interleaving by clearing preexisting timers
-					//console.log("clearing a timer");
 					clearInterval(timer);
 				});
 				
@@ -237,8 +233,10 @@ class MarkerManager {
 					}else{
 						this.mainCamera.position.add(segmentVector);
 					}
-					//this.mainCamera.lookAt(targetObj); // TODO: use path target object property?
+					
 					if(target){
+						// if there is a target that the camera should be following,
+						// this will allow the camera to stay focused on that target
 						let targetPosWorld = new THREE.Vector3();
 						target.getWorldPosition(targetPosWorld);
 						this.mainCamera.lookAt(targetPosWorld);
