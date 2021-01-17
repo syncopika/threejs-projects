@@ -7,7 +7,7 @@ class Path {
 		this.linkMesh = linkMesh // a threejs line mesh object
 		
 		// other parameters to describe the path
-		this.duration = 3; // the seconds it takes to traverse the path
+		this.duration = 5; // the seconds it takes to traverse the path
 		
 		// the object to look at while the camera moves along this path
 		this.target = target;
@@ -76,7 +76,7 @@ class MarkerManager {
 		// what if we want a path with just 1 marker? i.e. for a static camera scene
 		if(markerList.length === 1){
 			// create some kinda path marker for it? like a sphere hovering over the marker maybe?
-			this.createPath(markerList[0], markerList[0], null);
+			this.createPath(markerList[0], markerList[0], null, target);
 		}else{
 			// draw lines between the markers in the list (based on order in the list)
 			let lineMaterial = new THREE.LineBasicMaterial({color: 0x0000ff});
@@ -200,7 +200,7 @@ class MarkerManager {
 		
 		// move the camera to the first marker first
 		if(this.paths[0]){
-			let firstPos = this.paths[0].start.position;
+			const firstPos = this.paths[0].start.position;
 			this.mainCamera.position.copy(firstPos);
 		}
 		
@@ -227,7 +227,8 @@ class MarkerManager {
 				});
 				
 				// rotate camera based on start marker for this path
-				camera.rotation.copy(path.start.rotation);
+				camera.rotation.copy(path.start.rotation); // do we need this?
+				if(target) this.focusOnTarget(target);
 				
 				let newTimer = setInterval(() => {
 					// move the camera every second based on the segmentVector
@@ -247,7 +248,8 @@ class MarkerManager {
 				timers.push(newTimer);
 				
 				setTimeout(() => {
-					camera.rotation.copy(path.end.rotation);
+					camera.rotation.copy(path.end.rotation); // is this needed?
+					if(target) this.focusOnTarget(target);
 					if(isStatic){
 						this.mainCamera.position.copy(start);
 					}else{
@@ -289,7 +291,7 @@ function setupSceneLights(scene){
 }
 
 function setupTerrain(scene){
-	const texture = new THREE.TextureLoader().load('texture.png');
+	const texture = new THREE.TextureLoader().load('../car_demo/models/grass2.jpg');
 	const terrainMat = new THREE.MeshBasicMaterial({map: texture});
 	const terrain = new THREE.PlaneGeometry(200, 200, 1);
 	const plane = new THREE.Mesh(terrain, terrainMat);
@@ -357,6 +359,7 @@ scene.add(camera);
 
 setupSceneLights(scene);
 setupTerrain(scene);
+
 const targetObj = setupDemoMesh(scene);
 
 const clock = new THREE.Clock();
@@ -450,9 +453,7 @@ function animate(){
 	renderer.render(scene, camera);
 	update();
 }
-
 animate();
-
 
 document.getElementById('addMarker').addEventListener('click', (evt) => {
 	addMarker = true;
@@ -473,6 +474,7 @@ document.getElementById('selectMarker').addEventListener('click', (evt) => {
 document.getElementById('createPath').addEventListener('click', (evt) => {
 	if(markerManager.mode === "select"){
 		// take all selected markers and create a path between them in the order they are in
+		console.log(targetObj);
 		markerManager.connectMarkers(markerManager.selectedMarkers, targetObj);
 	}
 });
