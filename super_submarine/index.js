@@ -24,7 +24,6 @@ function checkGoalObjectHit(source, dir, raycaster, scene){
 	return null;
 }
 
-
 function createSpotlight(){
 	let spotlight = new THREE.SpotLight(0xffffff, 1.8, 50, 0.35, 1.0, 1.2);
 	spotlight.castShadow = true;
@@ -49,6 +48,30 @@ function createCongratsMsg(msg, progressBar){
 	congratsMsg.textContent = msg;	
 	congratsMsg.style.display = "block";
 	return congratsMsg;
+}
+
+function createJellyfishGroup(mesh){
+	// pass in mesh of the jellyfish
+	const jGroup = new THREE.Group();
+	jGroup.add(mesh);
+	
+	// note that THREE.SkeletonUtils comes from https://cdn.jsdelivr.net/npm/three@v0.103.0/examples/js/utils/SkeletonUtils.js
+	const jellyClone = THREE.SkeletonUtils.clone(mesh);
+	jfishAnimation2 = new THREE.AnimationMixer(jellyClone); // notice we're referencing a global variable
+	jGroup.add(jellyClone);
+	jellyClone.position.y += 5;
+	jellyClone.position.z -= 5;
+	
+	const jellyClone2 = THREE.SkeletonUtils.clone(mesh);
+	jfishAnimation3 = new THREE.AnimationMixer(jellyClone2);
+	jellyClone2.scale.x /= 1.5;
+	jellyClone2.scale.y /= 1.5;
+	jellyClone2.scale.z /= 1.5;
+	jGroup.add(jellyClone2);
+	jellyClone2.position.y += 3;
+	jellyClone2.position.x -= 7;
+	
+	return jGroup;
 }
 
 
@@ -160,6 +183,13 @@ let jfishAnimation2 = null;
 let jfishAnimation3 = null;
 let jfishClips = null;
 
+let thePlayer = null;
+let theNpc = null;
+let jellyfishGroup = null;
+let capsuleToDisarm = null;
+let sunkenShip = null;
+let water = null;
+
 let loadedModels = [];
 
 function getModel(modelFilePath, side, name){
@@ -233,13 +263,6 @@ loadedModels.push(getModel('models/jellyfish-animated.gltf', 'jellyfish', 'npc')
 loadedModels.push(getModel('models/dangerous-capsule-edit-final.glb', 'none', 'goalObject'));
 loadedModels.push(getModel('models/smallship-damaged.gltf', 'none', 'goalObject2'));
 
-let thePlayer = null;
-let theNpc = null;
-let jellyfishGroup = null;
-let capsuleToDisarm = null;
-let sunkenShip = null;
-let water = null;
-
 Promise.all(loadedModels).then((objects) => {
 	objects.forEach((mesh) => {
 		if(mesh.name === "p2"){
@@ -291,43 +314,23 @@ Promise.all(loadedModels).then((objects) => {
 			// water.render();
 		
 		}else if(mesh.name === "npc"){
-				if(mesh.side === "whaleshark"){
-					// whale shark
-					whaleSharkAnimation = new THREE.AnimationMixer(mesh);
-					
-					let sharkGroup = new THREE.Group();
-					sharkGroup.add(mesh);
-					mesh = sharkGroup;
+			if(mesh.side === "whaleshark"){
+				// whale shark
+				whaleSharkAnimation = new THREE.AnimationMixer(mesh);
+				
+				const sharkGroup = new THREE.Group();
+				sharkGroup.add(mesh);
+				mesh = sharkGroup;
 
-					theNpc = mesh;
-					theNpc.matrixAutoUpdate = false;
-				}else if(mesh.side === "jellyfish"){
-					jfishAnimation = new THREE.AnimationMixer(mesh);
-					
-					let jGroup = new THREE.Group();
-					jGroup.add(mesh);
-					
-					// add more jellyfish
-					let jellyClone = THREE.SkeletonUtils.clone(mesh);
-					jfishAnimation2 = new THREE.AnimationMixer(jellyClone);
-					jGroup.add(jellyClone);
-					jellyClone.position.y += 5;
-					jellyClone.position.z -= 5;
-					
-					let jellyClone2 = THREE.SkeletonUtils.clone(mesh);
-					jfishAnimation3 = new THREE.AnimationMixer(jellyClone2);
-					jellyClone2.scale.x /= 1.5;
-					jellyClone2.scale.y /= 1.5;
-					jellyClone2.scale.z /= 1.5;
-					jGroup.add(jellyClone2);
-					jellyClone2.position.y += 3;
-					jellyClone2.position.x -= 7;
-					
-					mesh = jGroup;
-					jellyfishGroup = mesh;
-					jellyfishGroup.position.z = 120;
-					jellyfishGroup.position.x -= 80;
-				}
+				theNpc = mesh;
+				theNpc.matrixAutoUpdate = false;
+			}else if(mesh.side === "jellyfish"){
+				jfishAnimation = new THREE.AnimationMixer(mesh);
+				mesh = createJellyfishGroup(mesh);
+				jellyfishGroup = mesh;
+				jellyfishGroup.position.z = 120;
+				jellyfishGroup.position.x -= 80;
+			}
 		}else if(mesh.name === "goalObject"){
 			mesh.position.set(-100, -18.2, -100);
 			mesh.rotation.y = Math.PI / 6;
@@ -420,7 +423,6 @@ Promise.all(loadedModels).then((objects) => {
 let lastTime = clock.getDelta();
 let hitSurface = false; // if the sub reaches the surface of the water
 function update(){
-	
 	sec = clock.getDelta();
 	moveDistance = 20 * sec;
 	rotationAngle = (Math.PI / 2) * sec;
@@ -439,6 +441,9 @@ function update(){
 		let rotY = new THREE.Matrix4();
 		rotY.makeRotationY(-0.01);
 	
+		// TODO: understand why this transMat gets me the result I want?
+		// having a variable like t that increases by 0.005 in Math.cos and Math.sin
+		// doesn't get me a satisfactory result :/
 		let transMat = new THREE.Matrix4();
 		transMat.set(
 			1,0,0,(10+20*(Math.cos(0.001))), 
@@ -573,7 +578,6 @@ function update(){
 			if(goalObjectHit.name === "goalObject"){
 				let capsuleHit = goalObjectHit;
 				if(!capsuleHit.disarmed){
-
 					toggleMessage(
 						document.getElementsByTagName('canvas')[0], 
 						document.getElementById("disarmMessage"), 
@@ -622,7 +626,6 @@ function update(){
 						progressBar.style.width = "0px"; // reset to 0 width
 						lastTime = 0;
 					}
-					
 				}else{
 					// hide message
 					toggleMessage(
@@ -681,7 +684,6 @@ function update(){
 						progressBar.style.width = "0px"; // reset to 0 width
 						lastTime = 0;
 					}
-					
 				}else{
 					toggleMessage(
 						document.getElementsByTagName('canvas')[0], 
@@ -747,7 +749,6 @@ function update(){
 	camera.position.y = cameraOffset.y;
 	camera.position.z = cameraOffset.z;
 	camera.lookAt(thePlayer.position);
-
 }
 
 function animate(){
