@@ -3,10 +3,11 @@ small projects using three.js with stuff I made in Blender!
 see them here: https://syncopika.github.io/threejs-projects/    
     
 To run this project:    
-- assuming you have node.js and npm installed, `cd` into this repo after you have downloaded it and run `npm install`. this should create a new node_modules directory containing all the javascript dependencies noted in package.json
-- then run `node server.js`, which launches an Express.js server to serve this project
-- open up a broswer and navigate to `http://localhost:3000/`
-- you should see the projects! :D
+If you have Python installed, `cd` into this repo after downloading and run `python -m http.server`. Then navigate to `http://localhost:8000/` and you should see a list of the projects!     
+    
+Otherwise, if you have Node.js and npm, you can use an Express server. `cd` into this repo after you have downloaded it and run `npm install`. Then run `node server.js` and open up a broswer and navigate to `http://localhost:3000/`.    
+    
+For convenience, I opted just to pull Three.js from a CDN, which requires an internet connection anytime you want to open this project. Please keep that in mind when running locally.    
     
 Each project directory also has a readme with some additional info.      
     
