@@ -1,4 +1,5 @@
 let currModel = null;
+let currModelTextureMesh = null; // use this variable to keep track of the mesh whose texture is being edited
 const loader = new THREE.GLTFLoader();
 const textureLoader = new THREE.TextureLoader();
 //const group = new THREE.Group();
@@ -14,7 +15,7 @@ renderer.shadowMap.enabled = true;
 renderer.setSize(el.clientWidth, el.clientHeight);
 el.appendChild(renderer.domElement);
 
-camera.position.set(0, 10, 8);
+camera.position.set(0, 10, 15);
 camera.rotateOnAxis(new THREE.Vector3(1,0,0), -Math.PI/8);
 scene.add(camera);
 
@@ -27,6 +28,16 @@ let dirLight = new THREE.DirectionalLight( 0xffffff );
 dirLight.position.set( 0, 100, -10);
 scene.add(dirLight);
 
+// set up trackball control
+const controls = new THREE.TrackballControls(camera, renderer.domElement);
+controls.rotateSpeed = 1.2;
+controls.zoomSpeed = 1.2;
+controls.panSpeed = 0.8;
+//controls.noZoom = false;
+//controls.noPan = false;
+//controls.staticMoving = true;
+//controls.dynamicDampingFactor = 0.3;
+
 getModel('models/f-16.gltf', 'f16');
 update();
 
@@ -35,26 +46,51 @@ function getModel(modelFilePath, name){
 		loader.load(
 			modelFilePath,
 			async function(gltf){
-				gltf.scene.traverse((child) => {
-					if(child.type === "Mesh"){
-						// get the embedded texture and display in canvas
-						const texture = child.material.map.image;
-						const canvas = document.getElementById('liveryCanvas');
-						canvas.width = texture.width;
-						canvas.height = texture.height;
-						canvas.getContext('2d').drawImage(texture, 0, 0);
-						
-						let material = child.material;
-						let geometry = child.geometry;
-						let obj = new THREE.Mesh(geometry, material);			
-						obj.rotateOnAxis(new THREE.Vector3(0,1,0), -Math.PI/4);
-						obj.name = name;
-						
-						currModel = obj;
-						
-						processMesh(obj);
-					}
-				});
+				if(name === "porsche"){
+					currModel = gltf.scene;
+					currModel.scale.set(4,4,4);
+					currModel.position.set(0, 0, -5);
+					currModel.rotateOnAxis(new THREE.Vector3(0,1,0), -Math.PI*.8);
+					processMesh(currModel);
+					
+					const carBody = gltf.scene.children.filter((obj) => obj.name === "porsche")[0];
+					currModelTextureMesh = carBody;
+					
+					const texture = carBody.material.map.image;
+					const canvas = document.getElementById('liveryCanvas');
+					canvas.width = texture.width;
+					canvas.height = texture.height;
+					canvas.getContext('2d').drawImage(texture, 0, 0);
+							
+				}else{
+					gltf.scene.traverse((child) => {
+						if(child.type === "Mesh"){
+							// get the embedded texture and display in canvas
+							const texture = child.material.map.image;
+							const canvas = document.getElementById('liveryCanvas');
+							canvas.width = texture.width;
+							canvas.height = texture.height;
+							canvas.getContext('2d').drawImage(texture, 0, 0);
+							
+							let material = child.material;
+							let geometry = child.geometry;
+							let obj = new THREE.Mesh(geometry, material);			
+							obj.rotateOnAxis(new THREE.Vector3(0,1,0), -Math.PI/4);
+							obj.name = name;
+							
+							if(name === "battleship2"){
+								obj.scale.set(5, 5, 5);
+								obj.position.set(5, 0, 0);
+							}else{
+								obj.position.set(0, 0, 0);
+							}
+							
+							currModel = obj;
+							currModelTextureMesh = obj;
+							processMesh(obj);
+						}
+					});
+				}
 			},
 			// called while loading is progressing
 			function(xhr){
@@ -70,14 +106,11 @@ function getModel(modelFilePath, name){
 }
 
 function processMesh(mesh){
-	let meshName = mesh.name;
-	
 	// the local axis of the imported mesh is a bit weird and not consistent with the world axis. so, to fix that,
 	// put it in a group object and just control the group object! the mesh is also just oriented properly initially when placed in the group.
 	let playerAxesHelper = new THREE.AxesHelper(10);
 	mesh.add(playerAxesHelper);
 	
-	mesh.position.set(0, 0, -10);
 	scene.add(mesh);
 	update();
 	renderer.render(scene, camera);
@@ -85,6 +118,7 @@ function processMesh(mesh){
 
 function update(){
 	requestAnimationFrame(update);
+	controls.update();
 	renderer.render(scene, camera);
 }
 
@@ -170,13 +204,10 @@ function updateModel(){
 	const newTexture = textureLoader.load(imageUrl);
 	
 	// update model with new texture
-	const oldTexture = currModel.material.map;
-	//console.log(currModel.material);
-	//console.log(oldTexture);
+	const oldTexture = currModelTextureMesh.material.map;
+
 	newTexture.flipY = false;
-	currModel.material.map = newTexture;
-	//currModel.material.needsUpdate = true;
-	//oldTexture.dispose();
+	currModelTextureMesh.material.map = newTexture;
 }
 document.getElementById('updateModel').addEventListener('click', (evt) => {
 	updateModel();
@@ -214,7 +245,7 @@ function brushStop(){
 
 function addClick(ptrEvt, dragging){
 	const size = 3;
-	const color = 'rgba(0,0,0,255)';
+	const color = document.getElementById('colorInput').value; //'rgba(0,0,0,255)';
 	const x = ptrEvt.offsetX;
 	const y = ptrEvt.offsetY;
 	clickX.push(x);
@@ -258,3 +289,7 @@ canvas.addEventListener('pointerdown', brushStart);
 canvas.addEventListener('pointerup', brushStop);
 canvas.addEventListener('pointermove', brushMove);
 canvas.addEventListener('pointerleave', brushStop);
+
+document.getElementById('colorInput').addEventListener('change', (evt) => {
+	evt.target.style.border = '3px solid ' + evt.target.value;
+});
