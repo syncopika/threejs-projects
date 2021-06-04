@@ -1,0 +1,82 @@
+<html>
+
+	<head>
+		<title>livery customizer demo</title>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r120/three.min.js" integrity="sha512-kgjZw3xjgSUDy9lTU085y+UCVPz3lhxAtdOVkcO4O2dKl2VSBcNsQ9uMg/sXIM4SoOmCiYfyFO/n1/3GSXZtSg==" crossorigin="anonymous"></script>
+		<script src='../lib/GLTFLoader.js'></script>
+		<script src='../lib/TrackballControls.js'></script>
+	</head>
+	
+	<style>
+		#main{
+			font-family: monospace;
+			text-align: center;
+			position: relative;
+			display: block;
+		}
+		
+		#container{
+			width: 1100px;
+			height: 600px;
+			margin: 0 auto;
+			display: inline-block;
+		}
+		
+		#editArea{
+			padding: 1%;
+			text-align: center;
+		}
+		
+		#liveryCanvas{
+			border: 1px solid #000;
+		}
+		
+		#liveryCanvas:hover{
+			cursor: crosshair;
+		}
+		
+		button{
+			margin: 3px;
+		}
+		
+		li{
+			display: inline-block;
+		}
+	</style>
+	
+	<body>
+		<div id='main'>
+			<h3> livery customizer demo </h3>
+			<div id='container'>
+			</div>
+		</div>
+		<div id='editArea'>
+			<ul id='toolbar'>
+				<li>
+					<label for='colorInput'>pen color: </label>
+					<input id='colorInput' type="text" value="rgba(0,0,0,255)"/>
+				</li>
+				<li><button id='invertColor'>invert color</button></li>
+				<li><button id='mosaic'>mosaic filter</button></li>
+				<li><button id='updateModel'>update model</button></li>
+				<li>
+					<select id='selectModel'>
+						<option value="f-16" selected>jet</option>
+						<option value="f-18">jet2</option>
+						<option value="porsche">car</option>
+						<option value="battleship2">battleship</option>
+					</select>
+				</li>
+			</ul>
+			
+			<div id='liveryDisplay'>
+				<canvas id='liveryCanvas'>
+				</canvas>
+			</div>
+			
+		</div>
+	</body>
+	
+	<script src='index.js'></script>
+
+</html>

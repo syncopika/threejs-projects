@@ -1,0 +1,12 @@
+https://discoverthreejs.com/book/first-steps/textures-intro/
+https://github.com/KhronosGroup/glTF-Tutorials/blob/master/gltfTutorial/gltfTutorial_012_TexturesImagesSamplers.md
+https://nicedoc.io/KhronosGroup/glTF-Tutorials/blob/master/gltfTutorial/gltfTutorial_002_BasicGltfStructure.md
+https://computergraphics.stackexchange.com/questions/3616/how-to-encode-decode-buffer-data-in-gltf
+https://stackoverflow.com/questions/30106476/using-javascripts-atob-to-decode-base64-doesnt-properly-decode-utf-8-strings -> exploring the base64 buffer data uri in gltf files
+https://discourse.threejs.org/t/how-to-get-texture-file-bytes-embedded-in-glb-after-loading-it-in-the-scene-via-gltfloader/6569
+https://discourse.threejs.org/t/set-img-elements-src-from-texture-map-inside-material/9771/3
+https://stackoverflow.com/questions/41853580/three-js-export-a-texture-as-an-image
+https://discourse.threejs.org/t/solved-get-dimensions-of-material-texture-image-in-traverse/16875 -> the material.map.image got me what I wanted. pretty easy it turns out lol -_-
+https://stackoverflow.com/questions/18436431/three-js-update-texture-image
+https://discourse.threejs.org/t/updating-material-map/2381/2
+https://discourse.threejs.org/t/textures-map-incorrectly-to-gltf-object/11544/2
