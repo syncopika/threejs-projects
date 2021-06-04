@@ -90,6 +90,46 @@ document.getElementById('invertColor').addEventListener('click', (evt) => {
 	ctx.putImageData(inverted, 0, 0);
 });
 
+function mosaicFilter(pixels){
+	let d = pixels.data;
+	let copy = new Uint8ClampedArray(d);
+	
+	// get dimensions 
+	let width = pixels.width;
+	let height = pixels.height;
+	
+	// change sampling size here. lower for higher detail preservation, higher for less detail (because larger chunks)
+	let chunkWidth = 10;
+	let chunkHeight = 10;
+
+	for(let i = 0; i < width; i += chunkWidth){
+		for(let j = 0; j < height; j += chunkHeight){
+			// multiply by width because all the image data is in a single array and a row is dependent on width
+			let r = copy[4 * i + 4 * j * width];
+			let g = copy[4 * i + 4 * j * width + 1];
+			let b = copy[4 * i + 4 * j * width + 2];
+			// now for all the other pixels in this chunk, set them to this color 
+			for(let k = i; k < i + chunkWidth; k++){
+				for(let l = j; l < j + chunkHeight; l++){
+					d[4 * k + 4 * l * width] = r;
+					d[4 * k + 4 * l * width + 1] = g;
+					d[4 * k + 4 * l * width + 2] = b;
+				}
+			}
+		}
+	}
+	
+	return pixels;
+}
+document.getElementById('mosaic').addEventListener('click', (evt) => {
+	const canvas = document.getElementById('liveryCanvas');
+	const ctx = canvas.getContext('2d');
+	const pixelData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+	const mosaic = mosaicFilter(pixelData);
+	ctx.putImageData(mosaic, 0, 0);
+});
+
+
 function updateModel(){
 	// get image from canvas
 	const imageUrl = document.getElementById('liveryCanvas').toDataURL();
