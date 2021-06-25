@@ -1,8 +1,7 @@
 let currModel = null;
-let currModelTextureMesh = null; // use this variable to keep track of the mesh whose texture is being edited
+let currModelTexture = null;
 const loader = new THREE.GLTFLoader();
 const textureLoader = new THREE.TextureLoader();
-//const group = new THREE.Group();
 
 const el = document.getElementById("container");
 const renderer = new THREE.WebGLRenderer();
@@ -33,12 +32,8 @@ const controls = new THREE.TrackballControls(camera, renderer.domElement);
 controls.rotateSpeed = 1.2;
 controls.zoomSpeed = 1.2;
 controls.panSpeed = 0.8;
-//controls.noZoom = false;
-//controls.noPan = false;
-//controls.staticMoving = true;
-//controls.dynamicDampingFactor = 0.3;
 
-getModel('models/f-16.gltf', 'f16');
+getModel('../assets/f-16.gltf', 'f16');
 update();
 
 function getModel(modelFilePath, name){
@@ -46,38 +41,26 @@ function getModel(modelFilePath, name){
 		loader.load(
 			modelFilePath,
 			async function(gltf){
-				if(name === "porsche"){
-					currModel = gltf.scene;
-					currModel.scale.set(4,4,4);
-					currModel.position.set(0, 0, -5);
-					currModel.rotateOnAxis(new THREE.Vector3(0,1,0), -Math.PI*.8);
-					processMesh(currModel);
-					
-					const carBody = gltf.scene.children.filter((obj) => obj.name === "porsche")[0];
-					currModelTextureMesh = carBody;						
-				}else{
-					gltf.scene.traverse((child) => {
-						if(child.type === "Mesh"){
-							
-							let material = child.material;
-							let geometry = child.geometry;
-							let obj = new THREE.Mesh(geometry, material);			
-							obj.rotateOnAxis(new THREE.Vector3(0,1,0), -Math.PI/4);
-							obj.name = name;
-							
-							if(name === "battleship2"){
-								obj.scale.set(5, 5, 5);
-								obj.position.set(5, 0, 0);
-							}else{
-								obj.position.set(0, 0, 0);
-							}
-							
-							currModel = obj;
-							currModelTextureMesh = obj;
-							processMesh(obj);
+				gltf.scene.traverse((child) => {
+					if(child.type === "Mesh"){	
+						let material = child.material;
+						let geometry = child.geometry;
+						let obj = new THREE.Mesh(geometry, material);			
+						obj.rotateOnAxis(new THREE.Vector3(0,1,0), -Math.PI/4);
+						obj.name = name;
+						
+						if(name === "battleship2"){
+							obj.scale.set(5, 5, 5);
+							obj.position.set(5, 0, 0);
+						}else{
+							obj.position.set(0, 0, 0);
 						}
-					});
-				}
+						
+						currModel = obj;
+						currModelTexture = obj.material.map.image;
+						processMesh(obj);
+					}
+				});
 			},
 			// called while loading is progressing
 			function(xhr){
@@ -120,36 +103,68 @@ document.getElementById('selectModel').addEventListener('change', (evt) => {
 	//console.log(evt.target.value);
 	scene.remove(scene.getObjectByName(currModel.name));
 	if(evt.target.value === 'f-18'){
-		getModel(`models/${evt.target.value}.glb`, evt.target.value);
+		getModel(`../assets/${evt.target.value}.glb`, evt.target.value);
 	}else{
-		getModel(`models/${evt.target.value}.gltf`, evt.target.value);
+		getModel(`../assets/${evt.target.value}.gltf`, evt.target.value);
 	}
 });
+
+function getTextureImageUrl(imgElement){
+	const canvas = document.createElement('canvas');
+	canvas.width = imgElement.width;
+	canvas.height = imgElement.height;
+	canvas.getContext('2d').drawImage(imgElement, 0, 0);
+	return canvas.toDataURL();
+}
 
 
 function updateModel(){
 	// update shader
 	const vertexShader = `
+		varying vec2 vUv;
+		uniform float u_time;
+	
 		void main() {
+			vUv = uv;
 			gl_Position = projectionMatrix *
 			              modelViewMatrix *
-						  vec4(position,1.0);
+						  vec4(position.x,position.y+(3.0*sin(u_time)),position.z,1.0);
 		}
 	`;
 	
 	const fragShader = `
+		varying vec2 vUv;
+		uniform sampler2D img;
 		uniform float u_time;
+		uniform vec2 u_resolution; // dimensions of renderer
+		
 		void main() {
-			gl_FragColor = vec4(1.0-abs(sin(u_time)),
-			                    0.0,
-								1.0,
-								1.0);
+			vec2 pt = gl_FragCoord.xy/u_resolution.xy;
+			
+			float y = pow(pt.x,2.0);
+			
+			vec3 color = vec3(y);
+			
+			vec4 txColor = texture2D(img, vUv);
+			
+			gl_FragColor = vec4(txColor.r/2.0, txColor.g/2.0, txColor.b/2.0, 0.0);
+			
+			//gl_FragColor = vec4(1.0-abs(sin(u_time)),
+			//                    0.0,
+			//					color.z,
+			//					1.0);
 		}
 	`;
 	
+	const textureUrl = getTextureImageUrl(currModelTexture);
+	const texture = textureLoader.load(textureUrl);
+	texture.flipY = false; // this part is important!
+	
 	const newShaderMaterial = new THREE.ShaderMaterial({
 		uniforms: {
-			u_time: {type: "f", value: 0}
+			img: {type: "t", value: texture},
+			u_time: {type: "f", value: 0},
+			u_resolution: {type: "vec2", value: new THREE.Vector2(renderer.domElement.width, renderer.domElement.height)},
 		},
 		vertexShader: vertexShader,
 		fragmentShader: fragShader,

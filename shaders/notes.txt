@@ -1,4 +1,11 @@
 https://aerotwist.com/tutorials/an-introduction-to-shaders-part-1/
-https://thebookofshaders.com/02/
+https://thebookofshaders.com/02/ -> this only concerns the fragment shader
 https://threejs.org/docs/#api/en/materials/ShaderMaterial
 https://stackoverflow.com/questions/37398013/animating-custom-shader-in-webgl-three-js
+https://shader-tutorial.dev/basics/vertex-shader/
+https://threejsfundamentals.org/threejs/lessons/threejs-shadertoy.html
+
+
+
+notes
+might need to grab the uv coords of my imported model and pass them to the shaders? https://jsfiddle.net/f2Lommf5/16541/
