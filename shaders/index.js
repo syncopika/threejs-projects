@@ -33,7 +33,7 @@ controls.rotateSpeed = 1.2;
 controls.zoomSpeed = 1.2;
 controls.panSpeed = 0.8;
 
-getModel('../assets/f-16.gltf', 'f16');
+getModel('../shared_assets/f-16.gltf', 'f16');
 update();
 
 function getModel(modelFilePath, name){
@@ -49,7 +49,7 @@ function getModel(modelFilePath, name){
 						obj.rotateOnAxis(new THREE.Vector3(0,1,0), -Math.PI/4);
 						obj.name = name;
 						
-						if(name === "battleship2"){
+						if(name === "battleship2" || name === "whale-shark-camo"){
 							obj.scale.set(5, 5, 5);
 							obj.position.set(5, 0, 0);
 						}else{
@@ -57,7 +57,7 @@ function getModel(modelFilePath, name){
 						}
 						
 						currModel = obj;
-						currModelTexture = obj.material.map.image;
+						currModelTexture = obj.material.map ? obj.material.map.image : null;
 						processMesh(obj);
 					}
 				});
@@ -102,10 +102,10 @@ function update(){
 document.getElementById('selectModel').addEventListener('change', (evt) => {
 	//console.log(evt.target.value);
 	scene.remove(scene.getObjectByName(currModel.name));
-	if(evt.target.value === 'f-18'){
-		getModel(`../assets/${evt.target.value}.glb`, evt.target.value);
+	if(["whale-shark-camo", "f-18"].indexOf(evt.target.value) > -1){
+		getModel(`../shared_assets/${evt.target.value}.glb`, evt.target.value);
 	}else{
-		getModel(`../assets/${evt.target.value}.gltf`, evt.target.value);
+		getModel(`../shared_assets/${evt.target.value}.gltf`, evt.target.value);
 	}
 });
 
@@ -128,7 +128,7 @@ function updateModel(){
 			vUv = uv;
 			gl_Position = projectionMatrix *
 			              modelViewMatrix *
-						  vec4(position.x,position.y+(3.0*sin(u_time)),position.z,1.0);
+						  vec4(position, 1.0); //vec4(position.x,position.y+(3.0*sin(u_time)),position.z,1.0);
 		}
 	`;
 	
@@ -147,7 +147,7 @@ function updateModel(){
 			
 			vec4 txColor = texture2D(img, vUv);
 			
-			gl_FragColor = vec4(txColor.r/2.0, txColor.g/2.0, txColor.b/2.0, 0.0);
+			gl_FragColor = vec4(txColor.r*1.2*abs(sin(u_time)), txColor.g*1.2*abs(sin(u_time)), txColor.b*1.2*abs(sin(u_time)), 0.0);
 			
 			//gl_FragColor = vec4(1.0-abs(sin(u_time)),
 			//                    0.0,
@@ -156,16 +156,20 @@ function updateModel(){
 		}
 	`;
 	
-	const textureUrl = getTextureImageUrl(currModelTexture);
-	const texture = textureLoader.load(textureUrl);
-	texture.flipY = false; // this part is important!
+	const uniforms = {
+		u_time: {type: "f", value: 0},
+		u_resolution: {type: "vec2", value: new THREE.Vector2(renderer.domElement.width, renderer.domElement.height)},
+	}
+	
+	if(currModelTexture){
+		const textureUrl = getTextureImageUrl(currModelTexture);
+		const texture = textureLoader.load(textureUrl);
+		texture.flipY = false; // this part is important!
+		uniforms.img = {type: "t", value: texture};
+	}
 	
 	const newShaderMaterial = new THREE.ShaderMaterial({
-		uniforms: {
-			img: {type: "t", value: texture},
-			u_time: {type: "f", value: 0},
-			u_resolution: {type: "vec2", value: new THREE.Vector2(renderer.domElement.width, renderer.domElement.height)},
-		},
+		uniforms: uniforms,
 		vertexShader: vertexShader,
 		fragmentShader: fragShader,
 	});

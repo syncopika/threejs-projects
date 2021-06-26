@@ -256,7 +256,7 @@ function getModel(modelFilePath, side, name){
 }
 
 loadedModels.push(getModel('models/submarine1.glb', 'player', 'p1'));
-loadedModels.push(getModel('models/battleship2.glb', 'player2', 'p2'));
+loadedModels.push(getModel('../shared_assets/battleship2.gltf', 'player2', 'p2'));
 loadedModels.push(getModel('models/oceanfloor.glb', 'none', 'bg'));
 loadedModels.push(getModel('models/whale-shark-final.gltf', 'whaleshark', 'npc'));
 loadedModels.push(getModel('models/jellyfish-animated.gltf', 'jellyfish', 'npc'));
