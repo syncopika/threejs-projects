@@ -8,6 +8,8 @@ https://blog.scottlogic.com/2019/10/17/sculpting-shapes-with-webgl-fragment-shad
 https://github.com/mrdoob/three.js/blob/master/examples/webgl_buffergeometry_rawshader.html
 https://github.com/mrdoob/three.js/blob/master/examples/webgl2_volume_cloud.html
 https://stackoverflow.com/questions/66741338/simple-square-using-buffergeometry
+http://www.neilmendoza.com/glsl-rotation-about-an-arbitrary-axis/
+https://discourse.threejs.org/t/shader-randomize-point-positions-from-origins/6689/2
 
 notes
 might need to grab the uv coords of my imported model and pass them to the shaders? https://jsfiddle.net/f2Lommf5/16541/ 

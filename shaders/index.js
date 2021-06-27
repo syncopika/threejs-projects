@@ -128,10 +128,28 @@ function updateModel(){
 		varying vec2 vUv;
 		uniform float u_time;
 	
+		// http://www.neilmendoza.com/glsl-rotation-about-an-arbitrary-axis/
+		mat4 getRotationMat(vec3 axis, float angle){
+			float s = sin(angle);
+			float c = cos(angle);
+			float oc = 1.0 - c;
+			
+			return mat4(
+				oc*axis.x*axis.x + c,        oc*axis.x*axis.y - axis.z*s, oc*axis.z*axis.x + axis.y*s, 0.0,
+				oc*axis.x*axis.y + axis.z*s, oc*axis.y*axis.y + c,        oc*axis.y*axis.z + axis.x*s, 0.0, 
+				oc*axis.x*axis.z - axis.y*s, oc*axis.y*axis.z + axis.x*s, oc*axis.z*axis.z + c,         0.0,
+                0.0,                         0.0,                         0.0,                         1.0				
+			);
+		}
+	
 		void main() {
 			vUv = uv;
+			
+			mat4 rotY = getRotationMat(vec3(0, 1, 0), sin(u_time));
+			
 			gl_Position = projectionMatrix *
 			              modelViewMatrix *
+						  rotY *
 						  vec4(position, 1.0); //vec4(position.x,position.y+(3.0*sin(u_time)),position.z,1.0);
 		}
 	`;
@@ -181,47 +199,6 @@ function updateModel(){
 	currModel.material = newShaderMaterial;
 }
 
-function createScene1(){
-	// create some stars
-	const geometry = new THREE.PlaneGeometry(20,20);
-	
-	const vertexShader = `
-		uniform float u_time;
-	
-		void main() {
-			gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-		}
-	`;
-	
-	const fragShader = `
-		uniform sampler2D img;
-		uniform float u_time;
-		uniform vec2 u_resolution; // dimensions of renderer
-		uniform vec3 color;
-		
-		void main() {
-            gl_FragColor = vec4(vec3(0.8), 1.0);
-		}
-	`;
-	
-	const uniforms = {
-		u_time: {type: "f", value: 0},
-		u_resolution: {type: "vec2", value: new THREE.Vector2(renderer.domElement.width, renderer.domElement.height)},
-	};
-	
-	const newShaderMaterial = new THREE.ShaderMaterial({
-		uniforms: uniforms,
-		vertexShader: vertexShader,
-		fragmentShader: fragShader,
-		side: THREE.DoubleSide,
-		transparent: true,
-	});
-	
-	const plane = new THREE.Mesh(geometry, newShaderMaterial);
-	plane.name = "scene1";
-	
-	return plane;
-}
 
 function randomRange(min, max){
 	return Math.random() * (max - min) + min;
@@ -237,9 +214,9 @@ function createSceneSquares(){
 	const colors = [];
 	const indices = [];
 	
-	const zRange = {'min': 1, 'max': 120}; // range for z position of squares
-	const xRange = {'min': -80, 'max': 80};
-	const yRange = {'min': -80, 'max': 80};
+	const zRange = {'min': camera.position.z-150, 'max': 0}; // range for z position of squares
+	const xRange = {'min': -120, 'max': 120};
+	const yRange = {'min': -120, 'max': 120};
 	const squareWidth = 5;
 	const squareHeight = 5;
 	
@@ -312,23 +289,44 @@ function createSceneSquares(){
 		
 		attribute vec4 color;
 		varying vec4 vColor;
+		
+		// https://thebookofshaders.com/10/
+		float rand(vec2 pos){
+			return fract(sin(dot(pos, vec2(12.9898,78.233)))*43758.5453123);
+		}
+		
+		// http://www.neilmendoza.com/glsl-rotation-about-an-arbitrary-axis/
+		mat4 getRotationMat(vec3 axis, float angle){
+			float s = sin(angle);
+			float c = cos(angle);
+			float oc = 1.0 - c;
+			
+			return mat4(
+				oc*axis.x*axis.x + c,        oc*axis.x*axis.y - axis.z*s, oc*axis.z*axis.x + axis.y*s, 0.0,
+				oc*axis.x*axis.y + axis.z*s, oc*axis.y*axis.y + c,        oc*axis.y*axis.z + axis.x*s, 0.0, 
+				oc*axis.x*axis.z - axis.y*s, oc*axis.y*axis.z + axis.x*s, oc*axis.z*axis.z + c,         0.0,
+                0.0,                         0.0,                         0.0,                         1.0				
+			);
+		}
 	
 		void main() {
 			vColor = color;
 			
-			gl_Position = projectionMatrix * modelViewMatrix * vec4(position.x, position.y, (1.2*position.z*abs(cos(u_time))), 1.0);
+			mat4 rotZ = getRotationMat(vec3(0,0,1), rand(position.xy));
+			
+			gl_Position = projectionMatrix * modelViewMatrix * rotZ * vec4(position.x, position.y, (1.2*position.z*abs(cos(0.1*u_time))), 1.0);
 		}
 	`;
 	
 	const fragShader = `
 		uniform sampler2D img;
 		uniform float u_time;
-		uniform vec2 u_resolution; // dimensions of renderer
+		uniform vec2 u_resolution; // dimensions of renderer canvas
 		varying vec4 vColor;
 		
 		void main() {
             gl_FragColor = vec4(
-			vColor.r*abs(sin(u_time))*1.3, 
+			vColor.r*abs(cos(u_time))*1.3, 
 			vColor.g*abs(sin(u_time))*1.6, 
 			vColor.b*abs(cos(u_time))*1.2,
 			1.0);
