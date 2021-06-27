@@ -100,10 +100,14 @@ function update(){
 
 // model selection
 document.getElementById('selectModel').addEventListener('change', (evt) => {
-	//console.log(evt.target.value);
 	scene.remove(scene.getObjectByName(currModel.name));
+	currModelTexture = null;
+	
 	if(["whale-shark-camo", "f-18"].indexOf(evt.target.value) > -1){
 		getModel(`../shared_assets/${evt.target.value}.glb`, evt.target.value);
+	}else if(evt.target.value === "scene1"){
+		currModel = createSceneSquares(); //createScene1();
+		processMesh(currModel);
 	}else{
 		getModel(`../shared_assets/${evt.target.value}.gltf`, evt.target.value);
 	}
@@ -159,7 +163,7 @@ function updateModel(){
 	const uniforms = {
 		u_time: {type: "f", value: 0},
 		u_resolution: {type: "vec2", value: new THREE.Vector2(renderer.domElement.width, renderer.domElement.height)},
-	}
+	};
 	
 	if(currModelTexture){
 		const textureUrl = getTextureImageUrl(currModelTexture);
@@ -175,7 +179,179 @@ function updateModel(){
 	});
 	
 	currModel.material = newShaderMaterial;
+}
+
+function createScene1(){
+	// create some stars
+	const geometry = new THREE.PlaneGeometry(20,20);
 	
+	const vertexShader = `
+		uniform float u_time;
+	
+		void main() {
+			gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+		}
+	`;
+	
+	const fragShader = `
+		uniform sampler2D img;
+		uniform float u_time;
+		uniform vec2 u_resolution; // dimensions of renderer
+		uniform vec3 color;
+		
+		void main() {
+            gl_FragColor = vec4(vec3(0.8), 1.0);
+		}
+	`;
+	
+	const uniforms = {
+		u_time: {type: "f", value: 0},
+		u_resolution: {type: "vec2", value: new THREE.Vector2(renderer.domElement.width, renderer.domElement.height)},
+	};
+	
+	const newShaderMaterial = new THREE.ShaderMaterial({
+		uniforms: uniforms,
+		vertexShader: vertexShader,
+		fragmentShader: fragShader,
+		side: THREE.DoubleSide,
+		transparent: true,
+	});
+	
+	const plane = new THREE.Mesh(geometry, newShaderMaterial);
+	plane.name = "scene1";
+	
+	return plane;
+}
+
+function randomRange(min, max){
+	return Math.random() * (max - min) + min;
+}
+
+// make a bunch of squares with shaders
+function createSceneSquares(){
+	const vertexCount = 200 * 4; // 100 squares
+	
+	const geometry = new THREE.BufferGeometry();
+	
+	const positions = [];
+	const colors = [];
+	const indices = [];
+	
+	const zRange = {'min': 1, 'max': 120}; // range for z position of squares
+	const xRange = {'min': -80, 'max': 80};
+	const yRange = {'min': -80, 'max': 80};
+	const squareWidth = 5;
+	const squareHeight = 5;
+	
+	for(let i = 0; i <= vertexCount - 4; i+= 4){
+		// this is one of the vertices of a square
+		const x1 = randomRange(xRange.min, xRange.max);
+		const y1 = randomRange(yRange.min, yRange.max);
+		const z1 = randomRange(zRange.min, zRange.max);
+		
+		// top-left vertex
+		positions.push(x1);
+		positions.push(y1);
+		positions.push(z1);
+		colors.push(Math.random()*255); //r
+		colors.push(Math.random()*255); //g
+		colors.push(Math.random()*255); //g
+		colors.push(200); //a - make each square slightly transparent
+		
+		// since each square has 4 vertices, create the others here
+		// top-right vertex
+		positions.push(x1+squareWidth);
+		positions.push(y1);
+		positions.push(z1);
+		colors.push(Math.random()*255);
+		colors.push(Math.random()*255);
+		colors.push(Math.random()*255);
+		colors.push(200);
+		
+		// bottom-left vertex
+		positions.push(x1);
+		positions.push(y1-squareHeight);
+		positions.push(z1);
+		colors.push(Math.random()*255);
+		colors.push(Math.random()*255);
+		colors.push(Math.random()*255);
+		colors.push(200);
+		
+		// bottom-right vertex
+		positions.push(x1+squareWidth);
+		positions.push(y1-squareHeight);
+		positions.push(z1);
+		colors.push(Math.random()*255);
+		colors.push(Math.random()*255);
+		colors.push(Math.random()*255);
+		colors.push(200);
+		
+		// since we're making squares, we need 2 triangles. 
+		// specify what vertices make up which triangles in the indices array
+		// first triangle
+		indices.push(i+2);
+		indices.push(i+3);
+		indices.push(i+1);
+		
+		// second triangle
+		indices.push(i+1);
+		indices.push(i);
+		indices.push(i+2);
+	}
+	
+	const positionAttribute = new THREE.Float32BufferAttribute(positions, 3);
+	const colorAttribute = new THREE.Uint8BufferAttribute(colors, 4);
+	colorAttribute.normalized = true; // normalize color values so the fall in range 0 to 1.
+	
+	geometry.setAttribute('position', positionAttribute);
+	geometry.setAttribute('color', colorAttribute);
+	geometry.setIndex(indices);
+	
+	const vertexShader = `
+		uniform float u_time;
+		
+		attribute vec4 color;
+		varying vec4 vColor;
+	
+		void main() {
+			vColor = color;
+			
+			gl_Position = projectionMatrix * modelViewMatrix * vec4(position.x, position.y, (1.2*position.z*abs(cos(u_time))), 1.0);
+		}
+	`;
+	
+	const fragShader = `
+		uniform sampler2D img;
+		uniform float u_time;
+		uniform vec2 u_resolution; // dimensions of renderer
+		varying vec4 vColor;
+		
+		void main() {
+            gl_FragColor = vec4(
+			vColor.r*abs(sin(u_time))*1.3, 
+			vColor.g*abs(sin(u_time))*1.6, 
+			vColor.b*abs(cos(u_time))*1.2,
+			1.0);
+		}
+	`;
+	
+	const uniforms = {
+		u_time: {type: "f", value: 0},
+		u_resolution: {type: "vec2", value: new THREE.Vector2(renderer.domElement.width, renderer.domElement.height)},
+	};
+	
+	const newShaderMaterial = new THREE.ShaderMaterial({
+		uniforms: uniforms,
+		vertexShader: vertexShader,
+		fragmentShader: fragShader,
+		side: THREE.DoubleSide,
+		transparent: true,
+	});
+	
+	const mesh = new THREE.Mesh(geometry, newShaderMaterial);
+	mesh.name = "squareScene";
+	
+	return mesh;
 }
 
 document.getElementById('updateModel').addEventListener('click', (evt) => {
