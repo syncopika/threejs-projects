@@ -1,0 +1,19 @@
+https://aerotwist.com/tutorials/an-introduction-to-shaders-part-1/
+https://thebookofshaders.com/02/ -> this only concerns the fragment shader
+https://threejs.org/docs/#api/en/materials/ShaderMaterial
+https://stackoverflow.com/questions/37398013/animating-custom-shader-in-webgl-three-js
+https://shader-tutorial.dev/basics/vertex-shader/
+https://threejsfundamentals.org/threejs/lessons/threejs-shadertoy.html
+https://blog.scottlogic.com/2019/10/17/sculpting-shapes-with-webgl-fragment-shader.html
+https://github.com/mrdoob/three.js/blob/master/examples/webgl_buffergeometry_rawshader.html
+https://github.com/mrdoob/three.js/blob/master/examples/webgl2_volume_cloud.html
+https://stackoverflow.com/questions/66741338/simple-square-using-buffergeometry
+http://www.neilmendoza.com/glsl-rotation-about-an-arbitrary-axis/
+https://discourse.threejs.org/t/shader-randomize-point-positions-from-origins/6689/2
+
+notes
+might need to grab the uv coords of my imported model and pass them to the shaders? https://jsfiddle.net/f2Lommf5/16541/ 
+-> nope, just needed make sure the texture's flipY was set to false
+
+colors for rgba channels in shaders range from 0-1, not 0-255!! somehow I didn't notice that even when the alpha channel was set to 1 and I
+wasted a ton of time trying to figure out why different colors weren't working -_-.
