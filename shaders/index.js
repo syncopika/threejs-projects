@@ -49,9 +49,10 @@ function getModel(modelFilePath, name){
 						obj.rotateOnAxis(new THREE.Vector3(0,1,0), -Math.PI/4);
 						obj.name = name;
 						
-						if(name === "battleship2" || name === "whale-shark-camo"){
-							obj.scale.set(5, 5, 5);
+						if(name === "whale-shark-camo"){
+							obj.scale.set(1.8, 1.8, 1.8);
 							obj.position.set(5, 0, 0);
+							obj.rotateOnAxis(new THREE.Vector3(0,1,0), Math.PI/2);
 						}else{
 							obj.position.set(0, 0, 0);
 						}
@@ -76,8 +77,6 @@ function getModel(modelFilePath, name){
 }
 
 function processMesh(mesh){
-	// the local axis of the imported mesh is a bit weird and not consistent with the world axis. so, to fix that,
-	// put it in a group object and just control the group object! the mesh is also just oriented properly initially when placed in the group.
 	let playerAxesHelper = new THREE.AxesHelper(10);
 	mesh.add(playerAxesHelper);
 	
@@ -90,8 +89,8 @@ function update(){
 	requestAnimationFrame(update);
 	controls.update();
 	
-	// update uniform var in frag shader
 	if(currModel && currModel.material.uniforms){
+		// update uniform var in frag shader
 		currModel.material.uniforms.u_time.value += 0.01;
 	}
 	
@@ -103,10 +102,10 @@ document.getElementById('selectModel').addEventListener('change', (evt) => {
 	scene.remove(scene.getObjectByName(currModel.name));
 	currModelTexture = null;
 	
-	if(["whale-shark-camo", "f-18"].indexOf(evt.target.value) > -1){
+	if(["whale-shark-camo"].indexOf(evt.target.value) > -1){
 		getModel(`../shared_assets/${evt.target.value}.glb`, evt.target.value);
 	}else if(evt.target.value === "scene1"){
-		currModel = createSceneSquares(); //createScene1();
+		currModel = createSceneSquares();
 		processMesh(currModel);
 	}else{
 		getModel(`../shared_assets/${evt.target.value}.gltf`, evt.target.value);
@@ -123,7 +122,7 @@ function getTextureImageUrl(imgElement){
 
 
 function updateModel(){
-	// update shader
+	// update shader for the jet model
 	const vertexShader = `
 		varying vec2 vUv;
 		uniform float u_time;
@@ -138,19 +137,19 @@ function updateModel(){
 				oc*axis.x*axis.x + c,        oc*axis.x*axis.y - axis.z*s, oc*axis.z*axis.x + axis.y*s, 0.0,
 				oc*axis.x*axis.y + axis.z*s, oc*axis.y*axis.y + c,        oc*axis.y*axis.z + axis.x*s, 0.0, 
 				oc*axis.x*axis.z - axis.y*s, oc*axis.y*axis.z + axis.x*s, oc*axis.z*axis.z + c,         0.0,
-                0.0,                         0.0,                         0.0,                         1.0				
+                0.0,                         0.0,                         0.0,                         1.0
 			);
 		}
 	
 		void main() {
 			vUv = uv;
 			
-			mat4 rotY = getRotationMat(vec3(0, 1, 0), sin(u_time));
+			mat4 rotY = getRotationMat(vec3(0, 1, 0), sin(0.3*u_time));
 			
 			gl_Position = projectionMatrix *
 			              modelViewMatrix *
 						  rotY *
-						  vec4(position, 1.0); //vec4(position.x,position.y+(3.0*sin(u_time)),position.z,1.0);
+						  vec4(position, 1.0);
 		}
 	`;
 	
@@ -160,21 +159,20 @@ function updateModel(){
 		uniform float u_time;
 		uniform vec2 u_resolution; // dimensions of renderer
 		
+		float interpolate(float val){
+			return clamp(smoothstep(0.3, 1.0, val), 0.3, 1.0); // let lowest possible val be 0.3
+		}
+		
 		void main() {
 			vec2 pt = gl_FragCoord.xy/u_resolution.xy;
 			
-			float y = pow(pt.x,2.0);
-			
-			vec3 color = vec3(y);
-			
 			vec4 txColor = texture2D(img, vUv);
 			
-			gl_FragColor = vec4(txColor.r*1.2*abs(sin(u_time)), txColor.g*1.2*abs(sin(u_time)), txColor.b*1.2*abs(sin(u_time)), 0.0);
-			
-			//gl_FragColor = vec4(1.0-abs(sin(u_time)),
-			//                    0.0,
-			//					color.z,
-			//					1.0);
+			gl_FragColor = vec4(
+				interpolate(txColor.r*abs(sin(u_time))), 
+				interpolate(txColor.g*abs(sin(u_time))), 
+				interpolate(txColor.b*abs(sin(u_time))), 
+				1.0);
 		}
 	`;
 	
@@ -206,7 +204,8 @@ function randomRange(min, max){
 
 // make a bunch of squares with shaders
 function createSceneSquares(){
-	const vertexCount = 200 * 4; // 100 squares
+	const numSquares = 200;
+	const vertexCount = numSquares * 4;
 	
 	const geometry = new THREE.BufferGeometry();
 	
@@ -214,7 +213,7 @@ function createSceneSquares(){
 	const colors = [];
 	const indices = [];
 	
-	const zRange = {'min': camera.position.z-150, 'max': 0}; // range for z position of squares
+	const zRange = {'min': camera.position.z-180, 'max': 20}; // range for z position of squares
 	const xRange = {'min': -120, 'max': 120};
 	const yRange = {'min': -120, 'max': 120};
 	const squareWidth = 5;
@@ -305,16 +304,19 @@ function createSceneSquares(){
 				oc*axis.x*axis.x + c,        oc*axis.x*axis.y - axis.z*s, oc*axis.z*axis.x + axis.y*s, 0.0,
 				oc*axis.x*axis.y + axis.z*s, oc*axis.y*axis.y + c,        oc*axis.y*axis.z + axis.x*s, 0.0, 
 				oc*axis.x*axis.z - axis.y*s, oc*axis.y*axis.z + axis.x*s, oc*axis.z*axis.z + c,         0.0,
-                0.0,                         0.0,                         0.0,                         1.0				
+                0.0,                         0.0,                         0.0,                         1.0
 			);
 		}
 	
 		void main() {
 			vColor = color;
 			
-			mat4 rotZ = getRotationMat(vec3(0,0,1), rand(position.xy));
+			float randVal = rand(vec2(position.xy));
 			
-			gl_Position = projectionMatrix * modelViewMatrix * rotZ * vec4(position.x, position.y, (1.2*position.z*abs(cos(0.1*u_time))), 1.0);
+			mat4 rotZ = getRotationMat(vec3(0,0,1), randVal*cos(u_time)); // rotate about the z axis
+			
+			// rotate and move the squares along the z axis
+			gl_Position = projectionMatrix * modelViewMatrix * rotZ * vec4(position.x, position.y, (1.+randVal+cos(u_time))*position.z*abs(cos(0.2*u_time)), 1.0);
 		}
 	`;
 	
@@ -352,6 +354,66 @@ function createSceneSquares(){
 	return mesh;
 }
 
+// whale shark shader
+function updateWhaleShark(){
+		const vertexShader = `
+		varying vec2 vUv;
+		uniform float u_time;
+	
+		void main() {
+			vUv = uv;
+			
+			gl_Position = projectionMatrix *
+			              modelViewMatrix *
+						  vec4(position, 1.0);
+		}
+	`;
+	
+	const fragShader = `
+		varying vec2 vUv;
+		uniform sampler2D img;
+		uniform float u_time;
+		uniform vec2 u_resolution; // dimensions of renderer
+		
+		void main() {
+			vec2 pt = gl_FragCoord.xy/u_resolution.xy;
+			
+			vec4 txColor = texture2D(img, vUv);
+			
+			// color only certain parts of the shark!
+			if(txColor.r < 0.5 && txColor.g < 0.5 && txColor.b < 0.5){
+				gl_FragColor = vec4(txColor.rgb, 1.0);
+			}else{
+				gl_FragColor = vec4(1.-txColor.r*abs(sin(u_time)), 1.-txColor.g*abs(cos(u_time)),1.- txColor.b*abs(sin(u_time)), 1.0);
+			}
+		}
+	`;
+	
+	const uniforms = {
+		u_time: {type: "f", value: 0},
+		u_resolution: {type: "vec2", value: new THREE.Vector2(renderer.domElement.width, renderer.domElement.height)},
+	};
+	
+	if(currModelTexture){
+		const textureUrl = getTextureImageUrl(currModelTexture);
+		const texture = textureLoader.load(textureUrl);
+		texture.flipY = false; // this part is important!
+		uniforms.img = {type: "t", value: texture};
+	}
+	
+	const newShaderMaterial = new THREE.ShaderMaterial({
+		uniforms: uniforms,
+		vertexShader: vertexShader,
+		fragmentShader: fragShader,
+	});
+	
+	currModel.material = newShaderMaterial;
+}
+
 document.getElementById('updateModel').addEventListener('click', (evt) => {
-	updateModel();
+	if(currModel.name === "whale-shark-camo"){
+		updateWhaleShark();
+	}else{
+		updateModel();
+	}
 });
