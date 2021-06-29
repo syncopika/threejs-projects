@@ -99,6 +99,7 @@ function update(){
 
 // model selection
 document.getElementById('selectModel').addEventListener('change', (evt) => {
+	
 	scene.remove(scene.getObjectByName(currModel.name));
 	currModelTexture = null;
 	
@@ -140,16 +141,25 @@ function updateModel(){
                 0.0,                         0.0,                         0.0,                         1.0
 			);
 		}
+		
+		float rand(vec2 pos){
+			return fract(sin(dot(pos, vec2(12.9898,78.233)))*43758.5453123);
+		}
 	
 		void main() {
 			vUv = uv;
 			
-			mat4 rotY = getRotationMat(vec3(0, 1, 0), sin(0.3*u_time));
+			mat4 rotY = getRotationMat(vec3(0, 0, 1), sin(0.3*u_time));
+			
+			float randVal = rand(position.xz);
+			
+			float xDelta = smoothstep( 0., 1., position.x*randVal*sin(0.3*u_time) );
+			float zDelta = smoothstep( 0., 1., position.z*randVal*cos(0.5*u_time) );
 			
 			gl_Position = projectionMatrix *
 			              modelViewMatrix *
 						  rotY *
-						  vec4(position, 1.0);
+						  vec4(position.x+xDelta, position.y, position.z+zDelta, 1.0);
 		}
 	`;
 	
@@ -356,7 +366,7 @@ function createSceneSquares(){
 
 // whale shark shader
 function updateWhaleShark(){
-		const vertexShader = `
+	const vertexShader = `
 		varying vec2 vUv;
 		uniform float u_time;
 	
