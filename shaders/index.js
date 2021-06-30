@@ -103,7 +103,7 @@ document.getElementById('selectModel').addEventListener('change', (evt) => {
 	scene.remove(scene.getObjectByName(currModel.name));
 	currModelTexture = null;
 	
-	if(["whale-shark-camo"].indexOf(evt.target.value) > -1){
+	if(["whale-shark-camo", "f-18"].indexOf(evt.target.value) > -1){
 		getModel(`../shared_assets/${evt.target.value}.glb`, evt.target.value);
 	}else if(evt.target.value === "scene1"){
 		currModel = createSceneSquares();
@@ -124,67 +124,8 @@ function getTextureImageUrl(imgElement){
 
 function updateModel(){
 	// update shader for the jet model
-	const vertexShader = `
-		varying vec2 vUv;
-		uniform float u_time;
-	
-		// http://www.neilmendoza.com/glsl-rotation-about-an-arbitrary-axis/
-		mat4 getRotationMat(vec3 axis, float angle){
-			float s = sin(angle);
-			float c = cos(angle);
-			float oc = 1.0 - c;
-			
-			return mat4(
-				oc*axis.x*axis.x + c,        oc*axis.x*axis.y - axis.z*s, oc*axis.z*axis.x + axis.y*s, 0.0,
-				oc*axis.x*axis.y + axis.z*s, oc*axis.y*axis.y + c,        oc*axis.y*axis.z + axis.x*s, 0.0, 
-				oc*axis.x*axis.z - axis.y*s, oc*axis.y*axis.z + axis.x*s, oc*axis.z*axis.z + c,         0.0,
-                0.0,                         0.0,                         0.0,                         1.0
-			);
-		}
-		
-		float rand(vec2 pos){
-			return fract(sin(dot(pos, vec2(12.9898,78.233)))*43758.5453123);
-		}
-	
-		void main() {
-			vUv = uv;
-			
-			mat4 rotY = getRotationMat(vec3(0, 0, 1), sin(0.3*u_time));
-			
-			float randVal = rand(position.xz);
-			
-			float xDelta = smoothstep( 0., 1., position.x*randVal*sin(0.3*u_time) );
-			float zDelta = smoothstep( 0., 1., position.z*randVal*cos(0.5*u_time) );
-			
-			gl_Position = projectionMatrix *
-			              modelViewMatrix *
-						  rotY *
-						  vec4(position.x+xDelta, position.y, position.z+zDelta, 1.0);
-		}
-	`;
-	
-	const fragShader = `
-		varying vec2 vUv;
-		uniform sampler2D img;
-		uniform float u_time;
-		uniform vec2 u_resolution; // dimensions of renderer
-		
-		float interpolate(float val){
-			return clamp(smoothstep(0.3, 1.0, val), 0.3, 1.0); // let lowest possible val be 0.3
-		}
-		
-		void main() {
-			vec2 pt = gl_FragCoord.xy/u_resolution.xy;
-			
-			vec4 txColor = texture2D(img, vUv);
-			
-			gl_FragColor = vec4(
-				interpolate(txColor.r*abs(sin(u_time))), 
-				interpolate(txColor.g*abs(sin(u_time))), 
-				interpolate(txColor.b*abs(sin(u_time))), 
-				1.0);
-		}
-	`;
+	const vertexShader = jetModelShader.vertexShader;
+	const fragShader = jetModelShader.fragShader;
 	
 	const uniforms = {
 		u_time: {type: "f", value: 0},
@@ -293,57 +234,8 @@ function createSceneSquares(){
 	geometry.setAttribute('color', colorAttribute);
 	geometry.setIndex(indices);
 	
-	const vertexShader = `
-		uniform float u_time;
-		
-		attribute vec4 color;
-		varying vec4 vColor;
-		
-		// https://thebookofshaders.com/10/
-		float rand(vec2 pos){
-			return fract(sin(dot(pos, vec2(12.9898,78.233)))*43758.5453123);
-		}
-		
-		// http://www.neilmendoza.com/glsl-rotation-about-an-arbitrary-axis/
-		mat4 getRotationMat(vec3 axis, float angle){
-			float s = sin(angle);
-			float c = cos(angle);
-			float oc = 1.0 - c;
-			
-			return mat4(
-				oc*axis.x*axis.x + c,        oc*axis.x*axis.y - axis.z*s, oc*axis.z*axis.x + axis.y*s, 0.0,
-				oc*axis.x*axis.y + axis.z*s, oc*axis.y*axis.y + c,        oc*axis.y*axis.z + axis.x*s, 0.0, 
-				oc*axis.x*axis.z - axis.y*s, oc*axis.y*axis.z + axis.x*s, oc*axis.z*axis.z + c,         0.0,
-                0.0,                         0.0,                         0.0,                         1.0
-			);
-		}
-	
-		void main() {
-			vColor = color;
-			
-			float randVal = rand(vec2(position.xy));
-			
-			mat4 rotZ = getRotationMat(vec3(0,0,1), randVal*cos(u_time)); // rotate about the z axis
-			
-			// rotate and move the squares along the z axis
-			gl_Position = projectionMatrix * modelViewMatrix * rotZ * vec4(position.x, position.y, (1.+randVal+cos(u_time))*position.z*abs(cos(0.2*u_time)), 1.0);
-		}
-	`;
-	
-	const fragShader = `
-		uniform sampler2D img;
-		uniform float u_time;
-		uniform vec2 u_resolution; // dimensions of renderer canvas
-		varying vec4 vColor;
-		
-		void main() {
-            gl_FragColor = vec4(
-			vColor.r*abs(cos(u_time))*1.3, 
-			vColor.g*abs(sin(u_time))*1.6, 
-			vColor.b*abs(cos(u_time))*1.2,
-			1.0);
-		}
-	`;
+	const vertexShader = springyShardShader.vertexShader;
+	const fragShader = springyShardShader.fragShader;
 	
 	const uniforms = {
 		u_time: {type: "f", value: 0},
@@ -366,46 +258,8 @@ function createSceneSquares(){
 
 // whale shark shader
 function updateWhaleShark(){
-	const vertexShader = `
-		varying vec2 vUv;
-		uniform float u_time;
-	
-		void main() {
-			vUv = uv;
-			
-			gl_Position = projectionMatrix *
-			              modelViewMatrix *
-						  vec4(position, 1.0);
-		}
-	`;
-	
-	const fragShader = `
-		varying vec2 vUv;
-		uniform sampler2D img;
-		uniform float u_time;
-		uniform vec2 u_resolution; // dimensions of renderer
-		
-		float rand(vec2 pos){
-			return fract(sin(dot(pos, vec2(12.9898,78.233)))*43758.5453123);
-		}
-		
-		void main() {
-			vec2 pt = gl_FragCoord.xy/u_resolution.xy;
-			
-			vec4 txColor = texture2D(img, vUv);
-			
-			// color only certain parts of the shark!
-			if(txColor.r < 0.5 && txColor.g < 0.5 && txColor.b < 0.5){
-				gl_FragColor = vec4(txColor.rgb, 1.0);
-			}else{
-				gl_FragColor = vec4(
-					1.-txColor.r*abs(sin(0.2*u_time))*rand(pt), // rand(pt) adds some noise
-					1.-txColor.g*abs(cos(u_time))*rand(pt),
-					1.- txColor.b*abs(sin(0.1*u_time)), 
-					1.0);
-			}
-		}
-	`;
+	const vertexShader = whaleSharkShader.vertexShader;
+	const fragShader = whaleSharkShader.fragShader;
 	
 	const uniforms = {
 		u_time: {type: "f", value: 0},
@@ -429,7 +283,7 @@ function updateWhaleShark(){
 }
 
 document.getElementById('updateModel').addEventListener('click', (evt) => {
-	if(currModel.name === "whale-shark-camo"){
+	if(currModel.name === "whale-shark-camo" || currModel.name === "f-18"){
 		updateWhaleShark();
 	}else{
 		updateModel();

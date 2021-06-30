@@ -12,9 +12,9 @@ const container = document.querySelector('#container');
 const raycaster = new THREE.Raycaster();
 const loadingManager = new THREE.LoadingManager();
 
-const stats = new Stats();
+/* const stats = new Stats();
 stats.showPanel(0);
-document.body.appendChild(stats.dom);
+document.body.appendChild(stats.dom); */
 
 // https://stackoverflow.com/questions/35575065/how-to-make-a-loading-screen-in-three-js
 loadingManager.onStart = (url, itemsLoaded, itemsTotal) => {
@@ -567,8 +567,8 @@ function update(){
 }
 
 function animate(){
-	stats.begin();
-	stats.end();
+	//stats.begin();
+	//stats.end();
 	requestAnimationFrame(animate);
 	renderer.render(scene, camera);
 	update();
