@@ -13,6 +13,9 @@ http://www.neilmendoza.com/glsl-rotation-about-an-arbitrary-axis/
 https://discourse.threejs.org/t/shader-randomize-point-positions-from-origins/6689/2
 https://stackoverflow.com/questions/23899887/passing-pointlight-info-to-a-custom-shader-with-three-js
 https://stackoverflow.com/questions/42170992/three-js-change-attributes-value-in-vertex-shader-and-pass-to-buffer -> this is interesting
+https://observablehq.com/@camargo/three-js-utah-teapot-with-a-custom-phong-shader-material
+https://stackoverflow.com/questions/17537879/in-webgl-what-are-the-differences-between-an-attribute-a-uniform-and-a-varying
+https://threejs.org/docs/#api/en/core/Uniform
 
 notes
 might need to grab the uv coords of my imported model and pass them to the shaders? https://jsfiddle.net/f2Lommf5/16541/ 

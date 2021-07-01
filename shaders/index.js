@@ -10,6 +10,8 @@ const camera = new THREE.PerspectiveCamera(fov, el.clientWidth / el.clientHeight
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0xffffff);	
 
+let animationReqId;
+
 renderer.shadowMap.enabled = true;
 renderer.setSize(el.clientWidth, el.clientHeight);
 el.appendChild(renderer.domElement);
@@ -24,7 +26,7 @@ hemiLight.position.set(0, 200, 0);
 scene.add(hemiLight);
 
 let dirLight = new THREE.DirectionalLight( 0xffffff );
-dirLight.position.set( 0, 100, -10);
+dirLight.position.set(0, 50, 0);
 scene.add(dirLight);
 
 // set up trackball control
@@ -33,8 +35,7 @@ controls.rotateSpeed = 1.2;
 controls.zoomSpeed = 1.2;
 controls.panSpeed = 0.8;
 
-getModel('../shared_assets/f-16.gltf', 'f16');
-update();
+getModel('../shared_assets/f-16.gltf', 'f-16');
 
 function getModel(modelFilePath, name){
 	return new Promise((resolve, reject) => {
@@ -65,7 +66,7 @@ function getModel(modelFilePath, name){
 			},
 			// called while loading is progressing
 			function(xhr){
-				console.log( (xhr.loaded / xhr.total * 100) + '% loaded' );
+				//console.log( (xhr.loaded / xhr.total * 100) + '% loaded' );
 			},
 			// called when loading has errors
 			function(error){
@@ -79,14 +80,13 @@ function getModel(modelFilePath, name){
 function processMesh(mesh){
 	let playerAxesHelper = new THREE.AxesHelper(10);
 	mesh.add(playerAxesHelper);
-	
 	scene.add(mesh);
 	update();
 	renderer.render(scene, camera);
 }
 
 function update(){
-	requestAnimationFrame(update);
+	animationReqId = requestAnimationFrame(update);
 	controls.update();
 	
 	if(currModel && currModel.material.uniforms){
@@ -100,7 +100,13 @@ function update(){
 // model selection
 document.getElementById('selectModel').addEventListener('change', (evt) => {
 	
+	if(animationReqId){
+		cancelAnimationFrame(animationReqId);
+	}
+	
 	scene.remove(scene.getObjectByName(currModel.name));
+	
+	currModel = null;
 	currModelTexture = null;
 	
 	if(["whale-shark-camo", "f-18"].indexOf(evt.target.value) > -1){
@@ -122,13 +128,12 @@ function getTextureImageUrl(imgElement){
 }
 
 
-function updateModel(){
-	// update shader for the jet model
+function updateJetModel(){
 	const vertexShader = jetModelShader.vertexShader;
 	const fragShader = jetModelShader.fragShader;
 	
 	const uniforms = {
-		u_time: {type: "f", value: 0},
+		u_time: {type: "f", value: 0.0},
 		u_resolution: {type: "vec2", value: new THREE.Vector2(renderer.domElement.width, renderer.domElement.height)},
 	};
 	
@@ -238,7 +243,7 @@ function createSceneSquares(){
 	const fragShader = springyShardShader.fragShader;
 	
 	const uniforms = {
-		u_time: {type: "f", value: 0},
+		u_time: {type: "f", value: 0.0},
 		u_resolution: {type: "vec2", value: new THREE.Vector2(renderer.domElement.width, renderer.domElement.height)},
 	};
 	
@@ -256,13 +261,42 @@ function createSceneSquares(){
 	return mesh;
 }
 
+function updateJetModel2(){
+	const vertexShader = jetModelShader2.vertexShader;
+	const fragShader = jetModelShader2.fragShader;
+	
+	const uniforms = {
+		u_time: {type: "f", value: 0.0},
+		u_resolution: {type: "vec2", value: new THREE.Vector2(renderer.domElement.width, renderer.domElement.height)},
+		lightPosition: {value: [new THREE.Vector4(dirLight.position.x, dirLight.position.y, dirLight.position.z, 1.0)]},
+		diffuseLight: {value: [new THREE.Vector3(0.9, 0.5, 0.3)]},
+		specularLight: {value: [new THREE.Vector3(0.8, 0.8, 0.8)]},
+		shininess: {value: 200.0},
+	};
+	
+	if(currModelTexture){
+		const textureUrl = getTextureImageUrl(currModelTexture);
+		const texture = textureLoader.load(textureUrl);
+		texture.flipY = false; // this part is important!
+		uniforms.img = {type: "t", value: texture};
+	}
+	
+	const newShaderMaterial = new THREE.ShaderMaterial({
+		uniforms: uniforms,
+		vertexShader: vertexShader,
+		fragmentShader: fragShader,
+	});
+	
+	currModel.material = newShaderMaterial;	
+}
+
 // whale shark shader
 function updateWhaleShark(){
 	const vertexShader = whaleSharkShader.vertexShader;
 	const fragShader = whaleSharkShader.fragShader;
 	
 	const uniforms = {
-		u_time: {type: "f", value: 0},
+		u_time: {type: "f", value: 0.0},
 		u_resolution: {type: "vec2", value: new THREE.Vector2(renderer.domElement.width, renderer.domElement.height)},
 	};
 	
@@ -283,9 +317,11 @@ function updateWhaleShark(){
 }
 
 document.getElementById('updateModel').addEventListener('click', (evt) => {
-	if(currModel.name === "whale-shark-camo" || currModel.name === "f-18"){
+	if(currModel.name === "whale-shark-camo"){
 		updateWhaleShark();
-	}else{
-		updateModel();
+	}else if(currModel.name === "f-18"){
+		updateJetModel2();
+	}else if(currModel.name === "f-16"){
+		updateJetModel();
 	}
 });

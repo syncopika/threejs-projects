@@ -24,16 +24,16 @@ const jetModelShader = {
 		void main() {
 			vUv = uv;
 			
-			mat4 rotY = getRotationMat(vec3(0, 0, 1), sin(0.3*u_time));
+			mat4 rotZ = getRotationMat(vec3(0, 0, 1), sin(0.5*u_time));
 			
-			float randVal = rand(position.xz);
+			float randVal = rand(uv);
 			
-			float xDelta = smoothstep( 0., 1., position.x*randVal*sin(0.3*u_time) );
-			float zDelta = smoothstep( 0., 1., position.z*randVal*cos(0.5*u_time) );
+			float xDelta = position.x*randVal*sin(0.8*u_time);
+			float zDelta = position.z*randVal*cos(0.7*u_time);
 			
 			gl_Position = projectionMatrix *
 			              modelViewMatrix *
-						  rotY *
+						  rotZ *
 						  vec4(position.x+xDelta, position.y, position.z+zDelta, 1.0);
 		}
 	`,
@@ -44,7 +44,7 @@ const jetModelShader = {
 		uniform vec2 u_resolution; // dimensions of renderer
 		
 		float interpolate(float val){
-			return clamp(smoothstep(0.3, 1.0, val), 0.3, 1.0); // let lowest possible val be 0.3
+			return clamp(smoothstep(0.2, 1.0, val), 0.3, 1.0); // let lowest possible val be 0.3
 		}
 		
 		void main() {
