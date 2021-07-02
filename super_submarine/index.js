@@ -85,9 +85,9 @@ const container = document.querySelector('#container');
 const raycaster = new THREE.Raycaster();
 const loadingManager = new THREE.LoadingManager();
 
-const stats = new Stats();
+/* const stats = new Stats();
 stats.showPanel(0);
-document.body.appendChild(stats.dom);
+document.body.appendChild(stats.dom); */
 
 // https://stackoverflow.com/questions/35575065/how-to-make-a-loading-screen-in-three-js
 loadingManager.onStart = (url, itemsLoaded, itemsTotal) => {
@@ -256,7 +256,7 @@ function getModel(modelFilePath, side, name){
 }
 
 loadedModels.push(getModel('models/submarine1.glb', 'player', 'p1'));
-loadedModels.push(getModel('../shared_assets/battleship2.gltf', 'player2', 'p2'));
+loadedModels.push(getModel('models/battleship2.gltf', 'player2', 'p2'));
 loadedModels.push(getModel('models/oceanfloor.glb', 'none', 'bg'));
 loadedModels.push(getModel('models/whale-shark-final.gltf', 'whaleshark', 'npc'));
 loadedModels.push(getModel('models/jellyfish-animated.gltf', 'jellyfish', 'npc'));
@@ -752,8 +752,8 @@ function update(){
 }
 
 function animate(){
-	stats.begin();
-	stats.end();
+	//stats.begin();
+	//stats.end();
 	requestAnimationFrame(animate);
 	renderer.render(scene, camera);
 	update();
