@@ -269,9 +269,10 @@ function updateJetModel2(){
 		u_time: {type: "f", value: 0.0},
 		u_resolution: {type: "vec2", value: new THREE.Vector2(renderer.domElement.width, renderer.domElement.height)},
 		lightPosition: {value: [new THREE.Vector4(dirLight.position.x, dirLight.position.y, dirLight.position.z, 1.0)]},
-		diffuseLight: {value: [new THREE.Vector3(0.9, 0.5, 0.3)]},
+		lightIntensity: {value: [new THREE.Vector4(0.8, 0.8, 0.8, 1.0)]},
+		diffuseLight: {value: [new THREE.Vector3(0.15, 0.15, 0.15)]},
 		specularLight: {value: [new THREE.Vector3(0.8, 0.8, 0.8)]},
-		shininess: {value: 200.0},
+		shininess: {value: 300.0},
 	};
 	
 	if(currModelTexture){
