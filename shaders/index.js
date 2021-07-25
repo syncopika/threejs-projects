@@ -41,7 +41,7 @@ function getModel(modelFilePath, name){
 	return new Promise((resolve, reject) => {
 		loader.load(
 			modelFilePath,
-			async function(gltf){
+			function(gltf){
 				gltf.scene.traverse((child) => {
 					if(child.type === "Mesh"){	
 						let material = child.material;
@@ -60,7 +60,17 @@ function getModel(modelFilePath, name){
 						
 						currModel = obj;
 						currModelTexture = obj.material.map ? obj.material.map.image : null;
+						
+						if(name === "whale-shark-camo"){
+							updateWhaleShark();
+						}else if(name === "f-18"){
+							updateJetModel2();
+						}else if(name === "f-16"){
+							updateJetModel();
+						}			
+						
 						processMesh(obj);
+						resolve(true);
 					}
 				});
 			},
@@ -90,7 +100,6 @@ function update(){
 	controls.update();
 	
 	if(currModel && currModel.material.uniforms){
-		// update uniform var in frag shader
 		currModel.material.uniforms.u_time.value += 0.01;
 	}
 	
@@ -113,6 +122,9 @@ document.getElementById('selectModel').addEventListener('change', (evt) => {
 		getModel(`../shared_assets/${evt.target.value}.glb`, evt.target.value);
 	}else if(evt.target.value === "scene1"){
 		currModel = createSceneSquares();
+		processMesh(currModel);
+	}else if(evt.target.value === "scene2"){
+		currModel = createRaymarchShader();
 		processMesh(currModel);
 	}else{
 		getModel(`../shared_assets/${evt.target.value}.gltf`, evt.target.value);
@@ -261,6 +273,31 @@ function createSceneSquares(){
 	return mesh;
 }
 
+function createRaymarchShader(){
+	// fragment shader only
+	const geometry = new THREE.PlaneGeometry(20, 20);
+	
+	const vertexShader = raymarchShader.vertexShader;
+	const fragShader = raymarchShader.fragShader;
+	
+	const uniforms = {
+		u_time: {type: "f", value: 0.0},
+		u_resolution: {type: "vec2", value: new THREE.Vector2(renderer.domElement.width, renderer.domElement.height)},
+	};
+	
+	const newShaderMaterial = new THREE.ShaderMaterial({
+		uniforms: uniforms,
+		vertexShader: vertexShader,
+		fragmentShader: fragShader,
+		side: THREE.DoubleSide,
+	});
+	
+	const mesh = new THREE.Mesh(geometry, newShaderMaterial);
+	mesh.name = "fountainScene";
+	
+	return mesh;
+}
+
 function updateJetModel2(){
 	const vertexShader = jetModelShader2.vertexShader;
 	const fragShader = jetModelShader2.fragShader;
@@ -316,13 +353,3 @@ function updateWhaleShark(){
 	
 	currModel.material = newShaderMaterial;
 }
-
-document.getElementById('updateModel').addEventListener('click', (evt) => {
-	if(currModel.name === "whale-shark-camo"){
-		updateWhaleShark();
-	}else if(currModel.name === "f-18"){
-		updateJetModel2();
-	}else if(currModel.name === "f-16"){
-		updateJetModel();
-	}
-});
