@@ -255,9 +255,9 @@ function getModel(modelFilePath, side, name){
 	});
 }
 
+loadedModels.push(getModel('../shared_assets/oceanfloor.glb', 'none', 'bg'));
 loadedModels.push(getModel('models/submarine1.glb', 'player', 'p1'));
 loadedModels.push(getModel('models/battleship2.gltf', 'player2', 'p2'));
-loadedModels.push(getModel('models/oceanfloor.glb', 'none', 'bg'));
 loadedModels.push(getModel('models/whale-shark-final.gltf', 'whaleshark', 'npc'));
 loadedModels.push(getModel('models/jellyfish-animated.gltf', 'jellyfish', 'npc'));
 loadedModels.push(getModel('models/dangerous-capsule-edit-final.glb', 'none', 'goalObject'));

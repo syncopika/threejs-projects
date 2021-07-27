@@ -4,7 +4,10 @@ const fov = 60;
 const defaultCamera = new THREE.PerspectiveCamera(fov, el.clientWidth / el.clientHeight, 0.01, 1000);
 const keyboard = new THREEx.KeyboardState();
 const container = document.querySelector('#container');
+
 const raycaster = new THREE.Raycaster();
+const mouse = new THREE.Vector2();
+
 const loadingManager = new THREE.LoadingManager();
 let animationController;
 
@@ -15,6 +18,36 @@ renderer.shadowMap.enabled = true;
 renderer.setSize(el.clientWidth, el.clientHeight);	
 container.appendChild(renderer.domElement);
 
+let keysEntered = "";
+renderer.domElement.addEventListener('mousedown', (evt) => {
+	mouse.x = (evt.offsetX / evt.target.width) * 2 - 1;
+	mouse.y = -(evt.offsetY / evt.target.height) * 2 + 1;
+	raycaster.setFromCamera(mouse, camera);
+	
+	const intersects = raycaster.intersectObjects(scene.children, true); // make sure it's recursive
+	
+	// we want to pick up only raycasts that hit any of the black buttons on the right panel of the machine
+	const targets = intersects.filter(x => x.object.name.indexOf("key") > 0); // each key is a cube so the ray will hit the front and back faces leaving us with 2 targets (but same object)
+	
+	if(targets.length > 0){
+		const keyPressed = targets[0].object;
+		keysEntered += keyPressed.name[0];
+		
+		// display keys entered as text on the display panel?
+		// this might be helpful: https://stackoverflow.com/questions/15248872/dynamically-create-2d-text-in-three-js
+		// otherwise, split the display screen into 2 faces that you can just swap textures on, with the textures being
+		// the letters/numbers. that would probably be easier?
+		
+		//TODO:
+		if(keysEntered.length === 2){
+			console.log("code " + keysEntered + " was entered!");
+			// then check format. should be 1 letter followed by 1 number e.g. A1, A2 or A3 - use regex
+			// match combination with corresponding coil in machine. call the animation for that
+			// if A1 was entered, run the animation for dropping the box and depositing it in the drop area
+			keysEntered = "";
+		}
+	}
+});
 
 const camera = defaultCamera;
 camera.position.set(1,4,8);
@@ -57,7 +90,10 @@ function getModel(modelFilePath, side, name){
 		loader.load(
 			modelFilePath,
 			function(gltf){
-				resolve(gltf.scene);
+				resolve({
+					'scene': gltf.scene,
+					'animations': gltf.animations,
+				});
 			},
 			// called while loading is progressing
 			function(xhr){
@@ -73,7 +109,18 @@ function getModel(modelFilePath, side, name){
 }
 
 let vendingMachine;
-getModel('vending-machine.gltf').then((obj) => {
+let keys;
+let animations;
+getModel('vending-machine.gltf').then((data) => {
+	const obj = data.scene;
+	
+	// keep track of animations
+	animations = data.animations;
+	//console.log(animations);
+	
+	// keep track of the buttons of the vending machine
+	keys = obj.children.filter(x => x.name === "display")[0].children.filter(x => x.name.indexOf('key') > 0);
+	
 	obj.position.x += 1;
 	obj.rotation.y = Math.PI;
 	obj.scale.x *= 5;
@@ -83,18 +130,18 @@ getModel('vending-machine.gltf').then((obj) => {
 	scene.add(obj);
 });
 
-function keydown(evt){
+/* function keydown(evt){
 	if(evt.keyCode === 49){
 	}
 }
-document.addEventListener("keydown", keydown);
+document.addEventListener("keydown", keydown); */
 
 
 function update(){
 	if(vendingMachine){
 		let sec = clock.getDelta();
 		let rotationAngle = (Math.PI / 2) * sec;
-		vendingMachine.rotateOnAxis(new THREE.Vector3(0,1,0), rotationAngle/3);
+		vendingMachine.rotateOnAxis(new THREE.Vector3(0,1,0), rotationAngle/4);
 	}
 }
 

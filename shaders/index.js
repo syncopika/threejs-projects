@@ -275,7 +275,7 @@ function createSceneSquares(){
 
 function createRaymarchShader(){
 	// fragment shader only
-	const geometry = new THREE.PlaneGeometry(20, 20);
+	const geometry = new THREE.PlaneGeometry(180, 80);
 	
 	const vertexShader = raymarchShader.vertexShader;
 	const fragShader = raymarchShader.fragShader;
