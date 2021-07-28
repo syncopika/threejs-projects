@@ -40,7 +40,7 @@ const raymarchShader = {
 		vec2 assembleScene(vec3 p){
 			// put shapes into position
 			
-			vec3 pos1 = p - vec3(-2., 0.3, 5.);
+			vec3 pos1 = p - vec3(-2., 0.3, 8.);
 			pos1.x += 0.3*cos(u_time);
 			pos1.y += sin(u_time);
 			vec2 s1 = vec2(sdfSphere(pos1, 0.7), 0.);
@@ -53,12 +53,17 @@ const raymarchShader = {
 			vec2 ret = opU(s1, s2);
 			
 			// add some more spheres
-			for(float i = 1.; i < 6.; i++){
-				vec3 pos = p - vec3((-.6+i)*cos(i*u_time), (i+0.7)*sin(u_time), 5.+cos(i*u_time));
-				pos.x += 1.6*cos(u_time*i);
-				pos.y += 1.3*sin(u_time*i);
+			int numSpheres = 10;
+			float radSlice = (360. / float(numSpheres)) * (3.14159 / 180.);
+			for(float i = 0.; i < float(numSpheres); i++){
+				vec3 pos = p - vec3(cos(i*radSlice), 0.5, 5.+sin(i*radSlice));
 				
-				vec2 s = vec2(sdfSphere(pos, 0.3), 0.);
+				// TODO: try rotating
+				pos.x += cos(i*radSlice*u_time);
+				pos.z += sin(i*radSlice*u_time);
+				pos.y += sin(i*radSlice*u_time);
+				
+				vec2 s = vec2(sdfSphere(pos, 0.2), 0.);
 				
 				ret = opU(s, ret);
 			}
@@ -81,13 +86,12 @@ const raymarchShader = {
 		// ro = ray origin
 		// rd = ray direction
 		vec3 raymarch(vec3 ro, vec3 rd){
-			vec3 ret = ro * rd; //vec3(0.5, 0.3, 0.5);
+			vec3 ret = vec3(1.);
 			
 			int maxSteps = 180;
 			float currRayDist = 0.;
 		
 			for(int i = 0; i < maxSteps; i++){
-				
 				vec3 p = ro+rd*currRayDist;
 				vec2 d = assembleScene(p);
 				
@@ -100,9 +104,7 @@ const raymarchShader = {
 					vec3 l = normalize(lightPos - p);
 					float diff = clamp(dot(n, l), 0.0, 1.0);
 					
-					return vec3(0.5*abs(cos(u_time)), 0.5*abs(sin(u_time)), 0.5) * diff;
-					
-					break;
+					return vec3(0.8*abs(cos(u_time)), 0.8*abs(sin(u_time)), 0.8) * diff;
 				}
 				
 				currRayDist += d.x;
