@@ -711,7 +711,7 @@ function update(){
 	
 	// check for collision?
 	// check top, left, right, bottom, front, back? 
-	let hasCollision = checkCollision(thePlayer.children[0], raycaster, scene);
+	let hasCollision = checkCollision(thePlayer.children[0], raycaster, scene); // this function is from utils.js
 	if(!thePlayer.isCollided && hasCollision && hasCollision.name !== "water"){
 		
 		thePlayer.children[0].material = thePlayer.hitMaterial;

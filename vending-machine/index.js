@@ -26,6 +26,15 @@ renderer.domElement.addEventListener('mousedown', (evt) => {
 	
 	const intersects = raycaster.intersectObjects(scene.children, true); // make sure it's recursive
 	
+	const gotBox = intersects.filter(x => x.object.name === "box1");
+	if(gotBox.length === 1){
+		// do something with box (but only if in the pick-up area)
+		console.log("pick up box");
+		
+		// reset action
+		animationHandler.currentAction.stop();
+	}
+	
 	// we want to pick up only raycasts that hit any of the black buttons on the right panel of the machine
 	const targets = intersects.filter(x => x.object.name.indexOf("key") > 0); // each key is a cube so the ray will hit the front and back faces leaving us with 2 targets (but same object)
 	
@@ -63,7 +72,7 @@ renderer.domElement.addEventListener('mousedown', (evt) => {
 		
 		// display keys entered as text on the display panel?
 		// this might be helpful: https://stackoverflow.com/questions/15248872/dynamically-create-2d-text-in-three-js
-		// otherwise, split the display screen into 2 faces that you can just swap textures on, with the textures being
+		// otherwise, split the display screen into 2 adjacent faces that you can just swap textures on, with the textures being
 		// the letters/numbers. that would probably be easier?
 		
 		//TODO:
@@ -73,8 +82,8 @@ renderer.domElement.addEventListener('mousedown', (evt) => {
 			// match combination with corresponding coil in machine. call the animation for that
 			// if A1 was entered, run the animation for dropping the box and depositing it in the drop area
 			if(keysEntered === "A1"){
-				console.log("rotation");
-				animationHandler.playClipName("rotation");
+				animationHandler.playClipName("rotation", false);
+				animationHandler.playClipName("box-drop-1", true);
 			}
 			
 			keysEntered = "";
@@ -83,7 +92,7 @@ renderer.domElement.addEventListener('mousedown', (evt) => {
 });
 
 const camera = defaultCamera;
-camera.position.set(1,4,8);
+camera.position.set(1,5,5);
 
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0xffffff);	
@@ -107,23 +116,22 @@ scene.add(hemiLight);
 
 const clock = new THREE.Clock();
 
-/* create some 'terrain'
-let texture = new THREE.TextureLoader().load('texture.png');
-let terrainMat = new THREE.MeshBasicMaterial({map: texture});
-let terrain = new THREE.PlaneGeometry(200, 200, 1);
-let plane = new THREE.Mesh(terrain, terrainMat);
-plane.position.set(0, -1, 0);
-plane.rotateX((3*Math.PI)/2);
-scene.add(plane);
-*/
+
 function AnimationHandler(mesh, animations){
 	this.mixer = new THREE.AnimationMixer(mesh);
 	this.anim = animations;
+	this.currentAction = null;
 	
-	this.playClipName = function(name){
+	this.playClipName = function(name, pauseBool){
 		const clip = THREE.AnimationClip.findByName(this.anim, name);
 		const action = this.mixer.clipAction(clip);
 		action.loop = THREE.LoopOnce;
+		
+		this.currentAction = action;
+		
+		// stop at last frame
+		if(pauseBool) action.clampWhenFinished = true;
+		
 		action.play();
 		action.reset();
 	}
@@ -167,6 +175,7 @@ getModel('vending-machine.gltf').then((data) => {
 	keys = obj.children.filter(x => x.name === "display")[0].children.filter(x => x.name.indexOf('key') > 0);
 	
 	obj.position.x += 1;
+	obj.position.y += 0.5;
 	obj.rotation.y = Math.PI;
 	obj.scale.x *= 5;
 	obj.scale.y *= 5;
