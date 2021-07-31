@@ -31,6 +31,34 @@ renderer.domElement.addEventListener('mousedown', (evt) => {
 	
 	if(targets.length > 0){
 		const keyPressed = targets[0].object;
+		
+		switch(keyPressed.name){
+			case "A-key":
+				animationHandler.playClipName("A-key-press");
+				break;
+			case "B-key":
+				animationHandler.playClipName("B-key-press");
+				break;
+			case "C-Key":
+				animationHandler.playClipName("C-key-press");
+				break;
+			case "D-Key":
+				animationHandler.playClipName("D-key-press");
+				break;
+			case "E-key":
+				animationHandler.playClipName("E-key-press");
+				break;
+			case "1-key":
+				animationHandler.playClipName("1-key-press");
+				break;
+			case "2-key":
+				animationHandler.playClipName("2-key-press");
+				break;
+			case "3-key":
+				animationHandler.playClipName("3-key-press");
+				break;
+		}
+		
 		keysEntered += keyPressed.name[0];
 		
 		// display keys entered as text on the display panel?
@@ -44,6 +72,11 @@ renderer.domElement.addEventListener('mousedown', (evt) => {
 			// then check format. should be 1 letter followed by 1 number e.g. A1, A2 or A3 - use regex
 			// match combination with corresponding coil in machine. call the animation for that
 			// if A1 was entered, run the animation for dropping the box and depositing it in the drop area
+			if(keysEntered === "A1"){
+				console.log("rotation");
+				animationHandler.playClipName("rotation");
+			}
+			
 			keysEntered = "";
 		}
 	}
@@ -83,6 +116,18 @@ plane.position.set(0, -1, 0);
 plane.rotateX((3*Math.PI)/2);
 scene.add(plane);
 */
+function AnimationHandler(mesh, animations){
+	this.mixer = new THREE.AnimationMixer(mesh);
+	this.anim = animations;
+	
+	this.playClipName = function(name){
+		const clip = THREE.AnimationClip.findByName(this.anim, name);
+		const action = this.mixer.clipAction(clip);
+		action.loop = THREE.LoopOnce;
+		action.play();
+		action.reset();
+	}
+}
 
 // add the vending machine
 function getModel(modelFilePath, side, name){
@@ -110,13 +155,13 @@ function getModel(modelFilePath, side, name){
 
 let vendingMachine;
 let keys;
-let animations;
+let animationHandler;
 getModel('vending-machine.gltf').then((data) => {
 	const obj = data.scene;
+	const anim = data.animations;
 	
 	// keep track of animations
-	animations = data.animations;
-	//console.log(animations);
+	animationHandler = new AnimationHandler(obj, anim);
 	
 	// keep track of the buttons of the vending machine
 	keys = obj.children.filter(x => x.name === "display")[0].children.filter(x => x.name.indexOf('key') > 0);
@@ -141,7 +186,9 @@ function update(){
 	if(vendingMachine){
 		let sec = clock.getDelta();
 		let rotationAngle = (Math.PI / 2) * sec;
-		vendingMachine.rotateOnAxis(new THREE.Vector3(0,1,0), rotationAngle/4);
+		//vendingMachine.rotateOnAxis(new THREE.Vector3(0,1,0), rotationAngle/4);
+		
+		animationHandler.mixer.update(sec);
 	}
 }
 
