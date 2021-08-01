@@ -58,10 +58,9 @@ const raymarchShader = {
 			for(float i = 0.; i < float(numSpheres); i++){
 				vec3 pos = p - vec3(cos(i*radSlice), 0.5, 5.+sin(i*radSlice));
 				
-				// TODO: try rotating
-				pos.x += cos(i*radSlice*u_time);
-				pos.z += sin(i*radSlice*u_time);
-				pos.y += sin(i*radSlice*u_time);
+				pos.x += cos(i*radSlice+u_time);
+				pos.z += cos(i*radSlice+u_time);
+				pos.y += sin(radSlice+u_time);
 				
 				vec2 s = vec2(sdfSphere(pos, 0.2), 0.);
 				
@@ -99,12 +98,12 @@ const raymarchShader = {
 					vec3 n = generateNormal(p);
 					
 					// calculate color here (https://www.shadertoy.com/view/fdB3Rh)
-					vec3 lightPos = vec3(0.0, 18.0, 3.0);
+					vec3 lightPos = vec3(0.0, 2.0, 1.0);
 					lightPos.xy += vec2(sin(u_time), cos(u_time)) * 2.;
 					vec3 l = normalize(lightPos - p);
 					float diff = clamp(dot(n, l), 0.0, 1.0);
 					
-					return vec3(0.8*abs(cos(u_time)), 0.8*abs(sin(u_time)), 0.8) * diff;
+					return vec3(0.9*abs(cos(u_time)), 0.9*abs(sin(u_time)), 0.9*abs(cos(u_time))) * diff;
 				}
 				
 				currRayDist += d.x;

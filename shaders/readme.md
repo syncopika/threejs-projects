@@ -14,3 +14,6 @@ having fun with shaders. there's so much you can do with them! :O
 4. springy shards
 - a bunch of rotating squares whose vertices and colors change over time to form a swirling pattern
 - the squares are created using BufferGeometry and the shaders are attached to the BufferGeometry
+    
+5. raymarching
+- a basic, minimal raymarching example

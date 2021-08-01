@@ -88,8 +88,8 @@ function getModel(modelFilePath, name){
 }
 
 function processMesh(mesh){
-	let playerAxesHelper = new THREE.AxesHelper(10);
-	mesh.add(playerAxesHelper);
+	//let playerAxesHelper = new THREE.AxesHelper(10);
+	//mesh.add(playerAxesHelper);
 	scene.add(mesh);
 	update();
 	renderer.render(scene, camera);
@@ -275,7 +275,7 @@ function createSceneSquares(){
 
 function createRaymarchShader(){
 	// fragment shader only
-	const geometry = new THREE.PlaneGeometry(180, 80);
+	const geometry = new THREE.PlaneGeometry(200, 100);
 	
 	const vertexShader = raymarchShader.vertexShader;
 	const fragShader = raymarchShader.fragShader;
