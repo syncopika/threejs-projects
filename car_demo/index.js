@@ -143,7 +143,7 @@ function addPlane(scene){
 }
 
 // load in models
-loadedModels.push(getModel('models/porsche.gltf', 'car'));
+loadedModels.push(getModel('../shared_assets/porsche.gltf', 'car'));
 loadedModels.push(getModel('models/racetrack.gltf', 'racetrack'));
 
 let thePlayer = null;

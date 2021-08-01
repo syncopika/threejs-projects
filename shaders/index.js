@@ -16,8 +16,9 @@ renderer.shadowMap.enabled = true;
 renderer.setSize(el.clientWidth, el.clientHeight);
 el.appendChild(renderer.domElement);
 
-camera.position.set(0, 10, 15);
-camera.rotateOnAxis(new THREE.Vector3(1,0,0), -Math.PI/8);
+camera.position.set(0, 10, 18);
+const cameraZPos = camera.position.z;
+//camera.rotateOnAxis(new THREE.Vector3(1,0,0), -Math.PI/8);
 scene.add(camera);
 
 // https://discourse.threejs.org/t/solved-glb-model-is-very-dark/6258
@@ -41,7 +42,7 @@ function getModel(modelFilePath, name){
 	return new Promise((resolve, reject) => {
 		loader.load(
 			modelFilePath,
-			async function(gltf){
+			function(gltf){
 				gltf.scene.traverse((child) => {
 					if(child.type === "Mesh"){	
 						let material = child.material;
@@ -60,7 +61,17 @@ function getModel(modelFilePath, name){
 						
 						currModel = obj;
 						currModelTexture = obj.material.map ? obj.material.map.image : null;
+						
+						if(name === "whale-shark-camo"){
+							updateWhaleShark();
+						}else if(name === "f-18"){
+							updateJetModel2();
+						}else if(name === "f-16"){
+							updateJetModel();
+						}			
+						
 						processMesh(obj);
+						resolve(true);
 					}
 				});
 			},
@@ -78,8 +89,8 @@ function getModel(modelFilePath, name){
 }
 
 function processMesh(mesh){
-	let playerAxesHelper = new THREE.AxesHelper(10);
-	mesh.add(playerAxesHelper);
+	//let playerAxesHelper = new THREE.AxesHelper(10);
+	//mesh.add(playerAxesHelper);
 	scene.add(mesh);
 	update();
 	renderer.render(scene, camera);
@@ -90,7 +101,6 @@ function update(){
 	controls.update();
 	
 	if(currModel && currModel.material.uniforms){
-		// update uniform var in frag shader
 		currModel.material.uniforms.u_time.value += 0.01;
 	}
 	
@@ -111,11 +121,18 @@ document.getElementById('selectModel').addEventListener('change', (evt) => {
 	
 	if(["whale-shark-camo", "f-18"].indexOf(evt.target.value) > -1){
 		getModel(`../shared_assets/${evt.target.value}.glb`, evt.target.value);
+		camera.position.z = cameraZPos;
 	}else if(evt.target.value === "scene1"){
+		// this one changes the camera's z-position a bit
 		currModel = createSceneSquares();
 		processMesh(currModel);
+	}else if(evt.target.value === "scene2"){
+		currModel = createRaymarchShader();
+		processMesh(currModel);
+		camera.position.z = cameraZPos;
 	}else{
 		getModel(`../shared_assets/${evt.target.value}.gltf`, evt.target.value);
+		camera.position.z = cameraZPos;
 	}
 });
 
@@ -168,6 +185,9 @@ function createSceneSquares(){
 	const positions = [];
 	const colors = [];
 	const indices = [];
+	
+	camera.rotateOnAxis(new THREE.Vector3(1,0,0), -Math.PI/3);
+	camera.position.z += 50;
 	
 	const zRange = {'min': camera.position.z-180, 'max': 20}; // range for z position of squares
 	const xRange = {'min': -120, 'max': 120};
@@ -261,6 +281,31 @@ function createSceneSquares(){
 	return mesh;
 }
 
+function createRaymarchShader(){
+	// fragment shader only
+	const geometry = new THREE.PlaneGeometry(200, 100);
+	
+	const vertexShader = raymarchShader.vertexShader;
+	const fragShader = raymarchShader.fragShader;
+	
+	const uniforms = {
+		u_time: {type: "f", value: 0.0},
+		u_resolution: {type: "vec2", value: new THREE.Vector2(renderer.domElement.width, renderer.domElement.height)},
+	};
+	
+	const newShaderMaterial = new THREE.ShaderMaterial({
+		uniforms: uniforms,
+		vertexShader: vertexShader,
+		fragmentShader: fragShader,
+		side: THREE.DoubleSide,
+	});
+	
+	const mesh = new THREE.Mesh(geometry, newShaderMaterial);
+	mesh.name = "fountainScene";
+	
+	return mesh;
+}
+
 function updateJetModel2(){
 	const vertexShader = jetModelShader2.vertexShader;
 	const fragShader = jetModelShader2.fragShader;
@@ -316,13 +361,3 @@ function updateWhaleShark(){
 	
 	currModel.material = newShaderMaterial;
 }
-
-document.getElementById('updateModel').addEventListener('click', (evt) => {
-	if(currModel.name === "whale-shark-camo"){
-		updateWhaleShark();
-	}else if(currModel.name === "f-18"){
-		updateJetModel2();
-	}else if(currModel.name === "f-16"){
-		updateJetModel();
-	}
-});

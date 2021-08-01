@@ -38,7 +38,7 @@ controls.panSpeed = 0.8;
 //controls.staticMoving = true;
 //controls.dynamicDampingFactor = 0.3;
 
-getModel('models/f-16.gltf', 'f16');
+getModel('../shared_assets/f-16.gltf', 'f16');
 update();
 
 function getModel(modelFilePath, name){
@@ -78,12 +78,7 @@ function getModel(modelFilePath, name){
 							obj.rotateOnAxis(new THREE.Vector3(0,1,0), -Math.PI/4);
 							obj.name = name;
 							
-							if(name === "battleship2"){
-								obj.scale.set(5, 5, 5);
-								obj.position.set(5, 0, 0);
-							}else{
-								obj.position.set(0, 0, 0);
-							}
+							obj.position.set(0, 0, 0);
 							
 							currModel = obj;
 							currModelTextureMesh = obj;
@@ -126,11 +121,7 @@ function update(){
 document.getElementById('selectModel').addEventListener('change', (evt) => {
 	//console.log(evt.target.value);
 	scene.remove(scene.getObjectByName(currModel.name));
-	if(evt.target.value === 'f-18'){
-		getModel(`models/${evt.target.value}.glb`, evt.target.value);
-	}else{
-		getModel(`models/${evt.target.value}.gltf`, evt.target.value);
-	}
+	getModel(`../shared_assets/${evt.target.value}.gltf`, evt.target.value);
 });
 
 

@@ -9,6 +9,13 @@ Otherwise, if you have Node.js and npm, you can use an Express server. `cd` into
     
 For convenience, I opted just to pull Three.js from a CDN, which requires an internet connection anytime you want to open this project. Please keep that in mind when running locally.    
     
+## acknowledgements:    
+many thanks to 
+- mr.doob for three.js and all the people who have contributed to it
+- Ronen Ness for partykals.js
+- Jerome Etienne for threex.keyboardstate.js
+- all the people who posted questions of StackOverflow + elsewhere and the authors of various blog posts that I referred to to make these things
+    
 ## notes:
 Each project directory also has a readme with some additional info.      
     
