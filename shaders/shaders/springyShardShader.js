@@ -32,7 +32,7 @@ const springyShardShader = {
 			mat4 rotZ = getRotationMat(vec3(0,0,1), randVal*cos(u_time)); // rotate about the z axis
 			
 			// rotate and move the squares along the z axis
-			gl_Position = projectionMatrix * modelViewMatrix * rotZ * vec4(position.x, position.y, (1.+randVal+cos(u_time))*position.z*abs(cos(0.2*u_time)), 1.0);
+			gl_Position = projectionMatrix * modelViewMatrix * rotZ * vec4(position.x, position.y, (1.+randVal)*position.z*abs(cos(0.3*u_time)), 1.0);
 		}
 	`,
 	

@@ -16,8 +16,9 @@ renderer.shadowMap.enabled = true;
 renderer.setSize(el.clientWidth, el.clientHeight);
 el.appendChild(renderer.domElement);
 
-camera.position.set(0, 10, 15);
-camera.rotateOnAxis(new THREE.Vector3(1,0,0), -Math.PI/8);
+camera.position.set(0, 10, 18);
+const cameraZPos = camera.position.z;
+//camera.rotateOnAxis(new THREE.Vector3(1,0,0), -Math.PI/8);
 scene.add(camera);
 
 // https://discourse.threejs.org/t/solved-glb-model-is-very-dark/6258
@@ -120,14 +121,18 @@ document.getElementById('selectModel').addEventListener('change', (evt) => {
 	
 	if(["whale-shark-camo", "f-18"].indexOf(evt.target.value) > -1){
 		getModel(`../shared_assets/${evt.target.value}.glb`, evt.target.value);
+		camera.position.z = cameraZPos;
 	}else if(evt.target.value === "scene1"){
+		// this one changes the camera's z-position a bit
 		currModel = createSceneSquares();
 		processMesh(currModel);
 	}else if(evt.target.value === "scene2"){
 		currModel = createRaymarchShader();
 		processMesh(currModel);
+		camera.position.z = cameraZPos;
 	}else{
 		getModel(`../shared_assets/${evt.target.value}.gltf`, evt.target.value);
+		camera.position.z = cameraZPos;
 	}
 });
 
@@ -180,6 +185,9 @@ function createSceneSquares(){
 	const positions = [];
 	const colors = [];
 	const indices = [];
+	
+	camera.rotateOnAxis(new THREE.Vector3(1,0,0), -Math.PI/3);
+	camera.position.z += 50;
 	
 	const zRange = {'min': camera.position.z-180, 'max': 20}; // range for z position of squares
 	const xRange = {'min': -120, 'max': 120};
