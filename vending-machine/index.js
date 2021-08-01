@@ -1,4 +1,3 @@
-
 const el = document.getElementById("container");
 const fov = 60;
 const defaultCamera = new THREE.PerspectiveCamera(fov, el.clientWidth / el.clientHeight, 0.01, 1000);
@@ -9,8 +8,6 @@ const raycaster = new THREE.Raycaster();
 const mouse = new THREE.Vector2();
 
 const loadingManager = new THREE.LoadingManager();
-let animationController;
-
 const loader = new THREE.GLTFLoader(loadingManager);
 
 const renderer = new THREE.WebGLRenderer();
@@ -18,18 +15,24 @@ renderer.shadowMap.enabled = true;
 renderer.setSize(el.clientWidth, el.clientHeight);	
 container.appendChild(renderer.domElement);
 
+const fontLoader = new THREE.FontLoader();
+
 let keysEntered = "";
+let currScreenText = null;
 renderer.domElement.addEventListener('mousedown', (evt) => {
 	mouse.x = (evt.offsetX / evt.target.width) * 2 - 1;
 	mouse.y = -(evt.offsetY / evt.target.height) * 2 + 1;
 	raycaster.setFromCamera(mouse, camera);
 	
 	const intersects = raycaster.intersectObjects(scene.children, true); // make sure it's recursive
+	//console.log(intersects);
 	
 	const gotBox = intersects.filter(x => x.object.name === "box1");
-	if(gotBox.length === 1){
-		// do something with box (but only if in the pick-up area)
-		console.log("pick up box");
+	
+	// allow box pickup when in pick-up area
+	if(gotBox.length === 1 && gotBox[0].point.y < 2.5){
+		// do something with box
+		console.log("picked up box");
 		
 		// reset action
 		animationHandler.currentAction.stop();
@@ -70,12 +73,9 @@ renderer.domElement.addEventListener('mousedown', (evt) => {
 		
 		keysEntered += keyPressed.name[0];
 		
-		// display keys entered as text on the display panel?
-		// this might be helpful: https://stackoverflow.com/questions/15248872/dynamically-create-2d-text-in-three-js
-		// otherwise, split the display screen into 2 adjacent faces that you can just swap textures on, with the textures being
-		// the letters/numbers. that would probably be easier?
+		// display keys entered as text on the display panel https://stackoverflow.com/questions/15248872/dynamically-create-2d-text-in-three-js
+		displayTextOnScreen(keysEntered);
 		
-		//TODO:
 		if(keysEntered.length === 2){
 			console.log("code " + keysEntered + " was entered!");
 			// then check format. should be 1 letter followed by 1 number e.g. A1, A2 or A3 - use regex
@@ -86,6 +86,7 @@ renderer.domElement.addEventListener('mousedown', (evt) => {
 				animationHandler.playClipName("box-drop-1", true);
 			}
 			
+			if(currScreenText) setTimeout(() => {scene.remove(currScreenText)}, 1500); // reset display screen text after a delay
 			keysEntered = "";
 		}
 	}
@@ -137,6 +138,33 @@ function AnimationHandler(mesh, animations){
 	}
 }
 
+// // https://stackoverflow.com/questions/38368135/how-to-include-typeface-json-font-file-in-three-js
+function displayTextOnScreen(textToDisplay){
+	if(textFont){
+		if(currScreenText) scene.remove(currScreenText);
+		
+		const geometry = new THREE.TextGeometry(textToDisplay, {
+			size: 0.2,
+			height: 0.01,
+			curveSegments: 6,
+			font: textFont,
+		});
+		
+		const color = new THREE.Color();
+		color.setRGB(0,0,0);
+		
+		const material = new THREE.MeshBasicMaterial({color});
+		
+		currScreenText = new THREE.Mesh(geometry, material);
+		
+		currScreenText.position.x = 1.8;
+		currScreenText.position.y = 5.8;
+		currScreenText.position.z = 1;
+		
+		scene.add(currScreenText);
+	}
+}
+
 // add the vending machine
 function getModel(modelFilePath, side, name){
 	return new Promise((resolve, reject) => {
@@ -164,6 +192,7 @@ function getModel(modelFilePath, side, name){
 let vendingMachine;
 let keys;
 let animationHandler;
+let textFont;
 getModel('vending-machine.gltf').then((data) => {
 	const obj = data.scene;
 	const anim = data.animations;
@@ -174,14 +203,22 @@ getModel('vending-machine.gltf').then((data) => {
 	// keep track of the buttons of the vending machine
 	keys = obj.children.filter(x => x.name === "display")[0].children.filter(x => x.name.indexOf('key') > 0);
 	
-	obj.position.x += 1;
-	obj.position.y += 0.5;
-	obj.rotation.y = Math.PI;
-	obj.scale.x *= 5;
-	obj.scale.y *= 5;
-	obj.scale.z *= 5;
-	vendingMachine = obj;
-	scene.add(obj);
+	// load font for displaying text
+	fontLoader.load("helvetiker_bold.typeface.json", (tex) => {
+		textFont = tex;
+		
+		// place vending machine
+		obj.position.x += 1;
+		obj.position.y += 0.5;
+		obj.position.z -= 0.5;
+		obj.rotation.y = Math.PI;
+		obj.scale.x *= 5;
+		obj.scale.y *= 5;
+		obj.scale.z *= 5;
+		
+		vendingMachine = obj;
+		scene.add(obj);
+	});
 });
 
 /* function keydown(evt){
