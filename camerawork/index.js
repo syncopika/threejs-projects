@@ -85,18 +85,18 @@ class MarkerManager {
 			this.createPath(markerList[0], markerList[0], null, target);
 		}else{
 			// draw lines between the markers in the list (based on order in the list)
-			let lineMaterial = new THREE.LineBasicMaterial({color: 0x0000ff});
-			let startPos = new THREE.Vector3();
-			let endPos = new THREE.Vector3();
+			const lineMaterial = new THREE.LineBasicMaterial({color: 0x0000ff});
+			const startPos = new THREE.Vector3();
+			const endPos = new THREE.Vector3();
 			for(let i = 0; i < markerList.length - 1; i++){
-				let start = markerList[i];
-				let end = markerList[i+1];
+				const start = markerList[i];
+				const end = markerList[i+1];
 				
 				start.getWorldPosition(startPos);
 				end.getWorldPosition(endPos);
 				
-				let linePts = [startPos, endPos];
-				let tubeGeo = new THREE.TubeGeometry(
+				const linePts = [startPos, endPos];
+				const tubeGeo = new THREE.TubeGeometry(
 					new THREE.CatmullRomCurve3(linePts),
 					512, // path segments
 					0.2, // thickness
@@ -104,8 +104,8 @@ class MarkerManager {
 					false, // closed
 				);
 				
-				let tube = new THREE.BufferGeometry().fromGeometry(tubeGeo);
-				let line = new THREE.Line(tube, lineMaterial);
+				const tube = new THREE.BufferGeometry().fromGeometry(tubeGeo);
+				const line = new THREE.Line(tube, lineMaterial);
 				scene.add(line);
 				
 				// add to list of paths
@@ -233,7 +233,11 @@ class MarkerManager {
 		// e.g. if we have a specific target, look at that target. otherwise,
 		// look towards the next marker
 		const target = currPath.target;
-		if(target) this.focusOnTarget(target);
+		if(target){
+			this.focusOnTarget(target);
+		}else{
+			this.focusOnTarget(currPath.end);
+		}
 		
 		if(elapsedTime >= expectedDurationInMs){
 			// time to move on to the next path
@@ -368,7 +372,7 @@ let moveDistance = 60 * sec;
 let rotationAngle = (Math.PI / 2) * sec;
 
 renderer.domElement.addEventListener("click", (evt) => {
-	let coords = markerManager.getCoordsOnMouseClick(evt);
+	const coords = markerManager.getCoordsOnMouseClick(evt);
 	if(markerManager.mode === "add"){
 		let cube = markerManager.createMarker();
 		markerManager.addMarker(cube, coords.x, coords.y);
@@ -474,7 +478,7 @@ document.getElementById('selectMarker').addEventListener('click', (evt) => {
 document.getElementById('createPath').addEventListener('click', (evt) => {
 	if(markerManager.mode === "select"){
 		// take all selected markers and create a path between them in the order they are in
-		console.log(targetObj);
+		//console.log(targetObj);
 		markerManager.connectMarkers(markerManager.selectedMarkers, targetObj);
 	}
 });
@@ -489,4 +493,18 @@ document.getElementById('toggleMarkerVisibility').addEventListener('click', (evt
 
 document.getElementById('togglePathVisibility').addEventListener('click', (evt) => {
 	markerManager.togglePaths();
+});
+
+document.getElementById('setTarget').addEventListener('click', (evt) => {
+	if(evt.target.textContent === "unset target"){
+		markerManager.paths.forEach((path) => {
+			path.target = null;
+		});
+		evt.target.textContent = "set target";
+	}else{
+		markerManager.paths.forEach((path) => {
+			path.target = targetObj;
+		});
+		evt.target.textContent = "unset target";
+	}
 });
