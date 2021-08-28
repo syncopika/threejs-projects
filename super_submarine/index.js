@@ -10,11 +10,11 @@ function checkGoalObjectHit(source, dir, raycaster, scene){
 	let intersects = raycaster.intersectObjects(scene.children);
 	for(let i = 0; i < intersects.length; i++){
 
-		let target = intersects[i];
+		const target = intersects[i];
 
 		if(target.object.name === "goalObject" || target.object.name === "goalObject2"){
 			// dangerous capsule
-			let inRange = source.distanceTo(target.point) > 7.0 && source.distanceTo(target.point) < 12.0;
+			const inRange = source.distanceTo(target.point) > 7.0 && source.distanceTo(target.point) < 12.0;
 			if(inRange){
 				//console.log("hit capsule!");
 				return target.object;
@@ -25,7 +25,7 @@ function checkGoalObjectHit(source, dir, raycaster, scene){
 }
 
 function createSpotlight(){
-	let spotlight = new THREE.SpotLight(0xffffff, 1.8, 50, 0.35, 1.0, 1.2);
+	const spotlight = new THREE.SpotLight(0xffffff, 1.8, 50, 0.35, 1.0, 1.2);
 	spotlight.castShadow = true;
 	
 	spotlight.shadow.mapSize.width = 20;
@@ -189,6 +189,7 @@ let jellyfishGroup = null;
 let capsuleToDisarm = null;
 let sunkenShip = null;
 let water = null;
+let oceanfloor = null;
 
 let loadedModels = [];
 
@@ -273,16 +274,17 @@ Promise.all(loadedModels).then((objects) => {
 			mesh.scale.z *= 3;
 		}else if(mesh.name === "bg"){
 			// ocean floor
+			oceanfloor = mesh;
 			mesh.position.set(0, -20, 0);
 			
 			// add water?
 			// https://github.com/jbouny/ocean
 			// this is jbouny's THREE.Water implementation	
-			let directionalLight = new THREE.DirectionalLight(0xffff55, 1);
+			const directionalLight = new THREE.DirectionalLight(0xffff55, 1);
 			directionalLight.position.set(-600, 80, 600);
 			scene.add(directionalLight);
 				
-			let waterNormals = new THREE.TextureLoader().load('waternormals.jpg', (texture) => {
+			const waterNormals = new THREE.TextureLoader().load('waternormals.jpg', (texture) => {
 				texture.wrapS = texture.wrapT = THREE.RepeatWrapping; 
 			});
 			
@@ -298,7 +300,7 @@ Promise.all(loadedModels).then((objects) => {
 				side: THREE.DoubleSide
 			});
 			
-			let meshMirror = new THREE.Mesh(
+			const meshMirror = new THREE.Mesh(
 				new THREE.PlaneBufferGeometry(2000, 2000, 10, 10), 
 				water.material
 			);
@@ -351,7 +353,7 @@ Promise.all(loadedModels).then((objects) => {
 		}else{
 			// the local axis of the imported mesh is a bit weird and not consistent with the world axis. so, to fix that,
 			// put it in a group object and just control the group object! the mesh is also just orientated properly initially when placed in the group.
-			let group = new THREE.Group();
+			const group = new THREE.Group();
 			group.add(mesh);
 			thePlayer = group;
 			mesh = group;
@@ -362,13 +364,13 @@ Promise.all(loadedModels).then((objects) => {
 			thePlayer.health = 100;
 			
 			// alternate materials used for the sub depending on condition 
-			let hitMaterial = new THREE.MeshBasicMaterial({color: 0xff0000});
+			const hitMaterial = new THREE.MeshBasicMaterial({color: 0xff0000});
 			mesh.hitMaterial = hitMaterial;
 			mesh.originalMaterial = mesh.children[0].material;
 			
 			// give the submarine a spotlight
 			// the spotlight should be facing downwards!
-			let spotlight = createSpotlight(); //createSphereWireframe({}, {});
+			const spotlight = createSpotlight(); //createSphereWireframe({}, {});
 			thePlayer.spotlight = spotlight;
 			thePlayer.spotlightVisible = false;
 			spotlight.visible = false;
@@ -380,7 +382,7 @@ Promise.all(loadedModels).then((objects) => {
 			// can I position the dummy object relative to the group and have its position stay consistent with 
 			// any movement? for now I'm going to try to reposition the spotlight target based on the group's
 			// forward vector.
-			let spotlightTarget = new THREE.Object3D();
+			const spotlightTarget = new THREE.Object3D();
 			group.add(spotlightTarget);
 			
 			scene.add(spotlightTarget);
@@ -430,21 +432,21 @@ function update(){
 	
 	// move the whale shark in a circle
 	if(theNpc){
-		let swimAction = whaleSharkAnimation.clipAction(whaleSharkClips[0]);
+		const swimAction = whaleSharkAnimation.clipAction(whaleSharkClips[0]);
 		swimAction.setLoop(THREE.LoopRepeat);
 		swimAction.play();
 		whaleSharkAnimation.update(sec);
 
-		let curr = new THREE.Matrix4(); // identity matrix so this represents at the origin
+		const curr = new THREE.Matrix4(); // identity matrix so this represents at the origin
 		curr.extractRotation(theNpc.matrix); // need to build off of previous rotation
 
-		let rotY = new THREE.Matrix4();
+		const rotY = new THREE.Matrix4();
 		rotY.makeRotationY(-0.01);
 	
 		// TODO: understand why this transMat gets me the result I want?
 		// having a variable like t that increases by 0.005 in Math.cos and Math.sin
 		// doesn't get me a satisfactory result :/
-		let transMat = new THREE.Matrix4();
+		const transMat = new THREE.Matrix4();
 		transMat.set(
 			1,0,0,(10+20*(Math.cos(0.001))), 
 			0,1,0,0, 
@@ -452,7 +454,7 @@ function update(){
 			0,0,0,1
 		); // affect only X and Z axes!
 
-		let scale = new THREE.Matrix4();
+		const scale = new THREE.Matrix4();
 		scale.makeScale(theNpc.scale.x/2, theNpc.scale.y/2, theNpc.scale.z/2);
 		
 		// https://gamedev.stackexchange.com/questions/16719/what-is-the-correct-order-to-multiply-scale-rotation-and-translation-matrices-f
@@ -465,15 +467,15 @@ function update(){
 	}
 	
 	if(jellyfishGroup){
-		let swim = jfishAnimation.clipAction(jfishClips[0]);
+		const swim = jfishAnimation.clipAction(jfishClips[0]);
 		swim.setLoop(THREE.LoopRepeat);
 		swim.play();
 		
-		let swim2 = jfishAnimation2.clipAction(jfishClips[0]);
+		const swim2 = jfishAnimation2.clipAction(jfishClips[0]);
 		swim2.setLoop(THREE.LoopRepeat);
 		swim2.play();
 		
-		let swim3 = jfishAnimation3.clipAction(jfishClips[0]);
+		const swim3 = jfishAnimation3.clipAction(jfishClips[0]);
 		swim3.setLoop(THREE.LoopRepeat);
 		swim3.play();
 		
@@ -490,13 +492,16 @@ function update(){
 		changeCameraView = true;
 	}
 	
+	let isMoving = false;
 	if(keyboard.pressed("W")){
 		// note that this gets called several times with one key press!
 		// I think it's because update() in requestAnimationFrames gets called quite a few times per second
 		if(!(thePlayer.position.y >= 27 && thePlayer.rotation.x >= .45)){
 			// as long as the player is under or equal to a y-position of 27 and 
 			// their x-rotation (the angle of the submarine nose) is under 45 radians, allow forward movement
+			// this is to prevent the submarine from flying out of the water
 			thePlayer.translateZ(-moveDistance);
+			isMoving = true;
 		}
 		
 		if(thePlayer.position.y > 27){
@@ -508,6 +513,7 @@ function update(){
 	if(keyboard.pressed("S")){
 		if(thePlayer.position.y <= 24){
 			thePlayer.translateZ(moveDistance);
+			isMoving = true;
 		}
 		if(thePlayer.position.y > 24){
 			thePlayer.position.y = 24;
@@ -516,23 +522,27 @@ function update(){
 	
 	if(keyboard.pressed("A")){
 		// rotate the sub and the camera appropriately
-		let axis = new THREE.Vector3(0, 1, 0);
+		const axis = new THREE.Vector3(0, 1, 0);
 		thePlayer.rotateOnAxis(axis, rotationAngle);
+		isMoving = true;
 	}
 	
 	if(keyboard.pressed("D")){
-		let axis = new THREE.Vector3(0, 1, 0);
+		const axis = new THREE.Vector3(0, 1, 0);
 		thePlayer.rotateOnAxis(axis, -rotationAngle);
+		isMoving = true;
 	}
 	
 	if(keyboard.pressed("Q")){
-		let axis = new THREE.Vector3(0, 0, 1);
+		const axis = new THREE.Vector3(0, 0, 1);
 		thePlayer.rotateOnAxis(axis, rotationAngle);
+		isMoving = true;
 	}
 	
 	if(keyboard.pressed("E")){
-		let axis = new THREE.Vector3(0, 0, 1);
+		const axis = new THREE.Vector3(0, 0, 1);
 		thePlayer.rotateOnAxis(axis, -rotationAngle);
+		isMoving = true;
 	}
 	
 	if(keyboard.pressed("up")){
@@ -540,15 +550,25 @@ function update(){
 		// the forward vector for the mesh might be backwards and perpendicular to the front of the sub
 		// up arrow key
 		if(thePlayer.position.y < 27){
-			let axis = new THREE.Vector3(1, 0, 0);
+			const axis = new THREE.Vector3(1, 0, 0);
 			thePlayer.rotateOnAxis(axis, rotationAngle);
+			isMoving = true;
 		}
 	}
 	
 	if(keyboard.pressed("down")){
 		// down arrow key
-		let axis = new THREE.Vector3(1, 0, 0);
+		const axis = new THREE.Vector3(1, 0, 0);
 		thePlayer.rotateOnAxis(axis, -rotationAngle);
+		isMoving = true;
+	}
+	
+	if(!isMoving){
+		// let the sub sink if not moving
+		// checkTerrainHeight comes from utils.js
+		if(checkTerrainHeight(thePlayer.position, raycaster, oceanfloor) > 1.0){
+			thePlayer.position.y -= 0.05;
+		}
 	}
 	
 	// make sure sub spotlight stays with the sub
