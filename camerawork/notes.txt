@@ -5,7 +5,8 @@ https://stackoverflow.com/questions/11638883/thickness-of-lines-using-three-line
 https://github.com/mrdoob/three.js/blob/master/examples/webgl_interactive_cubes.html
 https://stackoverflow.com/questions/43414174/animate-object-along-a-path-in-three-js
 https://stackoverflow.com/questions/29656301/move-a-mesh-on-a-line-three-js
-
+https://sbcode.net/threejs/vector3-lerp/
+https://forum.unity.com/threads/lerp-value-reaching-destination-before-lerp-ends.401896/ -> very important!
 
 todo:
 - import/export of marker+path data so we can demonstrate some useful ideas

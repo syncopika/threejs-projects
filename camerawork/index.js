@@ -7,7 +7,7 @@ class Path {
 		this.linkMesh = linkMesh // a threejs line mesh object
 		
 		// other parameters to describe the path
-		this.duration = 5; // the seconds it takes to traverse the path
+		this.duration = 5; // the seconds it takes to traverse the path. for now make it 5 secs.
 		
 		// the object to look at while the camera moves along this path
 		this.target = target;
@@ -23,6 +23,12 @@ class MarkerManager {
 		this.mode = "add"; // 'add' or 'select'
 		this.raycaster = new THREE.Raycaster();
 		this.mouse = new THREE.Vector2();
+		
+		// for path movement
+		this.startPos = null;
+		this.startTime = 0;
+		this.currPathIndex = 0;
+		this.reqAnimFrameId = 0;
 	}
 	
 	changeMode(){
@@ -130,37 +136,37 @@ class MarkerManager {
 	}
 	
 	createMarker(){
-		let geo = new THREE.BoxGeometry(2,2,2);
-		let mat = new THREE.MeshBasicMaterial({color: 0x00ff00});
-		let cube = new THREE.Mesh(geo, mat);
+		const geo = new THREE.BoxGeometry(2,2,2);
+		const mat = new THREE.MeshBasicMaterial({color: 0x00ff00});
+		const cube = new THREE.Mesh(geo, mat);
 		cube.objectType = "marker";
 		return cube;
 	}
 	
 	focusOnTarget(target){
-		let targetPosWorld = new THREE.Vector3();
+		const targetPosWorld = new THREE.Vector3();
 		target.getWorldPosition(targetPosWorld);
 		this.mainCamera.lookAt(targetPosWorld);
 	}
 	
 	// https://stackoverflow.com/questions/42309715/how-to-correctly-pass-mouse-coordinates-to-webgl
 	getCoordsOnMouseClick(event){
-		let target = event.target;
-		let x1 = event.clientX - target.getBoundingClientRect().left;// + target.offsetWidth/2;
-		let y1 = event.clientY - target.getBoundingClientRect().top;// + target.offsetHeight/2;
-		let posX = (x1 * target.width) / target.clientWidth;
-		let posY = (y1 * target.height) / target.clientHeight;
+		const target = event.target;
+		const x1 = event.clientX - target.getBoundingClientRect().left;// + target.offsetWidth/2;
+		const y1 = event.clientY - target.getBoundingClientRect().top;// + target.offsetHeight/2;
+		const posX = (x1 * target.width) / target.clientWidth;
+		const posY = (y1 * target.height) / target.clientHeight;
 
-		let gl = target.getContext("webgl2"); // might be webgl in other browsers (not chrome)?
-		let x = (posX / gl.canvas.width) * 2 - 1;
-		let y = (posY / gl.canvas.height) * -2 + 1;
+		const gl = target.getContext("webgl2"); // might be webgl in other browsers (not chrome)?
+		const x = (posX / gl.canvas.width) * 2 - 1;
+		const y = (posY / gl.canvas.height) * -2 + 1;
 		
 		return {x, y};
 	}
 
 	toggleMarkers(){
 		// make a set containing all markers and then toggle visibility
-		let markerSet = new Set();
+		const markerSet = new Set();
 		for(let path of this.paths){
 			if(path.start){
 				markerSet.add(path.start);
@@ -184,7 +190,7 @@ class MarkerManager {
 	
 	// markerStart and markerEnd should be threejs Mesh objects
 	createPath(markerStart, markerEnd, linkMesh, target=null){
-		let path = new Path(markerStart, markerEnd, linkMesh, target);
+		const path = new Path(markerStart, markerEnd, linkMesh, target);
 		this.paths.push(path);
 	}
 	
@@ -194,75 +200,69 @@ class MarkerManager {
 		// remove the path link/linkMesh (set to null?)
 	}
 	
-	ridePath(){
-		// go through path in paths
-		// for each path, move the camera from start to end markers along the link mesh and for the duration specified
+	// ride() will be passed to requestAnimationFrame(), which will
+	// pass a timestamp to ride()
+	ride(timestamp){
+		if(this.startTime === 0){
+			this.startTime = timestamp;
+		}
 		
+		// get the current path we're supposed to be on
+		const currPath = this.paths[this.currPathIndex];
+		const isStatic = (currPath.linkMesh === null);
+		
+		const elapsedTime = timestamp - this.startTime;
+		const expectedDurationInMs = currPath.duration * 1000;
+		
+		// are we where we should be?
+		// use the ratio of the current time elapsed and the expected duration,
+		// the next marker's position and lerp to figure out the position we should be at
+		if(isStatic){
+			const start = currPath.start.position.clone();
+			this.mainCamera.position.copy(start); // move the camera to the start marker of this path since there is no link path to travel on
+		}else{
+			const lerpAlpha = elapsedTime / expectedDurationInMs;
+			
+			// use the start position of the start marker of the current path and lerp on that
+			// we clone it each time so we don't overwrite its position (if we keep lerp'ing on a position that keeps changing,
+			// the movement will be faster than we want it to be)
+			this.mainCamera.position.copy(this.startPos.clone().lerp(currPath.end.position, lerpAlpha));
+		}
+		
+		// make sure we're looking in the right direction!
+		// e.g. if we have a specific target, look at that target. otherwise,
+		// look towards the next marker
+		const target = currPath.target;
+		if(target) this.focusOnTarget(target);
+		
+		if(elapsedTime >= expectedDurationInMs){
+			// time to move on to the next path
+			this.currPathIndex++;
+			this.startTime = 0;
+		}
+		
+		if(this.currPathIndex === this.paths.length){
+			// we're done with traversing the path
+			// reset stuff
+			console.log("we're done");
+			this.currPathIndex = 0;
+			this.startPos = null;
+			cancelAnimationFrame(this.reqAnimFrameId);
+		}else{
+			this.startPos = this.paths[this.currPathIndex].start.position.clone();
+			this.reqAnimFrameId = requestAnimationFrame(this.ride.bind(this));
+		}
+	}
+	
+	ridePath(){
 		// move the camera to the first marker first
 		if(this.paths[0]){
 			const firstPos = this.paths[0].start.position;
 			this.mainCamera.position.copy(firstPos);
+			this.startPos = firstPos.clone();
 		}
 		
-		let timeAccumulator = 0; // use this to help schedule each path's camera movement
-		let timers = [];
-		this.paths.forEach((path) => {
-			// figure out distance to
-			const start = path.start.position.clone();
-			const end = path.end.position.clone();
-			const duration = path.duration; // in seconds!
-			const target = path.target;
-			const vectorTo = end.sub(start);
-			const isStatic = (path.linkMesh === null);
-			
-			// get a vector segment based on duration of path
-			const segmentVector = vectorTo.divideScalar(duration);
-			
-			// use settimeout to schedule when the new path animation interval should be run
-			// this might not be very accurate though
-			setTimeout(() => {
-				timers.forEach((timer) => {
-					// prevent any interleaving by clearing preexisting timers
-					clearInterval(timer);
-				});
-				
-				// rotate camera based on start marker for this path
-				camera.rotation.copy(path.start.rotation); // do we need this?
-				if(target) this.focusOnTarget(target);
-				
-				let newTimer = setInterval(() => {
-					// move the camera every second based on the segmentVector
-					if(isStatic){
-						this.mainCamera.position.copy(start); // move the camera to the start marker of this path since there is no link path to travel on
-					}else{
-						this.mainCamera.position.add(segmentVector);
-					}
-					
-					if(target){
-						// if there is a target that the camera should be following,
-						// this will allow the camera to stay focused on that target
-						this.focusOnTarget(target);
-					}
-				}, 1000);
-				
-				timers.push(newTimer);
-				
-				setTimeout(() => {
-					camera.rotation.copy(path.end.rotation); // is this needed?
-					if(target) this.focusOnTarget(target);
-					if(isStatic){
-						this.mainCamera.position.copy(start);
-					}else{
-						this.mainCamera.position.add(segmentVector);
-					}
-					clearInterval(newTimer);
-				}, duration*1000);
-			},
-			timeAccumulator);
-			//console.log("setting a new timer at: " + timeAccumulator + "ms in and stopping after: " + (timeAccumulator + duration*1000) + "ms in.");
-			
-			timeAccumulator += duration*1000;
-		});
+		this.reqAnimFrameId = requestAnimationFrame(this.ride.bind(this));
 	}
 }
 
