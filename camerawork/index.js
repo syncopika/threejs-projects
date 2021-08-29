@@ -496,7 +496,7 @@ document.getElementById('togglePathVisibility').addEventListener('click', (evt) 
 });
 
 document.getElementById('setTarget').addEventListener('click', (evt) => {
-	if(evt.target.textContent === "unset target"){
+	if(evt.target.textContent.trim() === "unset target"){
 		markerManager.paths.forEach((path) => {
 			path.target = null;
 		});

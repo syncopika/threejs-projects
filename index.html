@@ -10,7 +10,7 @@
 			margin-left: 2%;
 		}
 		.project {
-			width: 100%;
+			width: 600px;
 		}
 		.row {
 			display: flex;
@@ -21,35 +21,40 @@
 		}
 		
 		#displayProjectSubmarine {
-			display: none;
+			display: block;
 		}
 		
 		#displayProjectAirshow {
-			display: none;
+			display: block;
 		}
 		
 		#displayProjectCharacterMvmt {
-			display: none;
+			display: block;
 		}
 		
 		#displayProjectCar {
-			display: none;
+			display: block;
 		}
 		
 		#displayProjectCamerawork {
-			display: none;
+			display: block;
 		}
 
 		#displayProjectLivery {
-			display: none;
+			display: block;
 		}
 		
 		#displayProjectShaders {
-			display: none;
+			display: block;
 		}
 		
 		#displayProjectVendingMachine {
-			display: none;
+			display: block;
+		}
+		
+		#grid {
+			display: flex;
+			flex-wrap: wrap;
 		}
 
 	</style>
@@ -63,76 +68,81 @@
 	<h3> <a href='https://github.com/syncopika/threejs-projects'>source</a> </h3>
 	<br />
 	
-	<div class='project'>
-		<h2><span class="caret" id="Submarine">&#9656; </span><a href='super_submarine/index.html'>super submarine </a></h2>
-		<div id="displayProjectSubmarine">
-			<h3> be a submarine and find stuff! </h3>
-			</h3>
-			<img id='submarine' src='super_submarine/pictures/submarine_demo.gif' width='20%' height='11%' />
+	<div id='grid'>
+		<div class='project'>
+			<h2><span class="caret" id="Submarine">&#9656; </span><a href='super_submarine/index.html'>super submarine </a></h2>
+			<div id="displayProjectSubmarine">
+				<h3> be a submarine and find stuff! </h3>
+				</h3>
+				<img id='submarine' src='super_submarine/pictures/submarine_demo.gif' width='80%' height='11%' />
+			</div>
 		</div>
-	</div>
-	
-	<div class='project'>
-		<h2><span class="caret" id="Airshow">&#9656; </span><a href='airshow/index.html'>airshow </a></h2>
-		<div id="displayProjectAirshow">
-			<h3> fly a jet! </h3>
-			<img id='airshow' src='airshow/pictures/airshow_demo.gif' width='20%' height='11%' />
+		
+		<div class='project'>
+			<h2><span class="caret" id="Airshow">&#9656; </span><a href='airshow/index.html'>airshow </a></h2>
+			<div id="displayProjectAirshow">
+				<h3> fly a jet! </h3>
+				<img id='airshow' src='airshow/pictures/airshow_demo.gif' width='80%' height='11%' />
+			</div>
 		</div>
-	</div>
 
-	<div class='project'>
-		<h2><span class="caret" id="CharacterMvmt">&#9656; </span><a href='character_demo/index.html'>character movement </a></h2>
-		<div id="displayProjectCharacterMvmt">
-			<h3> move a low poly humanoid around </h3>
-			<img id='character' src='character_demo/pictures/character_demo.gif' width='20%' height='11%' style='border: 1px solid #000' />
+		<div class='project'>
+			<h2><span class="caret" id="CharacterMvmt">&#9656; </span><a href='character_demo/index.html'>character movement </a></h2>
+			<div id="displayProjectCharacterMvmt">
+				<h3> move a low poly humanoid around </h3>
+				<img id='character' src='character_demo/pictures/character_demo.gif' width='80%' height='11%' style='border: 1px solid #000' />
+			</div>
 		</div>
-	</div>
-	
-	<div class='project'>
-		<h2><span class="caret" id="Car">&#9656; </span><a href='car_demo/index.html'>car demo </a></h2>
-		<div id="displayProjectCar">
-			<h3> drive a car around on a track! </h3>
-			<img id='car' src='car_demo/pictures/car_demo.gif' width='20%' height='11%' style='border: 1px solid #000' />
+		
+		<div class='project'>
+			<h2><span class="caret" id="Car">&#9656; </span><a href='car_demo/index.html'>car demo </a></h2>
+			<div id="displayProjectCar">
+				<h3> drive a car around on a track! </h3>
+				<img id='car' src='car_demo/pictures/car_demo.gif' width='80%' height='11%' style='border: 1px solid #000' />
+			</div>
 		</div>
-	</div>
-	
-	<div class='project'>
-		<h2><span class="caret" id="Camerawork">&#9656; </span><a href='camerawork/index.html'>camerawork </a></h2>
-		<div id="displayProjectCamerawork">
-			<h3> a quick idea for creating a path for a camera to move along (might be useful for cinematography?) </h3>
-			<img id='camerawork' src='camerawork/28-08-2021_102033.gif' width='20%' height='11%' style='border: 1px solid #000' />
+		
+		<div class='project'>
+			<h2><span class="caret" id="Camerawork">&#9656; </span><a href='camerawork/index.html'>camerawork </a></h2>
+			<div id="displayProjectCamerawork">
+				<h3> a quick idea for creating a path for a camera to move along (might be useful for cinematography?) </h3>
+				<img id='camerawork' src='camerawork/28-08-2021_102033.gif' width='80%' height='11%' style='border: 1px solid #000' />
+			</div>
 		</div>
-	</div>
-	
-	<div class='project'>
-		<h2><span class="caret" id="Livery">&#9656; </span><a href='livery_editor/index.html'> livery editor </a></h2>
-		<div id="displayProjectLivery">
-			<h3> a quick proof-of-concept for customizing the texture of a vehicle </h3>
-			<img id='livery' src='livery_editor/04-06-2021_142020.gif' width='20%' height='11%' style='border: 1px solid #000' />
+		
+		<div class='project'>
+			<h2><span class="caret" id="Livery">&#9656; </span><a href='livery_editor/index.html'> livery editor </a></h2>
+			<div id="displayProjectLivery">
+				<h3> a quick proof-of-concept for customizing the texture of a vehicle </h3>
+				<img id='livery' src='livery_editor/04-06-2021_142020.gif' width='80%' height='11%' style='border: 1px solid #000' />
+			</div>
 		</div>
-	</div>
-	
-	<div class='project'>
-		<h2><span class="caret" id="Shaders">&#9656; </span><a href='shaders/index.html'> shaders </a></h2>
-		<div id="displayProjectShaders">
-			<h3> playing with shaders! </h3>
-			<img id='shaders' src='shaders/27-06-2021_184151.gif' width='20%' height='11%' style='border: 1px solid #000' />
+		
+		<div class='project'>
+			<h2><span class="caret" id="Shaders">&#9656; </span><a href='shaders/index.html'> shaders </a></h2>
+			<div id="displayProjectShaders">
+				<h3> playing with shaders! </h3>
+				<img id='shaders' src='shaders/27-06-2021_184151.gif' width='80%' height='11%' style='border: 1px solid #000' />
+			</div>
 		</div>
-	</div>
-	
-	<div class='project'>
-		<h2><span class="caret" id="VendingMachine">&#9656; </span><a href='vending-machine/index.html'> vending machine </a></h2>
-		<div id="displayProjectVendingMachine">
-			<h3> a vending machine </h3>
+		
+		<div class='project'>
+			<h2><span class="caret" id="VendingMachine">&#9656; </span><a href='vending-machine/index.html'> vending machine </a></h2>
+			<div id="displayProjectVendingMachine">
+				<h3> a vending machine </h3>
+				<img id='vendingmachine' src='vending-machine/29-08-2021_103845.gif' width='65%' height='11%' style='border: 1px solid #000' />
+			</div>
 		</div>
+		
 	</div>
 
 </body>
 
 <script>
+/*
 	Array.from(document.getElementsByClassName("caret")).forEach((caret) => {
 		caret.addEventListener("click", (evt) => {
-			let targetInfoToToggle = document.getElementById("displayProject" + caret.id);
+			const targetInfoToToggle = document.getElementById("displayProject" + caret.id);
 			if(targetInfoToToggle.style.display === "block"){
 				caret.innerHTML = "&#9656; ";
 				targetInfoToToggle.style.display = "none";
@@ -142,6 +152,7 @@
 			}
 		});
 	});
+	*/
 </script>
 
 
