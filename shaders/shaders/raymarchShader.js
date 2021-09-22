@@ -51,7 +51,7 @@ const raymarchShader = {
 			// sphere 2
 			vec3 pos2 = p - vec3(2.5, 1.2, 12.);
 			pos2.x += cos(u_time);
-			pos2.y -= 0.5*sin(u_time);
+			pos2.y -= 0.8*sin(u_time);
 			vec2 s2 = vec2(sdfSphere(pos2, 1.5), 0.);
 			
 			// add sphere 1 and 2
@@ -92,7 +92,7 @@ const raymarchShader = {
 		vec3 raymarch(vec3 ro, vec3 rd){
 			vec3 ret = vec3(1.);
 			
-			int maxSteps = 190;
+			int maxSteps = 90;
 			float currRayDist = 0.;
 		
 			for(int i = 0; i < maxSteps; i++){
@@ -103,7 +103,7 @@ const raymarchShader = {
 					vec3 n = generateNormal(p);
 					
 					// calculate color here (https://www.shadertoy.com/view/fdB3Rh)
-					vec3 lightPos = vec3(0.0, 2.0, 1.0);
+					vec3 lightPos = vec3(0.0, 0.0, 1.0);
 					//lightPos.xy += vec2(sin(u_time), cos(u_time)) * 2.;
 					vec3 l = normalize(lightPos - p);
 					float diff = clamp(dot(n, l), 0.0, 1.0);
