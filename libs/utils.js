@@ -1,6 +1,5 @@
 // common utility functions for my three.js projects
 
-
 // https://stackoverflow.com/questions/38305408/threejs-get-center-of-object
 // note that the coordinates of the center will be with respect to the world coordinate system, not local!
 function getCenter(mesh){
@@ -16,6 +15,7 @@ function getCenter(mesh){
 	return mid;
 }
 
+// get the forward vector of a mesh (the vector that goes in the direction the mesh is pointing, ideally)
 // https://stackoverflow.com/questions/14813902/three-js-get-the-direction-in-which-the-camera-is-looking
 // https://stackoverflow.com/questions/25224153/how-can-i-get-the-normalized-vector-of-the-direction-an-object3d-is-facing
 function getForward(mesh){
@@ -24,6 +24,7 @@ function getForward(mesh){
 	return forwardVec;
 }
 
+// return a boolean indicating if a mesh has collided with something
 function checkCollision(mesh, raycaster, scene){
 	let top = new THREE.Vector3(0, 1, 0);
 	let bottom = new THREE.Vector3(0, -1, 0);
@@ -55,6 +56,7 @@ function checkCollision(mesh, raycaster, scene){
 	return false;
 }
 
+// draw a vector as a line in the scene
 function drawVector(pt1, pt2, color){
 	let points = [pt1, pt2];
 	let material = new THREE.LineBasicMaterial({color: color});
@@ -63,8 +65,8 @@ function drawVector(pt1, pt2, color){
 	return line;
 }
 
+// draw the forward vector of an object as a line in the scene
 function drawForwardVector(mesh){
-	
 	let forwardVec = getForward(mesh);
 	
 	// create a vector
@@ -190,6 +192,36 @@ function toggleMessage(canvas, msgElement, showMessage){
 		message.style.left = (x + Math.round(.40 * canvasPos.width)) + "px";
 		message.style.top = (y + Math.round(.80 * canvasPos.height)) + "px";
 		message.style.display = 'block';
+	}
+}
+
+function setupLoadingManager(loadingManager){
+	// https://stackoverflow.com/questions/35575065/how-to-make-a-loading-screen-in-three-js
+	loadingManager.onStart = (url, itemsLoaded, itemsTotal) => {
+		// set up a loading bar
+		let container = document.getElementById("container");
+		let containerDimensions = container.getBoundingClientRect();
+		let left = (containerDimensions.left + Math.round(.40 * containerDimensions.width)) + "px";
+		let top = (containerDimensions.top + Math.round(.50 * containerDimensions.height)) + "px";
+		let loadingBarContainer = createProgressBar("loading", "#00ff00");
+		loadingBarContainer.style.left = left;
+		loadingBarContainer.style.top = top;
+		container.appendChild(loadingBarContainer);
+	}
+
+	loadingManager.onLoad = () => {
+		document.getElementById("container").removeChild(
+			document.getElementById("loadingBarContainer")
+		);
+	}
+
+	loadingManager.onProgress = (url, itemsLoaded, itemsTotal) => {
+		let bar = document.getElementById("loadingBar");
+		bar.style.width = (parseInt(bar.parentNode.style.width) * (itemsLoaded/itemsTotal)) + 'px';
+	}
+
+	loadingManager.onError = (url) => {
+		console.log("there was an error loading :(");
 	}
 }
 

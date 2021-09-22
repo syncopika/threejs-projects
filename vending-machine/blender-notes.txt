@@ -1,0 +1,5 @@
+blender notes
+
+vending machine coil/spring thingy
+https://blender.stackexchange.com/questions/21710/coil-mechanism-for-vending-machine
+https://blender.stackexchange.com/questions/15923/duplicated-objects-copy-animation

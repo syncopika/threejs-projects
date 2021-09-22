@@ -301,7 +301,7 @@ function createRaymarchShader(){
 	});
 	
 	const mesh = new THREE.Mesh(geometry, newShaderMaterial);
-	mesh.name = "fountainScene";
+	mesh.name = "raymarchScene";
 	
 	return mesh;
 }
