@@ -1,4 +1,3 @@
-
 class Path {
 	constructor(start, end, linkMesh, target=null){
 		this.start = start; // a threejs mesh object
@@ -39,17 +38,14 @@ class MarkerManager {
 	// marker should be a mesh or Object3D
 	// x and y are 2d-to-3d converted coord values
 	addMarker(marker, x, y){
-		
 		// add marker to scene
 		camera.add(marker);
 		
 		// copy camera rotation
 		marker.rotation.copy(camera.rotation);
-		marker.updateMatrixWorld(true);
 		
 		// translate cube in camera object space
-		let z = 10;
-		let cubePos = new THREE.Vector3(10*x, 10*y, -z);
+		let cubePos = new THREE.Vector3(10*x, 10*y, -10);
 		marker.position.set(cubePos.x, cubePos.y, cubePos.z);
 		
 		// move it to world space
@@ -77,7 +73,7 @@ class MarkerManager {
 			return marker.uuid !== markerToRemove.uuid;
 		});
 	}
-
+	
 	connectMarkers(markerList, target=null){
 		// what if we want a path with just 1 marker? i.e. for a static camera scene
 		if(markerList.length === 1){
@@ -335,10 +331,11 @@ function setupDemoMesh(scene){
 	return mainTarget;
 }
 
+
+//////////////////////////////////////////////////////// start
 let addMarker = true;
 let selectMarker = false;
 
-////////////////////////////////////////////////////////
 const el = document.getElementById("container");
 const container = document.querySelector('#container');
 const fov = 60;
@@ -371,6 +368,10 @@ let sec = clock.getDelta();
 let moveDistance = 60 * sec;
 let rotationAngle = (Math.PI / 2) * sec;
 
+const markerManager = new MarkerManager(scene, camera);
+const radius = 5;
+let t = 0;
+
 renderer.domElement.addEventListener("click", (evt) => {
 	const coords = markerManager.getCoordsOnMouseClick(evt);
 	if(markerManager.mode === "add"){
@@ -391,73 +392,6 @@ renderer.domElement.addEventListener("click", (evt) => {
 		}
 	}
 });
-
-const markerManager = new MarkerManager(scene, camera);
-const radius = 5;
-let t = 0;
-function update(){
-	sec = clock.getDelta();
-	moveDistance = 8 * sec;
-	rotationAngle = (Math.PI / 2) * sec;
-	t += 0.008;
-	
-	let changeCameraView = false;
-	
-	if(keyboard.pressed("W")){
-		// moving forwards
-		camera.translateZ(-moveDistance);
-		
-	}else if(keyboard.pressed("S")){
-		// moving backwards
-		camera.translateZ(moveDistance);
-	}
-	
-	if(keyboard.pressed("up")){
-		// up arrow (rotate x)
-		// need to prevent default (i.e. scrolling)
-		// clamp also?
-		camera.rotateX(rotationAngle);
-	}
-	
-	if(keyboard.pressed("down")){
-		camera.rotateX(-rotationAngle);
-	}
-	
-	if(keyboard.pressed("A")){
-		let axis = new THREE.Vector3(0, 1, 0);
-		camera.rotateOnAxis(axis, rotationAngle);
-	}
-	
-	if(keyboard.pressed("D")){
-		let axis = new THREE.Vector3(0, 1, 0);
-		camera.rotateOnAxis(axis, -rotationAngle);
-	}
-	
-	if(keyboard.pressed("Q")){
-		let axis = new THREE.Vector3(0, 0, 1);
-		camera.rotateOnAxis(axis, rotationAngle);
-	}
-	
-	if(keyboard.pressed("E")){
-		let axis = new THREE.Vector3(0, 0, 1);
-		camera.rotateOnAxis(axis, -rotationAngle);
-	}
-	
-	// move the targetObj's sphere in a circle
-	targetObj.movingSphere.position.set(
-		Math.cos(t)*radius,
-		targetObj.movingSphere.position.y,
-		Math.sin(t)*radius
-	);
-	targetObj.movingSphere.rotateY(rotationAngle);
-}
-
-function animate(){
-	requestAnimationFrame(animate);
-	renderer.render(scene, camera);
-	update();
-}
-animate();
 
 document.getElementById('addMarker').addEventListener('click', (evt) => {
 	addMarker = true;
@@ -508,3 +442,63 @@ document.getElementById('setTarget').addEventListener('click', (evt) => {
 		evt.target.textContent = "unset target";
 	}
 });
+
+function update(){
+	sec = clock.getDelta();
+	moveDistance = 8 * sec;
+	rotationAngle = (Math.PI / 2) * sec;
+	t += 0.008;
+	
+	let changeCameraView = false;
+	
+	if(keyboard.pressed("W")){
+		// moving forwards
+		camera.translateZ(-moveDistance);
+		
+	}else if(keyboard.pressed("S")){
+		// moving backwards
+		camera.translateZ(moveDistance);
+	}
+	
+	if(keyboard.pressed("up")){
+		// up arrow (rotate x)
+		// need to prevent default (i.e. scrolling)
+		// clamp also?
+		camera.rotateX(rotationAngle);
+	}
+	
+	if(keyboard.pressed("down")){
+		camera.rotateX(-rotationAngle);
+	}
+	
+	if(keyboard.pressed("A")){
+		camera.rotateOnAxis(new THREE.Vector3(0, 1, 0), rotationAngle);
+	}
+	
+	if(keyboard.pressed("D")){
+		camera.rotateOnAxis(new THREE.Vector3(0, 1, 0), -rotationAngle);
+	}
+	
+	if(keyboard.pressed("Q")){
+		camera.rotateOnAxis(new THREE.Vector3(0, 0, 1), rotationAngle);
+	}
+	
+	if(keyboard.pressed("E")){
+		camera.rotateOnAxis(new THREE.Vector3(0, 0, 1), -rotationAngle);
+	}
+	
+	// move the targetObj's sphere in a circle
+	targetObj.movingSphere.position.set(
+		Math.cos(t)*radius,
+		targetObj.movingSphere.position.y,
+		Math.sin(t)*radius
+	);
+	targetObj.movingSphere.rotateY(rotationAngle);
+}
+
+function animate(){
+	requestAnimationFrame(animate);
+	renderer.render(scene, camera);
+	update();
+}
+animate();

@@ -1,7 +1,6 @@
-
 const el = document.getElementById("container");
 const fov = 60;
-const defaultCamera = new THREE.PerspectiveCamera(fov, el.clientWidth / el.clientHeight, 0.01, 1000);
+const camera = new THREE.PerspectiveCamera(fov, el.clientWidth / el.clientHeight, 0.01, 1000);
 const keyboard = new THREEx.KeyboardState();
 const container = document.querySelector('#container');
 const raycaster = new THREE.Raycaster();
@@ -11,32 +10,7 @@ const loadingManager = new THREE.LoadingManager();
 stats.showPanel(0);
 document.body.appendChild(stats.dom); */
 
-loadingManager.onStart = (url, itemsLoaded, itemsTotal) => {
-	// set up a loading bar
-	let container = document.getElementById("container");
-	let containerDimensions = container.getBoundingClientRect();
-	let left = (containerDimensions.left + Math.round(.40 * containerDimensions.width)) + "px";
-	let top = (containerDimensions.top + Math.round(.50 * containerDimensions.height)) + "px";
-	let loadingBarContainer = createProgressBar("loading", "#00ff00");
-	loadingBarContainer.style.left = left;
-	loadingBarContainer.style.top = top;
-	container.appendChild(loadingBarContainer);
-}
-
-loadingManager.onLoad = () => {
-	document.getElementById("container").removeChild(
-		document.getElementById("loadingBarContainer")
-	);
-}
-
-loadingManager.onProgress = (url, itemsLoaded, itemsTotal) => {
-	let bar = document.getElementById("loadingBar");
-	bar.style.width = (parseInt(bar.parentNode.style.width) * (itemsLoaded/itemsTotal)) + 'px';
-}
-
-loadingManager.onError = (url) => {
-	console.log("there was an error loading :(");
-}
+setupLoadingManager(loadingManager);
 
 const loader = new THREE.GLTFLoader(loadingManager);
 
@@ -44,8 +18,6 @@ const renderer = new THREE.WebGLRenderer();
 renderer.shadowMap.enabled = true;
 renderer.setSize(el.clientWidth, el.clientHeight);	
 container.appendChild(renderer.domElement);
-
-const camera = defaultCamera;
 
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0xffffff);	
@@ -73,14 +45,11 @@ let rotationAngle = (Math.PI / 2) * sec;
 let loadedModels = [];
 
 function getModel(modelFilePath, name){
-	
 	return new Promise((resolve, reject) => {
 		loader.load(
 			modelFilePath,
 			function(gltf){	
-			
 				if(name === "car"){
-			
 					let car = new THREE.Group();
 					
 					// the car and its wheels are separate meshes.
@@ -100,23 +69,19 @@ function getModel(modelFilePath, name){
 							car.add(obj);
 						}
 					});
-
-					console.log(car);
+					//console.log(car);
 					resolve(car);
-
 				}else if(name === "racetrack"){
 					// handle racetrack
 					gltf.scene.traverse((child) => {
 						if(child.type === "Mesh"){
 							child.material.shininess = 0; // doesn't seem to work? maybe a lighting issue?
 							child.name = name;
-							
-							console.log(child.material); //check doubleface
+							//console.log(child.material); //check doubleface
 							resolve(child);
 						}
 					});
 				}
-				
 			},
 			// called while loading is progressing
 			function(xhr){
@@ -265,7 +230,6 @@ Promise.all(loadedModels).then((objects) => {
 	})
 });
 
-
 const raycaster1 = new THREE.Raycaster();
 const raycaster2 = new THREE.Raycaster();
 const leftMarkerVec = new THREE.Vector3(); // probably just need 2 and can keep reusing them
@@ -295,8 +259,8 @@ function adjustLateralRotationBasedOnTerrain(thePlayer, terrain){
 	for(let obj of mp){
 		if(obj.object.name === "racetrack"){
 			midPt = obj;
+			break;
 		}
-		break;
 	}
 	
 	// the normal vector here is being converted to world space
@@ -369,7 +333,6 @@ function adjustLateralRotationBasedOnTerrain(thePlayer, terrain){
 		quat.setFromUnitVectors(markerSlopeVector, terrainSlopeVector);
 		thePlayer.applyQuaternion(quat);
 	}
-	
 }
 
 function adjustForwardRotation(thePlayer, terrain){
@@ -436,16 +399,13 @@ function keydown(evt){
 		bottomViewOn = false;
 		topViewOn = !topViewOn;
 	}else if(evt.keyCode === 80){
-		// p key
-		// toggle car body visibility
+		// p key - toggle car body visibility
 		thePlayer.body.visible = !thePlayer.body.visible;
 	}else if(evt.keyCode === 84){
-		// t key
-		// toggle racetrack visibility
+		// t key - toggle racetrack visibility
 		terrain.visible = !terrain.visible;
 	}else if(evt.keyCode === 88){
-		// x key
-		// display wireframe of track
+		// x key - display wireframe of track
 		terrain.material.wireframe = !terrain.material.wireframe;
 	}else if(evt.keyCode === 67){
 		debugMode = !debugMode;
@@ -457,7 +417,6 @@ function keydown(evt){
 		thePlayer.heightMarker.visible = !thePlayer.heightMarker.visible;
 	}
 }
-
 document.addEventListener("keydown", keydown);
 
 
@@ -466,7 +425,6 @@ document.addEventListener("keydown", keydown);
 let lastDirection = 0;
 
 function move(car, rotationAngle){
-	
 	adjustLateralRotationBasedOnTerrain(car, terrain);
 	adjustForwardRotation(car, terrain);
 	
@@ -516,7 +474,6 @@ function move(car, rotationAngle){
 
 
 function update(){
-	
 	sec = clock.getDelta();
 	moveDistance = 8 * sec;
 	rotationAngle = (Math.PI / 2) * sec;
@@ -587,7 +544,6 @@ function update(){
 	camera.position.z = cameraOffset.z;
 	
 	camera.lookAt(thePlayer.position);
-
 }
 
 function animate(){

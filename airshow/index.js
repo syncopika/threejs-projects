@@ -1,12 +1,11 @@
 // airshow!
-// relies on some functions defined in utils.js in ../lib
-// also Ronen Ness' partykals.js in ../lib
-
+// relies on some functions defined in utils.js in ../libs
+// also Ronen Ness' partykals.js in ../libs
 
 // https://github.com/donmccurdy/three-gltf-viewer/blob/master/src/viewer.js
 const el = document.getElementById("container");
 const fov = 60;
-const defaultCamera = new THREE.PerspectiveCamera(fov, el.clientWidth / el.clientHeight, 0.01, 5000);
+const camera = new THREE.PerspectiveCamera(fov, el.clientWidth / el.clientHeight, 0.01, 5000);
 const keyboard = new THREEx.KeyboardState();
 const container = document.querySelector('#container');
 const raycaster = new THREE.Raycaster();
@@ -16,46 +15,16 @@ const loadingManager = new THREE.LoadingManager();
 stats.showPanel(0);
 document.body.appendChild(stats.dom); */
 
-// https://stackoverflow.com/questions/35575065/how-to-make-a-loading-screen-in-three-js
-loadingManager.onStart = (url, itemsLoaded, itemsTotal) => {
-	// set up a loading bar
-	let container = document.getElementById("container");
-	let containerDimensions = container.getBoundingClientRect();
-	let left = (containerDimensions.left + Math.round(.40 * containerDimensions.width)) + "px";
-	let top = (containerDimensions.top + Math.round(.50 * containerDimensions.height)) + "px";
-	let loadingBarContainer = createProgressBar("loading", "#00ff00");
-	loadingBarContainer.style.left = left;
-	loadingBarContainer.style.top = top;
-	container.appendChild(loadingBarContainer);
-}
-
-loadingManager.onLoad = () => {
-	document.getElementById("container").removeChild(
-		document.getElementById("loadingBarContainer")
-	);
-}
-
-loadingManager.onProgress = (url, itemsLoaded, itemsTotal) => {
-	let bar = document.getElementById("loadingBar");
-	bar.style.width = (parseInt(bar.parentNode.style.width) * (itemsLoaded/itemsTotal)) + 'px';
-}
-
-loadingManager.onError = (url) => {
-	console.log("there was an error loading :(");
-}
-
+setupLoadingManager(loadingManager);
 const loader = new THREE.GLTFLoader(loadingManager);
 const renderer = new THREE.WebGLRenderer();
 renderer.shadowMap.enabled = true;
 renderer.setSize(el.clientWidth, el.clientHeight);	
 container.appendChild(renderer.domElement);
 
-
 //https://threejs.org/docs/#examples/en/controls/OrbitControls
 // or this?: https://github.com/mrdoob/three.js/blob/dev/examples/jsm/controls/TrackballControls.js
 //const controls = new OrbitControls(defaultCamera, renderer.domElement);
-
-const camera = defaultCamera;
 
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0xffffff);	
@@ -70,9 +39,12 @@ dirLight.position.set(0, 100, -55 );
 scene.add( dirLight );
 
 const clock = new THREE.Clock();
+const loadedModels = [];
+const aircraftOptions = {};
 let sec = clock.getDelta();
 let moveDistance = 60 * sec;
 let rotationAngle = (Math.PI / 2) * sec;
+let thePlayer = null;
 
 // need to keep some state 
 const state = {
@@ -161,8 +133,6 @@ function getSpeed(timeDelta){
 	return Math.exp(timeDelta);
 }
 
-
-let loadedModels = [];
 function getModel(modelFilePath, type, name){
 	return new Promise((resolve, reject) => {
 		loader.load(
@@ -208,11 +178,6 @@ loadedModels.push(getModel('../shared_assets/f-16.gltf', 'player', 'f16'));
 loadedModels.push(getModel('models/f-35.gltf', 'player', 'f35'));
 loadedModels.push(getModel('models/airbase-edit.gltf', 'airbase', 'bg'));
 
-let thePlayer = null;
-let theNpc = null;
-
-let aircraftOptions = {};
-
 function processMesh(mesh){
 	
 	if(mesh.type === "player"){
@@ -241,7 +206,6 @@ function processMesh(mesh){
 		aircraftOptions[meshName] = mesh;
 		
 		if(meshName === "f18"){
-			
 			thePlayer = mesh;
 			
 			// save current position and rotation of the group and the aircraft mesh itself
@@ -342,7 +306,6 @@ document.addEventListener("keydown", (evt) => {
 		
 		thePlayer = selected;
 	}
-	
 });
 
 document.addEventListener("keyup", (evt) => {
@@ -444,7 +407,6 @@ function update(){
 		thePlayer.translateZ(-moveDistance);
 		
 	}else if(state['mode'] === 'falling'){
-		
 		// handle deceleration
 		if(moveDistance > 0.10){
 			let deltaTime = Date.now() - state['start'];

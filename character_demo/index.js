@@ -12,34 +12,8 @@ const loadingManager = new THREE.LoadingManager();
 stats.showPanel(0);
 document.body.appendChild(stats.dom);
  */
-let animationController;
 
-loadingManager.onStart = (url, itemsLoaded, itemsTotal) => {
-	// set up a loading bar
-	let container = document.getElementById("container");
-	let containerDimensions = container.getBoundingClientRect();
-	let left = (containerDimensions.left + Math.round(.40 * containerDimensions.width)) + "px";
-	let top = (containerDimensions.top + Math.round(.50 * containerDimensions.height)) + "px";
-	let loadingBarContainer = createProgressBar("loading", "#00ff00");
-	loadingBarContainer.style.left = left;
-	loadingBarContainer.style.top = top;
-	container.appendChild(loadingBarContainer);
-}
-
-loadingManager.onLoad = () => {
-	document.getElementById("container").removeChild(
-		document.getElementById("loadingBarContainer")
-	);
-}
-
-loadingManager.onProgress = (url, itemsLoaded, itemsTotal) => {
-	let bar = document.getElementById("loadingBar");
-	bar.style.width = (parseInt(bar.parentNode.style.width) * (itemsLoaded/itemsTotal)) + 'px';
-}
-
-loadingManager.onError = (url) => {
-	console.log("there was an error loading :(");
-}
+setupLoadingManager(loadingManager);
 
 const loader = new THREE.GLTFLoader(loadingManager);
 
@@ -55,7 +29,6 @@ const scene = new THREE.Scene();
 scene.background = new THREE.Color(0xffffff);	
 scene.add(camera);
 
-
 let pointLight = new THREE.PointLight(0xffffff, 1, 0);
 pointLight.position.set(0, 20, -25);
 pointLight.castShadow = true;
@@ -66,7 +39,6 @@ pointLight.shadow.camera.far = 100;
 pointLight.shadow.camera.fov = 70;
 scene.add(pointLight);
 
-
 let hemiLight = new THREE.HemisphereLight(0xffffff);
 hemiLight.position.set(0, 50, 0);
 scene.add(hemiLight);
@@ -76,6 +48,7 @@ let sec = clock.getDelta();
 let moveDistance = 60 * sec;
 let rotationAngle = (Math.PI / 2) * sec;
 
+let animationController;
 let loadedModels = [];
 let animationMixer = null;
 let animationClips = null;
@@ -100,9 +73,7 @@ function getModel(modelFilePath, side, name){
 				// then resolve the thing outside the traverse.
 				let carbine = [];
 				gltf.scene.traverse((child) => {
-					
 					if(child.type === "Mesh" || child.type === "SkinnedMesh"){
-
 						let obj = child;
 
 						if(name === "obj"){
@@ -112,7 +83,6 @@ function getModel(modelFilePath, side, name){
 							carbine.push(obj);
 						}else{
 							if(child.type === "SkinnedMesh"){
-							
 								obj.add(child.skeleton.bones[0]); // add pelvis to mesh as a child
 							
 								if(name !== "obj"){
@@ -166,23 +136,16 @@ function getModel(modelFilePath, side, name){
 	});
 }
 
-
 // https://threejs.org/docs/#api/en/textures/Texture
 loadedModels.push(getModel('../shared_assets/oceanfloor.glb', 'none', 'bg'));
 loadedModels.push(getModel('models/humanoid-rig-with-gun.gltf', 'player', 'p1'));
 loadedModels.push(getModel('models/m4carbine-final.gltf', 'tool', 'obj'));
 
 let thePlayer = null;
-let theNpc = null;
 let tool = null;
 let terrain = null;
-let bgAxesHelper;
-let playerAxesHelper;
-let playerGroupAxesHelper;
-
 let firstPersonViewOn = false;
 let sideViewOn = false;
-
 
 Promise.all(loadedModels).then((objects) => {
 	objects.forEach((mesh) => {
@@ -265,9 +228,7 @@ function adjustVerticalHeightBasedOnTerrain(thePlayer, raycaster, scene){
 }
 
 function moveBasedOnAction(controller, thePlayer, speed, reverse){
-	
 	let action = controller.currAction;
-	
 	if(action === 'walk' || action === 'run'){
 		if(action === 'run'){
 			speed += 0.12;
@@ -322,7 +283,6 @@ function keydown(evt){
 		}
 		animationController.setUpdateTimeDivisor(.20);
 		animationController.changeAction("drawgun", timeScale);
-		
 	}else if(evt.keyCode === 49){
 		// toggle first-person view
 		firstPersonViewOn = !firstPersonViewOn;
@@ -340,7 +300,6 @@ function keydown(evt){
 		}else{
 			scene.add(camera);
 		}
-		
 	}else if(evt.keyCode === 50){
 		// toggle side view
 		firstPersonViewOn = false;
@@ -363,7 +322,6 @@ document.addEventListener("keyup", keyup);
 
 
 function update(){
-	
 	sec = clock.getDelta();
 	moveDistance = 8 * sec;
 	rotationAngle = (Math.PI / 2) * sec;
@@ -410,13 +368,11 @@ function update(){
 	}
 	
 	if(keyboard.pressed("A")){
-		let axis = new THREE.Vector3(0, 1, 0);
-		thePlayer.rotateOnAxis(axis, rotationAngle);
+		thePlayer.rotateOnAxis(new THREE.Vector3(0, 1, 0), rotationAngle);
 	}
 	
 	if(keyboard.pressed("D")){
-		let axis = new THREE.Vector3(0, 1, 0);
-		thePlayer.rotateOnAxis(axis, -rotationAngle);
+		thePlayer.rotateOnAxis(new THREE.Vector3(0, 1, 0), -rotationAngle);
 	}
 	
 	adjustVerticalHeightBasedOnTerrain(thePlayer, raycaster, scene);
@@ -444,7 +400,6 @@ function update(){
 	}
 	
 	if(!firstPersonViewOn) camera.lookAt(thePlayer.position);
-
 }
 
 function animate(){

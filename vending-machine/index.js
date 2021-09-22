@@ -1,6 +1,7 @@
 const el = document.getElementById("container");
 const fov = 60;
-const defaultCamera = new THREE.PerspectiveCamera(fov, el.clientWidth / el.clientHeight, 0.01, 1000);
+const camera = new THREE.PerspectiveCamera(fov, el.clientWidth / el.clientHeight, 0.01, 1000);
+camera.position.set(1,5,5);
 const keyboard = new THREEx.KeyboardState();
 const container = document.querySelector('#container');
 
@@ -17,8 +18,33 @@ container.appendChild(renderer.domElement);
 
 const fontLoader = new THREE.FontLoader();
 
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0xffffff);	
+scene.add(camera);
+
+let pointLight = new THREE.PointLight(0xffffff, 1, 0);
+pointLight.position.set(0, 8, 12);
+pointLight.castShadow = true;
+pointLight.shadow.mapSize.width = 0;
+pointLight.shadow.mapSize.height = 0;
+pointLight.shadow.camera.near = 10;
+pointLight.shadow.camera.far = 100;
+pointLight.shadow.camera.fov = 70;
+scene.add(pointLight);
+
+let hemiLight = new THREE.HemisphereLight(0xffffff);
+hemiLight.position.set(0, 20, 0);
+scene.add(hemiLight);
+
+const clock = new THREE.Clock();
+
 let keysEntered = "";
 let currScreenText = null;
+let vendingMachine;
+let keys;
+let animationHandler;
+let textFont;
+
 renderer.domElement.addEventListener('mousedown', (evt) => {
 	mouse.x = (evt.offsetX / evt.target.width) * 2 - 1;
 	mouse.y = -(evt.offsetY / evt.target.height) * 2 + 1;
@@ -86,37 +112,21 @@ renderer.domElement.addEventListener('mousedown', (evt) => {
 				animationHandler.playClipName("box-drop-1", true);
 			}
 			
-			if(currScreenText) setTimeout(() => {scene.remove(currScreenText)}, 1500); // reset display screen text after a delay
+			if(currScreenText) setTimeout(() => {vendingMachine.remove(currScreenText)}, 1500); // reset display screen text after a delay
 			keysEntered = "";
 		}
 	}
 });
 
-const camera = defaultCamera;
-camera.position.set(1,5,5);
-
-const scene = new THREE.Scene();
-scene.background = new THREE.Color(0xffffff);	
-scene.add(camera);
-
-
-let pointLight = new THREE.PointLight(0xffffff, 1, 0);
-pointLight.position.set(0, 8, 12);
-pointLight.castShadow = true;
-pointLight.shadow.mapSize.width = 0;
-pointLight.shadow.mapSize.height = 0;
-pointLight.shadow.camera.near = 10;
-pointLight.shadow.camera.far = 100;
-pointLight.shadow.camera.fov = 70;
-scene.add(pointLight);
-
-
-let hemiLight = new THREE.HemisphereLight(0xffffff);
-hemiLight.position.set(0, 20, 0);
-scene.add(hemiLight);
-
-const clock = new THREE.Clock();
-
+let rotateMachine = false;
+document.getElementById("rotate").addEventListener("click", (evt) => {
+	rotateMachine = !rotateMachine;
+	if(rotateMachine){
+		evt.target.textContent = "stop rotation";
+	}else{
+		evt.target.textContent = "rotate";
+	}
+});
 
 function AnimationHandler(mesh, animations){
 	this.mixer = new THREE.AnimationMixer(mesh);
@@ -141,11 +151,11 @@ function AnimationHandler(mesh, animations){
 // // https://stackoverflow.com/questions/38368135/how-to-include-typeface-json-font-file-in-three-js
 function displayTextOnScreen(textToDisplay){
 	if(textFont){
-		if(currScreenText) scene.remove(currScreenText);
+		if(currScreenText) vendingMachine.remove(currScreenText);
 		
 		const geometry = new THREE.TextGeometry(textToDisplay, {
-			size: 0.2,
-			height: 0.01,
+			size: 0.05,
+			height: 0.005,
 			curveSegments: 6,
 			font: textFont,
 		});
@@ -157,11 +167,13 @@ function displayTextOnScreen(textToDisplay){
 		
 		currScreenText = new THREE.Mesh(geometry, material);
 		
-		currScreenText.position.x = 1.8;
-		currScreenText.position.y = 5.8;
-		currScreenText.position.z = 1;
+		vendingMachine.add(currScreenText);
 		
-		scene.add(currScreenText);
+		currScreenText.scale.x = -1; // characters are getting mirrored when clicking the vending machine buttons but this seems to help
+									 // got the idea here: https://stackoverflow.com/questions/25909107/threejs-texture-reversed
+		currScreenText.position.x = -0.18;
+		currScreenText.position.y = 1.1;
+		currScreenText.position.z = -0.105;
 	}
 }
 
@@ -189,10 +201,6 @@ function getModel(modelFilePath, side, name){
 	});
 }
 
-let vendingMachine;
-let keys;
-let animationHandler;
-let textFont;
 getModel('vending-machine.gltf').then((data) => {
 	const obj = data.scene;
 	const anim = data.animations;
@@ -221,18 +229,21 @@ getModel('vending-machine.gltf').then((data) => {
 	});
 });
 
+// add keyboard key bindings if you want
 /* function keydown(evt){
 	if(evt.keyCode === 49){
 	}
 }
 document.addEventListener("keydown", keydown); */
 
-
 function update(){
 	if(vendingMachine){
 		let sec = clock.getDelta();
 		let rotationAngle = (Math.PI / 2) * sec;
-		//vendingMachine.rotateOnAxis(new THREE.Vector3(0,1,0), rotationAngle/4);
+		
+		if(rotateMachine){
+			vendingMachine.rotateOnAxis(new THREE.Vector3(0,1,0), rotationAngle/4);
+		}
 		
 		animationHandler.mixer.update(sec);
 	}

@@ -1,7 +1,7 @@
 // super submarine!
 // relies on some functions defined in ../lib/utils.js
-// and Water defined in ../lib/Water.js
-// and stats defined in ../lib/stats.js
+// and Water defined in ../libs/Water.js
+// and stats defined in ../libs/stats.js
 
 // check if spotlight hits the dangerous capsule or the sunken ship
 // source = position of source obj, dir = direction vector
@@ -89,18 +89,7 @@ const loadingManager = new THREE.LoadingManager();
 stats.showPanel(0);
 document.body.appendChild(stats.dom); */
 
-// https://stackoverflow.com/questions/35575065/how-to-make-a-loading-screen-in-three-js
-loadingManager.onStart = (url, itemsLoaded, itemsTotal) => {
-	// set up a loading bar
-	let container = document.getElementById("container");
-	let containerDimensions = container.getBoundingClientRect();
-	let left = (containerDimensions.left + Math.round(.40 * containerDimensions.width)) + "px";
-	let top = (containerDimensions.top + Math.round(.50 * containerDimensions.height)) + "px";
-	let loadingBarContainer = createProgressBar("loading", "#00ff00");
-	loadingBarContainer.style.left = left;
-	loadingBarContainer.style.top = top;
-	container.appendChild(loadingBarContainer);
-}
+setupLoadingManager(loadingManager);
 
 loadingManager.onLoad = () => {
 	document.getElementById("container").removeChild(
@@ -115,15 +104,6 @@ loadingManager.onLoad = () => {
 	
 	// set up progress bar for recovering sunken ship
 	createProgressBarContainer("sunkenShip");
-}
-
-loadingManager.onProgress = (url, itemsLoaded, itemsTotal) => {
-	let bar = document.getElementById("loadingBar");
-	bar.style.width = (parseInt(bar.parentNode.style.width) * (itemsLoaded/itemsTotal)) + 'px';
-}
-
-loadingManager.onError = (url) => {
-	console.log("there was an error loading :(");
 }
 
 const loader = new THREE.GLTFLoader(loadingManager);
@@ -184,11 +164,10 @@ let jfishAnimation3 = null;
 let jfishClips = null;
 
 let thePlayer = null;
-let theNpc = null;
+let whaleShark = null;
 let jellyfishGroup = null;
 let capsuleToDisarm = null;
 let sunkenShip = null;
-let water = null;
 let oceanfloor = null;
 
 let loadedModels = [];
@@ -199,11 +178,9 @@ function getModel(modelFilePath, side, name){
 			modelFilePath,
 			function(gltf){
 				gltf.scene.traverse((child) => {
-
 					let obj;
 						
 					if(child.type === "SkinnedMesh"){
-						
 						obj = child;
 						
 						// why does my skinnedmesh require a different set of initial rotations to get things looking the same as with a regular mesh!?
@@ -288,7 +265,7 @@ Promise.all(loadedModels).then((objects) => {
 				texture.wrapS = texture.wrapT = THREE.RepeatWrapping; 
 			});
 			
-			water = new THREE.Water(renderer, camera, scene, {
+			const water = new THREE.Water(renderer, camera, scene, {
 				textureWidth: 256,
 				textureHeight: 256,
 				waterNormals: waterNormals,
@@ -324,8 +301,8 @@ Promise.all(loadedModels).then((objects) => {
 				sharkGroup.add(mesh);
 				mesh = sharkGroup;
 
-				theNpc = mesh;
-				theNpc.matrixAutoUpdate = false;
+				whaleShark = mesh;
+				whaleShark.matrixAutoUpdate = false;
 			}else if(mesh.side === "jellyfish"){
 				jfishAnimation = new THREE.AnimationMixer(mesh);
 				mesh = createJellyfishGroup(mesh);
@@ -431,14 +408,14 @@ function update(){
 	let changeCameraView = false;
 	
 	// move the whale shark in a circle
-	if(theNpc){
+	if(whaleShark){
 		const swimAction = whaleSharkAnimation.clipAction(whaleSharkClips[0]);
 		swimAction.setLoop(THREE.LoopRepeat);
 		swimAction.play();
 		whaleSharkAnimation.update(sec);
 
 		const curr = new THREE.Matrix4(); // identity matrix so this represents at the origin
-		curr.extractRotation(theNpc.matrix); // need to build off of previous rotation
+		curr.extractRotation(whaleShark.matrix); // need to build off of previous rotation
 
 		const rotY = new THREE.Matrix4();
 		rotY.makeRotationY(-0.01);
@@ -455,7 +432,7 @@ function update(){
 		); // affect only X and Z axes!
 
 		const scale = new THREE.Matrix4();
-		scale.makeScale(theNpc.scale.x/2, theNpc.scale.y/2, theNpc.scale.z/2);
+		scale.makeScale(whaleShark.scale.x/2, whaleShark.scale.y/2, whaleShark.scale.z/2);
 		
 		// https://gamedev.stackexchange.com/questions/16719/what-is-the-correct-order-to-multiply-scale-rotation-and-translation-matrices-f
 		// assuming the whale shark is already at the origin (with the matrix curr, which should only have rotation info)
@@ -463,7 +440,7 @@ function update(){
 		curr.multiply(scale);
 		curr.multiply(rotY);
 		
-		theNpc.matrix.copy(curr);
+		whaleShark.matrix.copy(curr);
 	}
 	
 	if(jellyfishGroup){
@@ -522,26 +499,22 @@ function update(){
 	
 	if(keyboard.pressed("A")){
 		// rotate the sub and the camera appropriately
-		const axis = new THREE.Vector3(0, 1, 0);
-		thePlayer.rotateOnAxis(axis, rotationAngle);
+		thePlayer.rotateOnAxis(new THREE.Vector3(0, 1, 0), rotationAngle);
 		isMoving = true;
 	}
 	
 	if(keyboard.pressed("D")){
-		const axis = new THREE.Vector3(0, 1, 0);
-		thePlayer.rotateOnAxis(axis, -rotationAngle);
+		thePlayer.rotateOnAxis(new THREE.Vector3(0, 1, 0), -rotationAngle);
 		isMoving = true;
 	}
 	
 	if(keyboard.pressed("Q")){
-		const axis = new THREE.Vector3(0, 0, 1);
-		thePlayer.rotateOnAxis(axis, rotationAngle);
+		thePlayer.rotateOnAxis(new THREE.Vector3(0, 0, 1), rotationAngle);
 		isMoving = true;
 	}
 	
 	if(keyboard.pressed("E")){
-		const axis = new THREE.Vector3(0, 0, 1);
-		thePlayer.rotateOnAxis(axis, -rotationAngle);
+		thePlayer.rotateOnAxis(new THREE.Vector3(0, 0, 1), -rotationAngle);
 		isMoving = true;
 	}
 	
@@ -550,16 +523,14 @@ function update(){
 		// the forward vector for the mesh might be backwards and perpendicular to the front of the sub
 		// up arrow key
 		if(thePlayer.position.y < 27){
-			const axis = new THREE.Vector3(1, 0, 0);
-			thePlayer.rotateOnAxis(axis, rotationAngle);
+			thePlayer.rotateOnAxis(new THREE.Vector3(1, 0, 0), rotationAngle);
 			isMoving = true;
 		}
 	}
 	
 	if(keyboard.pressed("down")){
 		// down arrow key
-		const axis = new THREE.Vector3(1, 0, 0);
-		thePlayer.rotateOnAxis(axis, -rotationAngle);
+		thePlayer.rotateOnAxis(new THREE.Vector3(1, 0, 0), -rotationAngle);
 		isMoving = true;
 	}
 	
@@ -733,7 +704,6 @@ function update(){
 	// check top, left, right, bottom, front, back? 
 	let hasCollision = checkCollision(thePlayer.children[0], raycaster, scene); // this function is from utils.js
 	if(!thePlayer.isCollided && hasCollision && hasCollision.name !== "water"){
-		
 		thePlayer.children[0].material = thePlayer.hitMaterial;
 
 		// decrement player health
