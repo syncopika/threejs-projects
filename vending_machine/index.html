@@ -5,7 +5,19 @@
 		<script src="https://code.jquery.com/jquery-3.4.1.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script>
 		<script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js" integrity="sha256-VazP97ZCwtekAsvgPBSUwPFKdrwD3unUfSGVYrahUqU=" crossorigin="anonymous"></script>
 		<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r120/three.min.js" integrity="sha512-kgjZw3xjgSUDy9lTU085y+UCVPz3lhxAtdOVkcO4O2dKl2VSBcNsQ9uMg/sXIM4SoOmCiYfyFO/n1/3GSXZtSg==" crossorigin="anonymous"></script>
-		<script src='../libs/utils.js'></script>
+		
+        <!-- for neon glow effect -->
+        <script src="https://threejs.org/examples/js/postprocessing/EffectComposer.js"></script>
+        <script src="https://threejs.org/examples/js/postprocessing/RenderPass.js"></script>
+        <script src="https://threejs.org/examples/js/postprocessing/MaskPass.js"></script>
+        <script src="https://threejs.org/examples/js/postprocessing/ShaderPass.js"></script>
+        <script src="https://threejs.org/examples/js/shaders/CopyShader.js"></script>
+        <script src="https://threejs.org/examples/js/shaders/FXAAShader.js"></script> <!-- fast approximate anti-aliasing -->
+        <script src="https://threejs.org/examples/js/shaders/ConvolutionShader.js"></script>
+        <script src="https://threejs.org/examples/js/shaders/LuminosityHighPassShader.js"></script>
+        <script src="https://threejs.org/examples/js/postprocessing/UnrealBloomPass.js"></script>
+        
+        <script src='../libs/utils.js'></script>
 		<script src='../libs/GLTFLoader.js'></script>
 		<script src="../libs/threex.keyboardstate.js"></script>
 	</head>
@@ -36,6 +48,7 @@
 		<div id='instructions'>
 			<br />
 			<button id="rotate"> rotate </button>
+            <button id="toggleBloom"> toggle bloom </button>
 			<h3> controls: </h3>
 			<p> click on the black buttons on the right side of the machine to get an item. note that an item corresponds to a code of 1 letter and 1 number (e.g. 'A1') </p>
 			<p> you can click on the item when it's in the drop area! </p>

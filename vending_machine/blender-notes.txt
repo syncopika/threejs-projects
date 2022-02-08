@@ -1,0 +1,11 @@
+blender notes
+
+vending machine coil/spring thingy
+https://blender.stackexchange.com/questions/21710/coil-mechanism-for-vending-machine
+https://blender.stackexchange.com/questions/15923/duplicated-objects-copy-animation
+
+
+for neon glow effects with three.js:
+https://stackoverflow.com/questions/54915037/how-to-make-a-line-or-curve-emit-light-with-three-js
+https://www.reddit.com/r/threejs/comments/76rsju/unreal_bloom_pass/
+https://stackoverflow.com/questions/69142975/threejs-selective-bloom-disable-bloom-for-scene-background

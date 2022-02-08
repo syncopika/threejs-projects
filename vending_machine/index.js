@@ -2,6 +2,7 @@ const el = document.getElementById("container");
 const fov = 60;
 const camera = new THREE.PerspectiveCamera(fov, el.clientWidth / el.clientHeight, 0.01, 1000);
 camera.position.set(1,5,5);
+
 const keyboard = new THREEx.KeyboardState();
 const container = document.querySelector('#container');
 
@@ -19,10 +20,10 @@ container.appendChild(renderer.domElement);
 const fontLoader = new THREE.FontLoader();
 
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0xffffff);	
+scene.background = new THREE.Color(0xfafafa); // can't be ffffff because of the bloom effect
 scene.add(camera);
 
-let pointLight = new THREE.PointLight(0xffffff, 1, 0);
+const pointLight = new THREE.PointLight(0xffffff, 1, 0);
 pointLight.position.set(0, 8, 12);
 pointLight.castShadow = true;
 pointLight.shadow.mapSize.width = 0;
@@ -32,11 +33,35 @@ pointLight.shadow.camera.far = 100;
 pointLight.shadow.camera.fov = 70;
 scene.add(pointLight);
 
-let hemiLight = new THREE.HemisphereLight(0xffffff);
+const hemiLight = new THREE.HemisphereLight(0xffffff);
 hemiLight.position.set(0, 20, 0);
 scene.add(hemiLight);
 
 const clock = new THREE.Clock();
+
+// neon glow effect stuff
+const renderScene = new THREE.RenderPass(scene, camera);
+const effectFXAA = new THREE.ShaderPass(THREE.FXAAShader);
+effectFXAA.uniforms['resolution'].value.set(1/el.clientWidth, 1/el.clientHeight);
+
+const copyShader = new THREE.ShaderPass(THREE.CopyShader);
+copyShader.renderToScreen = true;
+
+const bloomPass = new THREE.UnrealBloomPass(
+    new THREE.Vector2(el.clientWidth, el.clientHeight),
+    0.3, // bloom strength
+    0, // bloom radius
+    0.1, // bloom threshold
+);
+
+const composer = new THREE.EffectComposer(renderer);
+composer.setSize(el.clientWidth, el.clientHeight);
+composer.addPass(renderScene);
+composer.addPass(effectFXAA);
+composer.addPass(effectFXAA); // why twice?
+composer.addPass(bloomPass);
+composer.addPass(copyShader);
+
 
 let keysEntered = "";
 let currScreenText = null;
@@ -44,6 +69,8 @@ let vendingMachine;
 let keys;
 let animationHandler;
 let textFont;
+let rotateMachine = false;
+let bloomOn = true;
 
 renderer.domElement.addEventListener('mousedown', (evt) => {
 	mouse.x = (evt.offsetX / evt.target.width) * 2 - 1;
@@ -118,7 +145,7 @@ renderer.domElement.addEventListener('mousedown', (evt) => {
 	}
 });
 
-let rotateMachine = false;
+
 document.getElementById("rotate").addEventListener("click", (evt) => {
 	rotateMachine = !rotateMachine;
 	if(rotateMachine){
@@ -127,6 +154,11 @@ document.getElementById("rotate").addEventListener("click", (evt) => {
 		evt.target.textContent = "rotate";
 	}
 });
+
+document.getElementById("toggleBloom").addEventListener("click", (evt) => {
+    bloomOn = !bloomOn;
+});
+
 
 function AnimationHandler(mesh, animations){
 	this.mixer = new THREE.AnimationMixer(mesh);
@@ -226,6 +258,17 @@ getModel('vending-machine.gltf').then((data) => {
 		
 		vendingMachine = obj;
 		scene.add(obj);
+        
+        //const cubeGeometry = new THREE.BoxGeometry(1,1,1);
+        //const material = new THREE.MeshBasicMaterial({color: 0x0000ff});
+        //material.wireframe = true;
+        //const mesh = new THREE.LineSegments(cubeGeometry, material);
+        //mesh.position.y += 0.5;
+        
+        //scene.add(mesh);
+        
+        //obj.add(mesh);
+        
 	});
 });
 
@@ -234,7 +277,15 @@ getModel('vending-machine.gltf').then((data) => {
 	if(evt.keyCode === 49){
 	}
 }
-document.addEventListener("keydown", keydown); */
+document.addEventListener("keydown", keydown); 
+*/
+
+// allow zoom-in/zoom-out with mouse clickwheel
+function zoom(event){
+    event.preventDefault(); // prevent screen scroll
+    camera.position.z += event.deltaY * 0.01;
+}
+renderer.domElement.onwheel = zoom;
 
 function update(){
 	if(vendingMachine){
@@ -252,7 +303,8 @@ function update(){
 function animate(){
 	requestAnimationFrame(animate);
 	renderer.render(scene, camera);
-	update();
+    if(bloomOn) composer.render();
+    update();
 }
 
 animate();
