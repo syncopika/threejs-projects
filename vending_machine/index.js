@@ -49,9 +49,9 @@ copyShader.renderToScreen = true;
 
 const bloomPass = new THREE.UnrealBloomPass(
     new THREE.Vector2(el.clientWidth, el.clientHeight),
-    0.3, // bloom strength
-    0, // bloom radius
-    0.1, // bloom threshold
+    0.25, // bloom strength
+    0.1, // bloom radius
+    0, // bloom threshold
 );
 
 const composer = new THREE.EffectComposer(renderer);
@@ -233,7 +233,7 @@ function getModel(modelFilePath, side, name){
 	});
 }
 
-getModel('vending-machine.gltf').then((data) => {
+getModel('vending-machine-color.gltf').then((data) => {
 	const obj = data.scene;
 	const anim = data.animations;
 	

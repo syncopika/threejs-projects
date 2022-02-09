@@ -9,3 +9,5 @@ for neon glow effects with three.js:
 https://stackoverflow.com/questions/54915037/how-to-make-a-line-or-curve-emit-light-with-three-js
 https://www.reddit.com/r/threejs/comments/76rsju/unreal_bloom_pass/
 https://stackoverflow.com/questions/69142975/threejs-selective-bloom-disable-bloom-for-scene-background
+https://discourse.threejs.org/t/how-to-use-bloom-effect-not-for-all-object-in-scene/24244/13
+https://github.com/mrdoob/three.js/blob/master/examples/webgl_postprocessing_unreal_bloom_selective.html

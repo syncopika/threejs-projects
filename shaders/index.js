@@ -144,10 +144,29 @@ function getTextureImageUrl(imgElement){
 	return canvas.toDataURL();
 }
 
+function showShaderCode(vertexCode, fragCode, container){
+    // clear container
+    // https://stackoverflow.com/questions/3955229/remove-all-child-elements-of-a-dom-node-in-javascript
+    const vh = document.createElement('h2');
+    vh.textContent = "vertex shader: ";
+    const v = document.createElement('pre');
+    v.textContent = vertexCode;
+
+    const br = document.createElement('br');
+
+    const fh = document.createElement('h2');
+    fh.textContent = "fragment shader: ";
+    const f = document.createElement('pre');
+    f.textContent = fragCode;
+    
+    container.replaceChildren(vh, v, br, fh, f);
+}
+
 
 function updateJetModel(){
 	const vertexShader = jetModelShader.vertexShader;
 	const fragShader = jetModelShader.fragShader;
+    showShaderCode(vertexShader, fragShader, document.getElementById('shader'));
 	
 	const uniforms = {
 		u_time: {type: "f", value: 0.0},
@@ -261,6 +280,7 @@ function createSceneSquares(){
 	
 	const vertexShader = springyShardShader.vertexShader;
 	const fragShader = springyShardShader.fragShader;
+    showShaderCode(vertexShader, fragShader, document.getElementById('shader'));
 	
 	const uniforms = {
 		u_time: {type: "f", value: 0.0},
@@ -287,6 +307,7 @@ function createRaymarchShader(){
 	
 	const vertexShader = raymarchShader.vertexShader;
 	const fragShader = raymarchShader.fragShader;
+    showShaderCode(vertexShader, fragShader, document.getElementById('shader'));
 	
 	const uniforms = {
 		u_time: {type: "f", value: 0.0},
@@ -309,6 +330,7 @@ function createRaymarchShader(){
 function updateJetModel2(){
 	const vertexShader = jetModelShader2.vertexShader;
 	const fragShader = jetModelShader2.fragShader;
+    showShaderCode(vertexShader, fragShader, document.getElementById('shader'));
 	
 	const uniforms = {
 		u_time: {type: "f", value: 0.0},
@@ -340,6 +362,7 @@ function updateJetModel2(){
 function updateWhaleShark(){
 	const vertexShader = whaleSharkShader.vertexShader;
 	const fragShader = whaleSharkShader.fragShader;
+    showShaderCode(vertexShader, fragShader, document.getElementById('shader'));
 	
 	const uniforms = {
 		u_time: {type: "f", value: 0.0},
