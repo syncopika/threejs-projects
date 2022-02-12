@@ -1,81 +1,81 @@
 <html>
 
-	<head>
-		<title>shader demo</title>
-		<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r120/three.min.js" integrity="sha512-kgjZw3xjgSUDy9lTU085y+UCVPz3lhxAtdOVkcO4O2dKl2VSBcNsQ9uMg/sXIM4SoOmCiYfyFO/n1/3GSXZtSg==" crossorigin="anonymous"></script>
-		<script src='../libs/GLTFLoader.js'></script>
-		<script src='../libs/TrackballControls.js'></script>
-		<script src='shaders/jetModelShader.js'></script>
-		<script src='shaders/jetModelShader2.js'></script>
-		<script src='shaders/whaleSharkShader.js'></script>
-		<script src='shaders/springyShardShader.js'></script>
-		<script src='shaders/raymarchShader.js'></script>
-	</head>
-	
-	<style>
-		#main{
-			font-family: monospace;
-			text-align: center;
-			position: relative;
-			display: block;
-		}
-		
-		#container{
-			width: 1100px;
-			height: 600px;
-			margin: 0 auto;
-			display: inline-block;
-		}
-		
-		#editArea{
-			padding: 1%;
-			text-align: center;
-		}
-		
-		#liveryCanvas{
-			border: 1px solid #000;
-		}
-		
-		#liveryCanvas:hover{
-			cursor: crosshair;
-		}
-		
-		button{
-			margin: 0 auto;
-		}
-		
-		ul{
-			padding: 0;
-		}
-		
-		li{
-			display: inline-block;
-		}
-	</style>
-	
-	<body>
-		<div id='main'>
-			<h3> shader demo </h3>
-			<p> click and drag on the canvas to move around and use a mouse clickwheel to zoom in/out </p>
-			<div id='container'>
-			</div>
-		</div>
-		<div id='editArea'>
-			<ul id='toolbar'>
-				<select id='selectModel'>
-					<option value="f-16" selected>jet</option>
-					<option value="f-18">jet2</option>
-					<option value="whale-shark-camo">whale shark</option>
-					<option value="scene1">springy shards</option>
-					<option value="scene2">raymarching</option>
-				</select>
-			</ul>
-		</div>
+    <head>
+        <title>shader demo</title>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r120/three.min.js" integrity="sha512-kgjZw3xjgSUDy9lTU085y+UCVPz3lhxAtdOVkcO4O2dKl2VSBcNsQ9uMg/sXIM4SoOmCiYfyFO/n1/3GSXZtSg==" crossorigin="anonymous"></script>
+        <script src='../libs/GLTFLoader.js'></script>
+        <script src='../libs/TrackballControls.js'></script>
+        <script src='shaders/jetModelShader.js'></script>
+        <script src='shaders/jetModelShader2.js'></script>
+        <script src='shaders/whaleSharkShader.js'></script>
+        <script src='shaders/springyShardShader.js'></script>
+        <script src='shaders/raymarchShader.js'></script>
+    </head>
+    
+    <style>
+        #main{
+            font-family: monospace;
+            text-align: center;
+            position: relative;
+            display: block;
+        }
+        
+        #container{
+            width: 1100px;
+            height: 600px;
+            margin: 0 auto;
+            display: inline-block;
+        }
+        
+        #editArea{
+            padding: 1%;
+            text-align: center;
+        }
+        
+        #liveryCanvas{
+            border: 1px solid #000;
+        }
+        
+        #liveryCanvas:hover{
+            cursor: crosshair;
+        }
+        
+        button{
+            margin: 0 auto;
+        }
+        
+        ul{
+            padding: 0;
+        }
+        
+        li{
+            display: inline-block;
+        }
+    </style>
+    
+    <body>
+        <div id='main'>
+            <h3> shader demo </h3>
+            <p> click and drag on the canvas to move around and use a mouse clickwheel to zoom in/out </p>
+            <div id='container'>
+            </div>
+        </div>
+        <div id='editArea'>
+            <ul id='toolbar'>
+                <select id='selectModel'>
+                    <option value="f-16" selected>jet</option>
+                    <option value="f-18">jet2</option>
+                    <option value="whale-shark-camo">whale shark</option>
+                    <option value="scene1">springy shards</option>
+                    <option value="scene2">raymarching</option>
+                </select>
+            </ul>
+        </div>
         
        <div id='shader'>
         </div>
-	</body>
-	
-	<script src='index.js'></script>
+    </body>
+    
+    <script src='index.js'></script>
 
 </html>

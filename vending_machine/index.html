@@ -1,11 +1,11 @@
 <html>
 
-	<head>
-		<title>vending machine</title>
-		<script src="https://code.jquery.com/jquery-3.4.1.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script>
-		<script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js" integrity="sha256-VazP97ZCwtekAsvgPBSUwPFKdrwD3unUfSGVYrahUqU=" crossorigin="anonymous"></script>
-		<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r120/three.min.js" integrity="sha512-kgjZw3xjgSUDy9lTU085y+UCVPz3lhxAtdOVkcO4O2dKl2VSBcNsQ9uMg/sXIM4SoOmCiYfyFO/n1/3GSXZtSg==" crossorigin="anonymous"></script>
-		
+    <head>
+        <title>vending machine</title>
+        <script src="https://code.jquery.com/jquery-3.4.1.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script>
+        <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js" integrity="sha256-VazP97ZCwtekAsvgPBSUwPFKdrwD3unUfSGVYrahUqU=" crossorigin="anonymous"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r120/three.min.js" integrity="sha512-kgjZw3xjgSUDy9lTU085y+UCVPz3lhxAtdOVkcO4O2dKl2VSBcNsQ9uMg/sXIM4SoOmCiYfyFO/n1/3GSXZtSg==" crossorigin="anonymous"></script>
+        
         <!-- for neon glow effect -->
         <script src="https://threejs.org/examples/js/postprocessing/EffectComposer.js"></script>
         <script src="https://threejs.org/examples/js/postprocessing/RenderPass.js"></script>
@@ -18,44 +18,44 @@
         <script src="https://threejs.org/examples/js/postprocessing/UnrealBloomPass.js"></script>
         
         <script src='../libs/utils.js'></script>
-		<script src='../libs/GLTFLoader.js'></script>
-		<script src="../libs/threex.keyboardstate.js"></script>
-	</head>
-	
-	<style>
-		canvas{
-			display: block;
-			border: 1px solid #000;
-		}
-		#container{
-			width: 1200px;
-			height: 800px;
-			text-align: center;
-			margin: 0 auto;
-		}
-		h4, #instructions, #info{
-			font-family: monospace;
-			text-align: center;
-		}
-	</style>
-	
-	<body>
-		<h4> a "neon" vending machine :) </h4>
-		
-		<div id='container'>
-		</div>
-		
-		<div id='instructions'>
-			<br />
-			<button id="rotate"> rotate </button>
+        <script src='../libs/GLTFLoader.js'></script>
+        <script src="../libs/threex.keyboardstate.js"></script>
+    </head>
+    
+    <style>
+        canvas{
+            display: block;
+            border: 1px solid #000;
+        }
+        #container{
+            width: 1200px;
+            height: 800px;
+            text-align: center;
+            margin: 0 auto;
+        }
+        h4, #instructions, #info{
+            font-family: monospace;
+            text-align: center;
+        }
+    </style>
+    
+    <body>
+        <h4> a "neon" vending machine :) </h4>
+        
+        <div id='container'>
+        </div>
+        
+        <div id='instructions'>
+            <br />
+            <button id="rotate"> rotate </button>
             <button id="toggleBloom"> toggle bloom </button>
-			<h3> controls: </h3>
-			<p> click on the black buttons on the right side of the machine to get an item. note that an item corresponds to a code of 1 letter and 1 number (e.g. 'A1') </p>
-			<p> you can click on the item when it's in the drop area! </p>
-		</div>
-	</body>
-	
-	<script type="module" src="index.js">
-	</script>
+            <h3> controls: </h3>
+            <p> click on the black buttons on the right side of the machine to get an item. note that an item corresponds to a code of 1 letter and 1 number (e.g. 'A1') </p>
+            <p> you can click on the item when it's in the drop area! </p>
+        </div>
+    </body>
+    
+    <script type="module" src="index.js">
+    </script>
 
 </html>
