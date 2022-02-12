@@ -26,15 +26,6 @@ function checkGoalObjectHit(source, dir, raycaster, scene){
 
 function createSpotlight(){
 	const spotlight = new THREE.SpotLight(0xffffff, 1.8, 50, 0.35, 1.0, 1.2);
-	spotlight.castShadow = true;
-	
-	spotlight.shadow.mapSize.width = 20;
-	spotlight.shadow.mapSize.height = 20;
-	
-	spotlight.shadow.camera.near = 10;
-	spotlight.shadow.camera.far = 20;
-	spotlight.shadow.camera.fov = 10;
-	
 	return spotlight;
 }
 
@@ -77,11 +68,10 @@ function createJellyfishGroup(mesh){
 
 // https://github.com/evanw/webgl-water
 // https://github.com/donmccurdy/three-gltf-viewer/blob/master/src/viewer.js
-const el = document.getElementById("container");
+const container = document.getElementById("container");
 const fov = 60;
-const defaultCamera = new THREE.PerspectiveCamera(fov, el.clientWidth / el.clientHeight, 0.01, 1000);
+const defaultCamera = new THREE.PerspectiveCamera(fov, container.clientWidth / container.clientHeight, 0.01, 1000);
 const keyboard = new THREEx.KeyboardState();
-const container = document.querySelector('#container');
 const raycaster = new THREE.Raycaster();
 const loadingManager = new THREE.LoadingManager();
 
@@ -90,7 +80,6 @@ stats.showPanel(0);
 document.body.appendChild(stats.dom); */
 
 setupLoadingManager(loadingManager);
-
 loadingManager.onLoad = () => {
 	document.getElementById("container").removeChild(
 		document.getElementById("loadingBarContainer")
@@ -110,7 +99,8 @@ const loader = new THREE.GLTFLoader(loadingManager);
 
 const renderer = new THREE.WebGLRenderer();
 renderer.shadowMap.enabled = true;
-renderer.setSize(el.clientWidth, el.clientHeight);	
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.setSize(container.clientWidth, container.clientHeight);
 container.appendChild(renderer.domElement);
 
 // for disarming the dangerous capsule
@@ -134,18 +124,13 @@ const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x000000);	
 scene.add(camera);
 
-const pointLight = new THREE.PointLight(0xffffff, 1, 0); //new THREE.pointLight( 0xffffff );
-pointLight.position.set(0, 10, -35);
+const pointLight = new THREE.PointLight(0x666666, 1, 0); //new THREE.pointLight( 0xffffff );
+pointLight.position.set(0, 26, -10);
 pointLight.castShadow = true;
-pointLight.shadow.mapSize.width = 512;
-pointLight.shadow.mapSize.height = 512;
-pointLight.shadow.camera.near = 10;
-pointLight.shadow.camera.far = 100;
-pointLight.shadow.camera.fov = 30;
 scene.add(pointLight);
 
 const hemiLight = new THREE.HemisphereLight(0xffffff);
-hemiLight.position.set(0, 100, 0);
+hemiLight.position.set(0, 120, 0);
 scene.add(hemiLight);
 
 const clock = new THREE.Clock();
@@ -249,9 +234,11 @@ Promise.all(loadedModels).then((objects) => {
 			mesh.scale.x *= 3;
 			mesh.scale.y *= 3;
 			mesh.scale.z *= 3;
+            mesh.castShadow = true;
 		}else if(mesh.name === "bg"){
 			// ocean floor
 			oceanfloor = mesh;
+            oceanfloor.receiveShadow = true;
 			mesh.position.set(0, -20, 0);
 			
 			// add water?
@@ -286,6 +273,7 @@ Promise.all(loadedModels).then((objects) => {
 			meshMirror.rotation.x = -Math.PI * 0.5;
 			meshMirror.position.y = 28;
 			meshMirror.name = "water";
+            meshMirror.castShadow = true;
 			
 			scene.add(meshMirror);
 			
@@ -295,6 +283,8 @@ Promise.all(loadedModels).then((objects) => {
 		}else if(mesh.name === "npc"){
 			if(mesh.side === "whaleshark"){
 				// whale shark
+                mesh.castShadow = true;
+                mesh.receiveShadow = true;
 				whaleSharkAnimation = new THREE.AnimationMixer(mesh);
 				
 				const sharkGroup = new THREE.Group();
@@ -330,9 +320,11 @@ Promise.all(loadedModels).then((objects) => {
 		}else{
 			// the local axis of the imported mesh is a bit weird and not consistent with the world axis. so, to fix that,
 			// put it in a group object and just control the group object! the mesh is also just orientated properly initially when placed in the group.
-			const group = new THREE.Group();
+			mesh.castShadow = true;
+            const group = new THREE.Group();
 			group.add(mesh);
 			thePlayer = group;
+            
 			mesh = group;
 			mesh.position.set(0, 0, -10);
 			mesh.originalColor = group.children[0].material; // this should only be temporary
@@ -392,9 +384,7 @@ Promise.all(loadedModels).then((objects) => {
 			animate();
 		}
 		
-		mesh.castShadow = true;
 		scene.add(mesh);
-		renderer.render(scene, camera);
 	})
 });
 

@@ -1,10 +1,9 @@
-const el = document.getElementById("container");
+const container = document.getElementById("container");
 const fov = 60;
-const camera = new THREE.PerspectiveCamera(fov, el.clientWidth / el.clientHeight, 0.01, 1000);
+const camera = new THREE.PerspectiveCamera(fov, container.clientWidth / container.clientHeight, 0.01, 1000);
 camera.position.set(1,5,5);
 
 const keyboard = new THREEx.KeyboardState();
-const container = document.querySelector('#container');
 
 const raycaster = new THREE.Raycaster();
 const mouse = new THREE.Vector2();
@@ -14,23 +13,17 @@ const loader = new THREE.GLTFLoader(loadingManager);
 
 const renderer = new THREE.WebGLRenderer();
 renderer.shadowMap.enabled = true;
-renderer.setSize(el.clientWidth, el.clientHeight);	
+renderer.setSize(container.clientWidth, container.clientHeight);	
 container.appendChild(renderer.domElement);
 
 const fontLoader = new THREE.FontLoader();
 
 const scene = new THREE.Scene();
-//scene.background = new THREE.Color(0xfafafa); // can't be ffffff because of the bloom effect
+//scene.background = new THREE.Color(0xe0e0e0); // can't be ffffff because of the bloom effect
 scene.add(camera);
 
 const pointLight = new THREE.PointLight(0xffffff, 1, 0);
-pointLight.position.set(0, 25, 5);
-pointLight.castShadow = true;
-pointLight.shadow.mapSize.width = 0;
-pointLight.shadow.mapSize.height = 0;
-pointLight.shadow.camera.near = 10;
-pointLight.shadow.camera.far = 100;
-pointLight.shadow.camera.fov = 70;
+pointLight.position.set(0, 22, 3);
 scene.add(pointLight);
 
 const hemiLight = new THREE.HemisphereLight(0xffffff);
@@ -42,20 +35,20 @@ const clock = new THREE.Clock();
 // neon glow effect stuff (Bloom effect)
 const renderScene = new THREE.RenderPass(scene, camera);
 const effectFXAA = new THREE.ShaderPass(THREE.FXAAShader);
-effectFXAA.uniforms['resolution'].value.set(1/el.clientWidth, 1/el.clientHeight);
+effectFXAA.uniforms['resolution'].value.set(1/container.clientWidth, 1/container.clientHeight);
 
 const copyShader = new THREE.ShaderPass(THREE.CopyShader);
 copyShader.renderToScreen = true;
 
 const bloomPass = new THREE.UnrealBloomPass(
-    new THREE.Vector2(el.clientWidth, el.clientHeight),
+    new THREE.Vector2(container.clientWidth, container.clientHeight),
     0.7,//0.25, // bloom strength
     0,//0.1, // bloom radius
     0.6, // bloom threshold
 );
 
 const composer = new THREE.EffectComposer(renderer);
-composer.setSize(el.clientWidth, el.clientHeight);
+composer.setSize(container.clientWidth, container.clientHeight);
 composer.addPass(renderScene);
 composer.addPass(effectFXAA);
 composer.addPass(bloomPass);

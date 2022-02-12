@@ -3,11 +3,10 @@
 // also Ronen Ness' partykals.js in ../libs
 
 // https://github.com/donmccurdy/three-gltf-viewer/blob/master/src/viewer.js
-const el = document.getElementById("container");
+const container = document.getElementById("container");
 const fov = 60;
-const camera = new THREE.PerspectiveCamera(fov, el.clientWidth / el.clientHeight, 0.01, 5000);
+const camera = new THREE.PerspectiveCamera(fov, container.clientWidth / container.clientHeight, 0.01, 5000);
 const keyboard = new THREEx.KeyboardState();
-const container = document.querySelector('#container');
 const raycaster = new THREE.Raycaster();
 const loadingManager = new THREE.LoadingManager();
 
@@ -19,7 +18,7 @@ setupLoadingManager(loadingManager);
 const loader = new THREE.GLTFLoader(loadingManager);
 const renderer = new THREE.WebGLRenderer();
 renderer.shadowMap.enabled = true;
-renderer.setSize(el.clientWidth, el.clientHeight);	
+renderer.setSize(container.clientWidth, container.clientHeight);	
 container.appendChild(renderer.domElement);
 
 //https://threejs.org/docs/#examples/en/controls/OrbitControls
@@ -30,13 +29,13 @@ const scene = new THREE.Scene();
 scene.background = new THREE.Color(0xffffff);	
 scene.add(camera);
 
-const hemiLight = new THREE.HemisphereLight( 0xffffff, 0x444444 );
-hemiLight.position.set( 0, 300, 0 );
-scene.add( hemiLight );
+const hemiLight = new THREE.HemisphereLight(0xffffff, 0x444444);
+hemiLight.position.set(0, 300, 0);
+scene.add(hemiLight);
 
-const dirLight = new THREE.DirectionalLight( 0xffffff );
-dirLight.position.set(0, 100, -55 );
-scene.add( dirLight );
+const dirLight = new THREE.DirectionalLight(0xffffff);
+dirLight.position.set(0, 100, -55);
+scene.add(dirLight);
 
 const clock = new THREE.Clock();
 const loadedModels = [];

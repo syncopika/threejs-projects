@@ -1,8 +1,7 @@
-const el = document.getElementById("container");
+const container = document.getElementById("container");
 const fov = 60;
-const camera = new THREE.PerspectiveCamera(fov, el.clientWidth / el.clientHeight, 0.01, 1000);
+const camera = new THREE.PerspectiveCamera(fov, container.clientWidth / container.clientHeight, 0.01, 1000);
 const keyboard = new THREEx.KeyboardState();
-const container = document.querySelector('#container');
 const raycaster = new THREE.Raycaster();
 const loadingManager = new THREE.LoadingManager();
 
@@ -16,25 +15,19 @@ const loader = new THREE.GLTFLoader(loadingManager);
 
 const renderer = new THREE.WebGLRenderer();
 renderer.shadowMap.enabled = true;
-renderer.setSize(el.clientWidth, el.clientHeight);	
+renderer.setSize(container.clientWidth, container.clientHeight);	
 container.appendChild(renderer.domElement);
 
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0xffffff);	
 scene.add(camera);
 
-const pointLight = new THREE.PointLight(0xffffff, 1, 0);
-pointLight.position.set(0, 60, -25);
-pointLight.castShadow = true;
-pointLight.shadow.mapSize.width = 0;
-pointLight.shadow.mapSize.height = 0;
-pointLight.shadow.camera.near = 10;
-pointLight.shadow.camera.far = 100;
-pointLight.shadow.camera.fov = 70;
+const pointLight = new THREE.PointLight(0xffffff);
+pointLight.position.set(0, 15, -20);
 scene.add(pointLight);
 
 const hemiLight = new THREE.HemisphereLight(0xffffff);
-hemiLight.position.set(0, 50, 0);
+hemiLight.position.set(0, 20, 0);
 scene.add(hemiLight);
 
 const clock = new THREE.Clock();
@@ -97,10 +90,10 @@ function getModel(modelFilePath, name){
 }
 
 function addPlane(scene){
-	let planeGeometry = new THREE.PlaneGeometry(400, 400);
-	let texture = new THREE.TextureLoader().load('models/grass2.jpg');
-	let material = new THREE.MeshBasicMaterial({map: texture}); 
-	let plane = new THREE.Mesh(planeGeometry, material); 
+	const planeGeometry = new THREE.PlaneGeometry(400, 400);
+	const texture = new THREE.TextureLoader().load('models/grass2.jpg');
+	const material = new THREE.MeshBasicMaterial({map: texture}); 
+	const plane = new THREE.Mesh(planeGeometry, material); 
 	plane.position.set(-100, -1.5, 0);
 	plane.rotateX((3*Math.PI)/2);
 	plane.name = "grass";
@@ -179,9 +172,9 @@ Promise.all(loadedModels).then((objects) => {
 			});
 			
 			// also add an Object3D to serve as a marker for checking terrain height
-			let cubeGeometry = new THREE.BoxGeometry(0.2,0.2,0.2);
-			let material = new THREE.MeshBasicMaterial({color: 0x00ff00});
-			let marker = new THREE.Mesh(cubeGeometry, material);
+			const cubeGeometry = new THREE.BoxGeometry(0.2,0.2,0.2);
+			const material = new THREE.MeshBasicMaterial({color: 0x00ff00});
+			const marker = new THREE.Mesh(cubeGeometry, material);
 			marker.visible = false;
 			
 			thePlayer.body.add(marker);
@@ -190,24 +183,24 @@ Promise.all(loadedModels).then((objects) => {
 			
 			// for lateral modifications if the road is elevated on one side
 			// we want the car to be parallel with the road
-			let material2 = new THREE.MeshBasicMaterial({color: 0xff0000});
-			let markerRight = new THREE.Mesh(cubeGeometry, material2);			
+			const material2 = new THREE.MeshBasicMaterial({color: 0xff0000});
+			const markerRight = new THREE.Mesh(cubeGeometry, material2);			
 			markerRight.position.set(0, 2, 1.5);
 			markerRight.visible = false;
 			
-			let material3 = new THREE.MeshBasicMaterial({color: 0x0000ff});
-			let markerLeft = new THREE.Mesh(cubeGeometry, material3);
+			const material3 = new THREE.MeshBasicMaterial({color: 0x0000ff});
+			const markerLeft = new THREE.Mesh(cubeGeometry, material3);
 			markerLeft.position.set(0, 2, -1.5);
 			markerLeft.visible = false;
 			
 			// for forward rotation (about z-axis) adjustments
-			let material4 = new THREE.MeshBasicMaterial({color: 0xffff00});
-			let markerFront = new THREE.Mesh(cubeGeometry, material4);
+			const material4 = new THREE.MeshBasicMaterial({color: 0xffff00});
+			const markerFront = new THREE.Mesh(cubeGeometry, material4);
 			markerFront.position.set(2, 2, 0);
 			markerFront.visible = false;
 			
-			let material5 = new THREE.MeshBasicMaterial({color: 0x00ffff});
-			let markerRear = new THREE.Mesh(cubeGeometry, material5);
+			const material5 = new THREE.MeshBasicMaterial({color: 0x00ffff});
+			const markerRear = new THREE.Mesh(cubeGeometry, material5);
 			markerRear.position.set(-2, 2, 0);
 			markerRear.visible = false;
 			

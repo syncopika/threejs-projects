@@ -1,20 +1,19 @@
 let currModel = null;
 let currModelTexture = null;
+let animationReqId;
+
 const loader = new THREE.GLTFLoader();
 const textureLoader = new THREE.TextureLoader();
 
-const el = document.getElementById("container");
-const renderer = new THREE.WebGLRenderer();
+const container = document.getElementById("container");
 const fov = 60;
-const camera = new THREE.PerspectiveCamera(fov, el.clientWidth / el.clientHeight, 0.01, 1000);
+const camera = new THREE.PerspectiveCamera(fov, container.clientWidth / container.clientHeight, 0.01, 1000);
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0xffffff);	
 
-let animationReqId;
-
-renderer.shadowMap.enabled = true;
-renderer.setSize(el.clientWidth, el.clientHeight);
-el.appendChild(renderer.domElement);
+const renderer = new THREE.WebGLRenderer();
+renderer.setSize(container.clientWidth, container.clientHeight);
+container.appendChild(renderer.domElement);
 
 camera.position.set(0, 10, 18);
 const cameraZPos = camera.position.z;
@@ -22,11 +21,11 @@ const cameraZPos = camera.position.z;
 scene.add(camera);
 
 // https://discourse.threejs.org/t/solved-glb-model-is-very-dark/6258
-let hemiLight = new THREE.HemisphereLight(0xffffff, 0x444444);
+const hemiLight = new THREE.HemisphereLight(0xffffff, 0x444444);
 hemiLight.position.set(0, 200, 0);
 scene.add(hemiLight);
 
-let dirLight = new THREE.DirectionalLight( 0xffffff );
+const dirLight = new THREE.DirectionalLight( 0xffffff );
 dirLight.position.set(0, 50, 0);
 scene.add(dirLight);
 

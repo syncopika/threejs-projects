@@ -1,10 +1,9 @@
 import { AnimationController } from './AnimationController.js';
 
-const el = document.getElementById("container");
+const container = document.getElementById("container");
 const fov = 60;
-const defaultCamera = new THREE.PerspectiveCamera(fov, el.clientWidth / el.clientHeight, 0.01, 1000);
+const defaultCamera = new THREE.PerspectiveCamera(fov, container.clientWidth / container.clientHeight, 0.01, 1000);
 const keyboard = new THREEx.KeyboardState();
-const container = document.querySelector('#container');
 const raycaster = new THREE.Raycaster();
 const loadingManager = new THREE.LoadingManager();
 
@@ -19,7 +18,8 @@ const loader = new THREE.GLTFLoader(loadingManager);
 
 const renderer = new THREE.WebGLRenderer();
 renderer.shadowMap.enabled = true;
-renderer.setSize(el.clientWidth, el.clientHeight);	
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.setSize(container.clientWidth, container.clientHeight);	
 container.appendChild(renderer.domElement);
 
 const camera = defaultCamera;
@@ -29,14 +29,9 @@ const scene = new THREE.Scene();
 scene.background = new THREE.Color(0xffffff);	
 scene.add(camera);
 
-let pointLight = new THREE.PointLight(0xffffff, 1, 0);
+const pointLight = new THREE.PointLight(0xffffff, 1, 0);
 pointLight.position.set(0, 20, -25);
 pointLight.castShadow = true;
-pointLight.shadow.mapSize.width = 0;
-pointLight.shadow.mapSize.height = 0;
-pointLight.shadow.camera.near = 10;
-pointLight.shadow.camera.far = 100;
-pointLight.shadow.camera.fov = 70;
 scene.add(pointLight);
 
 let hemiLight = new THREE.HemisphereLight(0xffffff);
@@ -157,9 +152,11 @@ Promise.all(loadedModels).then((objects) => {
 			// npcs?
 		}else if(mesh.name === "obj"){
 			// tools that can be equipped
+            mesh.castShadow = true;
 			tool = mesh;
 			tool.visible = false;
 		}else{
+            mesh.castShadow = true;
 			thePlayer = mesh;
 
 			// add a 3d object (cube) to serve as a marker for the 
@@ -201,9 +198,6 @@ Promise.all(loadedModels).then((objects) => {
 
 			animate();
 		}
-		
-		mesh.castShadow = true;
-		//mesh.receiveShadow = true;
 		scene.add(mesh);
 		renderer.render(scene, camera);
 	})

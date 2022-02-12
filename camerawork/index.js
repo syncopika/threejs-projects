@@ -65,7 +65,7 @@ class MarkerManager {
             // remove from paths any path that contains this marker
             const pathsToKeep = [];
             for(let path of this.paths){
-                if(path.start !== marker && path.end !== marker){
+                if(path.start.uuid !== marker.uuid && path.end.uuid !== marker.uuid){
                     pathsToKeep.push(path);
                 }else{
                     this.scene.remove(path.linkMesh);
@@ -76,6 +76,14 @@ class MarkerManager {
             this.camera.remove(marker);
             this.scene.remove(marker);
         }
+        
+        // also remove markers from currently selected markers
+        // markersToRemove is a ref to this.selectedMarkers
+        // so we make a copy so we don't iterate and alter the same list
+        const markersToRemoveCopy = markersToRemove.slice();
+        markersToRemoveCopy.forEach(marker => {
+            this.removeSelectedMarker(marker);
+        });
 	}
 	
 	addToSelectedMarkers(markerToAdd){
@@ -93,7 +101,7 @@ class MarkerManager {
 	connectMarkers(markerList, target=null){
 		// what if we want a path with just 1 marker? i.e. for a static camera scene
 		if(markerList.length === 1){
-			// create some kinda path marker for it? like a sphere hovering over the marker maybe?
+			// TODO: create some kinda path marker for it? like a sphere hovering over the marker maybe?
 			this.createPath(markerList[0], markerList[0], null, target);
 		}else{
 			// draw lines between the markers in the list (based on order in the list)
@@ -295,16 +303,6 @@ class UIManager {
 }
 
 function setupSceneLights(scene){
-	const pointLight = new THREE.PointLight(0xffffff, 1, 0);
-	pointLight.position.set(0, 20, -25);
-	pointLight.castShadow = true;
-	pointLight.shadow.mapSize.width = 0;
-	pointLight.shadow.mapSize.height = 0;
-	pointLight.shadow.camera.near = 10;
-	pointLight.shadow.camera.far = 100;
-	pointLight.shadow.camera.fov = 70;
-	scene.add(pointLight);
-
 	const hemiLight = new THREE.HemisphereLight(0xffffff);
 	hemiLight.position.set(0, 50, 0);
 	scene.add(hemiLight);
@@ -356,11 +354,10 @@ function setupDemoMesh(scene){
 let addMarker = true;
 let selectMarker = false;
 
-const el = document.getElementById("container");
-const container = document.querySelector('#container');
+const container = document.getElementById("container");
 const fov = 60;
 
-const defaultCamera = new THREE.PerspectiveCamera(fov, el.clientWidth / el.clientHeight, 0.01, 1000);
+const defaultCamera = new THREE.PerspectiveCamera(fov, container.clientWidth / container.clientHeight, 0.01, 1000);
 const keyboard = new THREEx.KeyboardState();
 const raycaster = new THREE.Raycaster();
 const loadingManager = new THREE.LoadingManager();
@@ -368,7 +365,7 @@ const loader = new THREE.GLTFLoader(loadingManager);
 
 const renderer = new THREE.WebGLRenderer();
 renderer.shadowMap.enabled = true;
-renderer.setSize(el.clientWidth, el.clientHeight);	
+renderer.setSize(container.clientWidth, container.clientHeight);
 container.appendChild(renderer.domElement);
 
 const camera = defaultCamera;

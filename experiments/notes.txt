@@ -1,0 +1,2 @@
+https://stackoverflow.com/questions/36683707/how-do-shadows-work-in-three-js-r75
+https://r105.threejsfundamentals.org/threejs/lessons/threejs-shadows.html
