@@ -30,17 +30,18 @@ const scene = new THREE.Scene();
 scene.background = new THREE.Color(0xffffff);	
 scene.add(camera);
 
-let hemiLight = new THREE.HemisphereLight( 0xffffff, 0x444444 );
+const hemiLight = new THREE.HemisphereLight( 0xffffff, 0x444444 );
 hemiLight.position.set( 0, 300, 0 );
 scene.add( hemiLight );
 
-let dirLight = new THREE.DirectionalLight( 0xffffff );
+const dirLight = new THREE.DirectionalLight( 0xffffff );
 dirLight.position.set(0, 100, -55 );
 scene.add( dirLight );
 
 const clock = new THREE.Clock();
 const loadedModels = [];
 const aircraftOptions = {};
+
 let sec = clock.getDelta();
 let moveDistance = 60 * sec;
 let rotationAngle = (Math.PI / 2) * sec;

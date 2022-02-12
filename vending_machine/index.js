@@ -20,11 +20,11 @@ container.appendChild(renderer.domElement);
 const fontLoader = new THREE.FontLoader();
 
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0xfafafa); // can't be ffffff because of the bloom effect
+//scene.background = new THREE.Color(0xfafafa); // can't be ffffff because of the bloom effect
 scene.add(camera);
 
 const pointLight = new THREE.PointLight(0xffffff, 1, 0);
-pointLight.position.set(0, 8, 12);
+pointLight.position.set(0, 25, 5);
 pointLight.castShadow = true;
 pointLight.shadow.mapSize.width = 0;
 pointLight.shadow.mapSize.height = 0;
@@ -39,7 +39,7 @@ scene.add(hemiLight);
 
 const clock = new THREE.Clock();
 
-// neon glow effect stuff
+// neon glow effect stuff (Bloom effect)
 const renderScene = new THREE.RenderPass(scene, camera);
 const effectFXAA = new THREE.ShaderPass(THREE.FXAAShader);
 effectFXAA.uniforms['resolution'].value.set(1/el.clientWidth, 1/el.clientHeight);
@@ -49,16 +49,15 @@ copyShader.renderToScreen = true;
 
 const bloomPass = new THREE.UnrealBloomPass(
     new THREE.Vector2(el.clientWidth, el.clientHeight),
-    0.25, // bloom strength
-    0.1, // bloom radius
-    0, // bloom threshold
+    0.7,//0.25, // bloom strength
+    0,//0.1, // bloom radius
+    0.6, // bloom threshold
 );
 
 const composer = new THREE.EffectComposer(renderer);
 composer.setSize(el.clientWidth, el.clientHeight);
 composer.addPass(renderScene);
 composer.addPass(effectFXAA);
-composer.addPass(effectFXAA); // why twice?
 composer.addPass(bloomPass);
 composer.addPass(copyShader);
 
@@ -258,17 +257,6 @@ getModel('vending-machine-color.gltf').then((data) => {
 		
 		vendingMachine = obj;
 		scene.add(obj);
-        
-        //const cubeGeometry = new THREE.BoxGeometry(1,1,1);
-        //const material = new THREE.MeshBasicMaterial({color: 0x0000ff});
-        //material.wireframe = true;
-        //const mesh = new THREE.LineSegments(cubeGeometry, material);
-        //mesh.position.y += 0.5;
-        
-        //scene.add(mesh);
-        
-        //obj.add(mesh);
-        
 	});
 });
 

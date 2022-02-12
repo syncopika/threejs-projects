@@ -14,9 +14,9 @@ class Path {
 }
 
 class MarkerManager {
-	constructor(scene, mainCamera){
+	constructor(scene, camera){
 		this.scene = scene; // threejs scene
-		this.mainCamera = mainCamera; // the camera the user will use to move around with
+		this.camera = camera; // the camera the user will use to move around with
 		this.paths = []; // list of Path objects
 		this.selectedMarkers = [];
 		this.mode = "add"; // 'add' or 'select'
@@ -38,28 +38,44 @@ class MarkerManager {
 	// marker should be a mesh or Object3D
 	// x and y are 2d-to-3d converted coord values
 	addMarker(marker, x, y){
-		// add marker to scene
-		camera.add(marker);
+		// add marker to camera in order to be able to add the cube
+        // to the scene in the proper position relative to the camera
+        this.camera.add(marker);
 		
 		// copy camera rotation
-		marker.rotation.copy(camera.rotation);
+		marker.rotation.copy(this.camera.rotation);
 		
 		// translate cube in camera object space
-		let cubePos = new THREE.Vector3(10*x, 10*y, -10);
+		const cubePos = new THREE.Vector3(10*x, 10*y, -10);
 		marker.position.set(cubePos.x, cubePos.y, cubePos.z);
 		
 		// move it to world space
-		let cubePosWorld = new THREE.Vector3();
+		const cubePosWorld = new THREE.Vector3();
 		marker.getWorldPosition(cubePosWorld);
 		marker.position.set(cubePosWorld.x, cubePosWorld.y, cubePosWorld.z);
 		
 		// make scene the parent of the cube
-		scene.add(marker);
+		this.scene.add(marker);
 	}
 	
-	removeMarker(markerToRemove){
-		// TODO
-		// also remove from paths any path that contains this marker
+	removeMarkers(markersToRemove){
+        // not great for scaling to a large number of markers and paths
+        // but for now let's check against each existing path for each marker to remove
+        for(let marker of markersToRemove){
+            // remove from paths any path that contains this marker
+            const pathsToKeep = [];
+            for(let path of this.paths){
+                if(path.start !== marker && path.end !== marker){
+                    pathsToKeep.push(path);
+                }else{
+                    this.scene.remove(path.linkMesh);
+                }
+            }
+            this.paths = pathsToKeep;
+            
+            this.camera.remove(marker);
+            this.scene.remove(marker);
+        }
 	}
 	
 	addToSelectedMarkers(markerToAdd){
@@ -121,8 +137,8 @@ class MarkerManager {
 	selectMarker(x, y){
 		this.mouse.x = x;
 		this.mouse.y = y;
-		this.raycaster.setFromCamera(this.mouse, this.mainCamera);
-		let intersects = this.raycaster.intersectObjects(this.scene.children);
+		this.raycaster.setFromCamera(this.mouse, this.camera);
+		const intersects = this.raycaster.intersectObjects(this.scene.children);
 		for(let i = 0; i < intersects.length; i++){
 			if(intersects[i].object.objectType && intersects[i].object.objectType === "marker"){
 				return intersects[i];
@@ -142,7 +158,7 @@ class MarkerManager {
 	focusOnTarget(target){
 		const targetPosWorld = new THREE.Vector3();
 		target.getWorldPosition(targetPosWorld);
-		this.mainCamera.lookAt(targetPosWorld);
+		this.camera.lookAt(targetPosWorld);
 	}
 	
 	// https://stackoverflow.com/questions/42309715/how-to-correctly-pass-mouse-coordinates-to-webgl
@@ -215,14 +231,14 @@ class MarkerManager {
 		// the next marker's position and lerp to figure out the position we should be at
 		if(isStatic){
 			const start = currPath.start.position.clone();
-			this.mainCamera.position.copy(start); // move the camera to the start marker of this path since there is no link path to travel on
+			this.camera.position.copy(start); // move the camera to the start marker of this path since there is no link path to travel on
 		}else{
 			const lerpAlpha = elapsedTime / expectedDurationInMs;
 			
 			// use the start position of the start marker of the current path and lerp on that
 			// we clone it each time so we don't overwrite its position (if we keep lerp'ing on a position that keeps changing,
 			// the movement will be faster than we want it to be)
-			this.mainCamera.position.copy(this.startPos.clone().lerp(currPath.end.position, lerpAlpha));
+			this.camera.position.copy(this.startPos.clone().lerp(currPath.end.position, lerpAlpha));
 		}
 		
 		// make sure we're looking in the right direction!
@@ -255,10 +271,14 @@ class MarkerManager {
 	}
 	
 	ridePath(){
+        if(this.paths.length === 0){
+            return;
+        }
+        
 		// move the camera to the first marker first
 		if(this.paths[0]){
 			const firstPos = this.paths[0].start.position;
-			this.mainCamera.position.copy(firstPos);
+			this.camera.position.copy(firstPos);
 			this.startPos = firstPos.clone();
 		}
 		
@@ -375,10 +395,10 @@ let t = 0;
 renderer.domElement.addEventListener("click", (evt) => {
 	const coords = markerManager.getCoordsOnMouseClick(evt);
 	if(markerManager.mode === "add"){
-		let cube = markerManager.createMarker();
+		const cube = markerManager.createMarker();
 		markerManager.addMarker(cube, coords.x, coords.y);
 	}else{
-		let selectedMarker = markerManager.selectMarker(coords.x, coords.y);
+		const selectedMarker = markerManager.selectMarker(coords.x, coords.y);
 		if(selectedMarker){
 			if(selectedMarker.object.material.color.g === 1){
 				// select 
@@ -399,6 +419,12 @@ document.getElementById('addMarker').addEventListener('click', (evt) => {
 	evt.target.style.border = "3px solid green";
 	document.getElementById('selectMarker').style.border = "none";
 	markerManager.changeMode();
+});
+
+document.getElementById('removeMarker').addEventListener('click', (evt) => {
+	if(selectMarker){
+        markerManager.removeMarkers(markerManager.selectedMarkers);
+    }
 });
 
 document.getElementById('selectMarker').addEventListener('click', (evt) => {
