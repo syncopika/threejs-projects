@@ -49,7 +49,7 @@ const raymarchShader = {
             vec2 s1 = vec2(sdfSphere(pos1, 0.7), 0.);
             
             // sphere 2
-            vec3 pos2 = p - vec3(2.5, 1.2, 12.);
+            vec3 pos2 = p - vec3(2.5, 1.2, 20.);
             pos2.x += cos(u_time);
             pos2.y -= 0.8*sin(u_time);
             vec2 s2 = vec2(sdfSphere(pos2, 1.5), 0.);
@@ -58,7 +58,7 @@ const raymarchShader = {
             vec2 ret = opU(s1, s2);
             
             // add some more spheres
-            int numSpheres = 10;
+            int numSpheres = 8;
             float radSlice = (360. / float(numSpheres)) * (3.14159 / 180.);
             for(float i = 0.; i < float(numSpheres); i++){
                 vec3 pos = p - vec3(cos(i*radSlice), 0.5, 5.+sin(i*radSlice));
@@ -92,7 +92,7 @@ const raymarchShader = {
         vec3 raymarch(vec3 ro, vec3 rd){
             vec3 ret = vec3(1.);
             
-            int maxSteps = 90;
+            int maxSteps = 60;
             float currRayDist = 0.;
         
             for(int i = 0; i < maxSteps; i++){
@@ -119,7 +119,6 @@ const raymarchShader = {
         
         
         void main() {
-            
             vec2 st = (gl_FragCoord.xy - 0.5 * u_resolution.xy) / u_resolution.y;  //2.0*gl_FragCoord.xy/u_resolution;
             
             vec3 ro = vec3(0, 1, 0);

@@ -5,7 +5,7 @@
 // https://github.com/donmccurdy/three-gltf-viewer/blob/master/src/viewer.js
 const container = document.getElementById("container");
 const fov = 60;
-const camera = new THREE.PerspectiveCamera(fov, container.clientWidth / container.clientHeight, 0.01, 5000);
+const camera = new THREE.PerspectiveCamera(fov, container.clientWidth / container.clientHeight, 0.1, 5000);
 const keyboard = new THREEx.KeyboardState();
 const raycaster = new THREE.Raycaster();
 const loadingManager = new THREE.LoadingManager();
@@ -16,8 +16,8 @@ document.body.appendChild(stats.dom); */
 
 setupLoadingManager(loadingManager);
 const loader = new THREE.GLTFLoader(loadingManager);
-const renderer = new THREE.WebGLRenderer();
-renderer.shadowMap.enabled = true;
+const renderer = new THREE.WebGLRenderer({alpha: true});
+//renderer.shadowMap.enabled = true;
 renderer.setSize(container.clientWidth, container.clientHeight);    
 container.appendChild(renderer.domElement);
 
@@ -25,8 +25,7 @@ container.appendChild(renderer.domElement);
 // or this?: https://github.com/mrdoob/three.js/blob/dev/examples/jsm/controls/TrackballControls.js
 //const controls = new OrbitControls(defaultCamera, renderer.domElement);
 
-const scene = new THREE.Scene();
-scene.background = new THREE.Color(0xffffff);    
+const scene = new THREE.Scene(); 
 scene.add(camera);
 
 const hemiLight = new THREE.HemisphereLight(0xffffff, 0x444444);
@@ -176,7 +175,7 @@ function getModel(modelFilePath, type, name){
 loadedModels.push(getModel('../shared_assets/f-18.glb', 'player', 'f18'));
 loadedModels.push(getModel('../shared_assets/f-16.gltf', 'player', 'f16'));
 loadedModels.push(getModel('models/f-35.gltf', 'player', 'f35'));
-loadedModels.push(getModel('models/airbase-edit.gltf', 'airbase', 'bg'));
+loadedModels.push(getModel('models/airbase.gltf', 'airbase', 'bg'));
 
 function processMesh(mesh){
     
