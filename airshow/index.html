@@ -1,59 +1,60 @@
 <html>
 
-	<head>
-		<title>airshow</title>
-		<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r120/three.min.js" integrity="sha512-kgjZw3xjgSUDy9lTU085y+UCVPz3lhxAtdOVkcO4O2dKl2VSBcNsQ9uMg/sXIM4SoOmCiYfyFO/n1/3GSXZtSg==" crossorigin="anonymous"></script>
-		<script src='../libs/GLTFLoader.js'></script>
-		<script src="../libs/threex.keyboardstate.js"></script>
-		<script src="../libs/utils.js"></script>
-		<script src="../libs/stats.js"></script>
-		<script src="../libs/partykals.js"></script>
-	</head>
-	
-	<style>
-		canvas{
-			display: block;
-			border: 1px solid #000;
-		}
-		#container{
-			width: 1200px;
-			height: 800px;
-			text-align: center;
-			margin: 0 auto;
-		}
-		h3, p, li{
-			font-family: monospace;
-			text-align: center;
-		}
-		ul {
-			text-align: center;
-		}
-		
-	</style>
-	
-	<body>
-		<div id='container'>
-		</div>
-		
-		<div id='state'>
-			<p id='altitude'> current altitude: 1.0 </p>
-			<p id='speed'> current speed: 0.0 </p>
-			<p id='status'> current state: taxi </p>
-		</div>
-		
-		<div id='instructions'>
-			<h3> controls: </h3>
-			<p> press 1, 2 or 3 to change aircraft. </p> 
-			<p> w,a,s,d to move forward, left, backwards and right. </p>
-			<p> q,e to roll left/right. up and down arrow to move up and down. </p>
-			<p> p to toggle smoke. </p>
-			<p> shift to change camera view. </p>
-			<p> caps lock to switch to takeoff mode, or landing mode when flying. </p> 
-		</div>
+    <head>
+        <title>airshow</title>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r120/three.min.js" integrity="sha512-kgjZw3xjgSUDy9lTU085y+UCVPz3lhxAtdOVkcO4O2dKl2VSBcNsQ9uMg/sXIM4SoOmCiYfyFO/n1/3GSXZtSg==" crossorigin="anonymous"></script>
+        <script src='../libs/GLTFLoader.js'></script>
+        <script src="../libs/threex.keyboardstate.js"></script>
+        <script src="../libs/utils.js"></script>
+        <script src="../libs/stats.js"></script>
+        <script src="../libs/partykals.js"></script>
+    </head>
+    
+    <style>
+        canvas{
+            display: block;
+            border: 1px solid #000;
+        }
+        #container{
+            width: 1200px;
+            height: 800px;
+            text-align: center;
+            margin: 0 auto;
+            background-image: linear-gradient(lightblue, white);
+        }
+        h3, p, li{
+            font-family: monospace;
+            text-align: center;
+        }
+        ul {
+            text-align: center;
+        }
+        
+    </style>
+    
+    <body>
+        <div id='container'>
+        </div>
+        
+        <div id='state'>
+            <p id='altitude'> current altitude: 1.0 </p>
+            <p id='speed'> current speed: 0.0 </p>
+            <p id='status'> current state: taxi </p>
+        </div>
+        
+        <div id='instructions'>
+            <h3> controls: </h3>
+            <p> press 1, 2 or 3 to change aircraft. </p> 
+            <p> w,a,s,d to move forward, left, backwards and right. </p>
+            <p> q,e to roll left/right. up and down arrow to move up and down. </p>
+            <p> p to toggle smoke. </p>
+            <p> shift to change camera view. </p>
+            <p> caps lock to switch to takeoff mode, or landing mode when flying. </p> 
+        </div>
 
-	</body>
-	
-	<script src="index.js">
-	</script>
+    </body>
+    
+    <script src="index.js">
+    </script>
 
 </html>
