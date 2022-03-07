@@ -26,7 +26,6 @@ class AnimationController {
         fetch('animation_state_map.json')
             .then(response => response.json())
             .then(data => {
-
                 this.animationMap = data.states;
                 
                 // modify some clips as needed according to the animation map
@@ -48,7 +47,6 @@ class AnimationController {
         // what if you want to equip while walking or running though? :/
         this.mixer.addEventListener('finished', (evt) => {
             if(evt.action._clip.name.indexOf("DrawGun") > -1){
-                
                 if(this.currActionTimescale === -1){
                     // de-equip == this animation played backwards
                     // hide the weapon when de-equipping
@@ -92,9 +90,12 @@ class AnimationController {
     // https://stackoverflow.com/questions/57255000/how-to-animate-2-objects-with-2-different-animations-one-after-another-in-3-js
     // possibly irrelevant but a good read nonetheless:
     // https://stackoverflow.com/questions/25417547/observer-pattern-vs-mediator-pattern
+    //
+    // note that actionToPlay should be a generic action name like walk or run. 
+    // the real animation clip name is derived below using this.animationMap and 
+    // the current character state (i.e. normal (no weapon), weapon-equipped, etc.)
     playAnimation(actionToPlay, time, timeScale){
         if(this.animationMap){
-            
             if(this.animationMap[this.currState][actionToPlay] === undefined){
                 return;
             }
@@ -102,9 +103,6 @@ class AnimationController {
             this.currActionTimescale = timeScale;
             this.mixer.stopAllAction();
             
-            // note that actionToPlay should be a generic action name like walk or run. 
-            // the real animation clip name should be derived using this.animation_map and 
-            // the current character state (i.e. normal (no weapon), weapon-equipped, etc.)
             this.currAction = actionToPlay;
             actionToPlay = this.animationMap[this.currState][actionToPlay]['actionName'];
             

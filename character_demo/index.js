@@ -34,7 +34,7 @@ pointLight.position.set(0, 20, -25);
 pointLight.castShadow = true;
 scene.add(pointLight);
 
-let hemiLight = new THREE.HemisphereLight(0xffffff);
+const hemiLight = new THREE.HemisphereLight(0xffffff);
 hemiLight.position.set(0, 50, 0);
 scene.add(hemiLight);
 

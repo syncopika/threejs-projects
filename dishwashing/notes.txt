@@ -1,0 +1,2 @@
+https://stackoverflow.com/questions/28630097/flip-mirror-any-object-with-three-js
+https://discourse.threejs.org/t/cloning-a-skinned-mesh/4775/18
