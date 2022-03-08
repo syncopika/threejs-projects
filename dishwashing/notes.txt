@@ -1,0 +1,8 @@
+https://stackoverflow.com/questions/28630097/flip-mirror-any-object-with-three-js
+https://discourse.threejs.org/t/cloning-a-skinned-mesh/4775/18
+https://stackoverflow.com/questions/57381278/threejs-2d-pixels-to-3d-coordinates-conversion
+
+TODO:
+- more plates/kitchenware
+- take into account sponge distance/movement
+- performance issues with raycasting?
