@@ -3,13 +3,9 @@ const fov = 60;
 const defaultCamera = new THREE.PerspectiveCamera(fov, container.clientWidth / container.clientHeight, 0.01, 1000);
 const keyboard = new THREEx.KeyboardState();
 const raycaster = new THREE.Raycaster();
+const mouse = new THREE.Vector2();
+
 const loadingManager = new THREE.LoadingManager();
-
-/* const stats = new Stats();
-stats.showPanel(0);
-document.body.appendChild(stats.dom);
- */
-
 setupLoadingManager(loadingManager);
 
 const loader = new THREE.GLTFLoader(loadingManager);
@@ -48,6 +44,14 @@ let rightHand;
 let leftHand;
 let plate;
 let sponge;
+let spongeAttached = false;
+let plateAttached = false;
+
+// for cleaning the plate
+let lastSpongePos = null;
+let durationSoFar = 0;
+let durationTillClean = 1; // 1 sec. it takes 1 sec to decrease dirtiness
+let dirtiness = 3;
 
 function getModel(modelFilePath, side, name){
     return new Promise((resolve, reject) => {
@@ -73,8 +77,6 @@ function getModel(modelFilePath, side, name){
                         }
                         if(name === "rightHand" && child.type === "SkinnedMesh"){
                             obj.add(child.skeleton.bones[0]); // this step is important for getting the mesh to show up properly!
-                            //console.log(obj);
-                            //console.log(child.skeleton.bones[0]);
                         }else if(name === "leftHand" && child.type === "SkinnedMesh"){
                             obj.add(child.skeleton.bones[0]);
                         }
@@ -88,7 +90,6 @@ function getModel(modelFilePath, side, name){
                 // for the dishes
                 if(name === "obj"){
                 }
-                
             },
             // called while loading is progressing
             function(xhr){
@@ -120,7 +121,7 @@ Promise.all(loadedModels).then((objects) => {
             mesh.position.set(-2, -5, 0);
             mesh.scale.x *= 8;
             mesh.scale.y *= 8;
-            mesh.scale.z *= 8;
+            mesh.scale.z *= 8;;
             plate = mesh;
         }else if(mesh.name === "sponge"){
             mesh.castShadow = true;
@@ -136,6 +137,7 @@ Promise.all(loadedModels).then((objects) => {
             rightHand.translateY(-2);
             rightHand.rotateX(-Math.PI/3);
             rightHand.rotateY((3*Math.PI)/2);
+            
             const rightAxesHelper = new THREE.AxesHelper(4);
             rightHand.add(rightAxesHelper);
             
@@ -162,6 +164,7 @@ Promise.all(loadedModels).then((objects) => {
             leftHand.translateY(-2);
             leftHand.rotateX(Math.PI/3);
             leftHand.rotateY((3*Math.PI)/2);
+            
             const leftAxesHelper = new THREE.AxesHelper(4);
             leftHand.add(leftAxesHelper);
             
@@ -183,16 +186,18 @@ Promise.all(loadedModels).then((objects) => {
     })
 });
 
-function keydown(evt){
-    if(evt.keyCode === 71){
-        // g key
+function attachPlateToLeftHand(){
+    if(!plateAttached){
         const handBone = leftHand.hand;
-        //console.log(handBone);
         handBone.add(plate);
         plate.position.set(0.6, 0.8, 1.6);
         plate.rotateZ(-Math.PI/2);
-    }else if(evt.keyCode === 83){
-        // s key
+        plateAttached = true;
+    }
+}
+
+function attachSpongeToRightHand(){
+    if(!spongeAttached){
         const handBone = rightHand.hand;
         handBone.add(sponge);
         sponge.position.set(0, 0.7, 0.3);
@@ -202,6 +207,77 @@ function keydown(evt){
         animationMixerRightHand = new THREE.AnimationMixer(rightHand);
         const action = animationMixerRightHand.clipAction(animationClips["hold1"]);
         action.play();
+        
+        spongeAttached = true;
+    }
+}
+
+function detectSpongeToPlateContact(mouse){
+    // use raycast from sponge
+    // if within certain distance, consider contact made
+    // check duration of contact (TODO: take into account change in sponge distance
+    // also so that the user has to actually move the sponge to clean the plate :D)
+    // after a certain duration, we can consider the plate to be getting "cleaned"
+    // so e.g. one sponge stroke over 1 sec can lower the plate's
+    // "dirtiness" rating
+    if(dirtiness > 0){
+        raycaster.setFromCamera(mouse, camera);
+    
+        const intersects = raycaster.intersectObjects(scene.children, true); // make sure it's recursive
+        const gotPlate = intersects.filter(x => x.object.name === "plate");
+        
+        if(gotPlate.length > 0){
+            // we'll 2 results (that are the same) because a plate has 2 sides, and both
+            // get hit by the ray
+            
+            // distance always appears to be the same (~1.43) and it looks fine visually
+            // at the given distance so I'm not going to care about the distance
+            //const distFromSponge = sponge.position.distanceTo(plate.position);
+            //console.log(distFromSponge);
+            
+            // contact made so start counting duration
+            durationSoFar += clock.getDelta();
+            
+            if(!lastSpongePos){
+                lastSpongePos = sponge.position;
+            }
+            
+            // TODO: take into account sponge distance change and not just time elapsed
+            //const spongeDistDelta = sponge.position.distanceTo(lastSpongePos);
+            //console.log(spongeDistDelta);
+            
+            if(durationSoFar >= durationTillClean){
+                durationSoFar = 0; // reset duration
+                dirtiness--;
+                
+                if(dirtiness === 2){
+                    const newMat = new THREE.MeshBasicMaterial({color: 0xaa8800});
+                    plate.material = newMat;
+                }else if(dirtiness === 0){
+                    // change the plate color (probably should use texture instead of vertex paint)
+                    const newMat = new THREE.MeshBasicMaterial({color: 0xaaaa00});
+                    plate.material = newMat;
+                    
+                    alert("nice job! you cleaned the plate :D");
+                }
+            }
+            
+            lastSpongePos = sponge.position;
+        }else{
+            // reset when sponge is away from plate
+            durationSoFar = 0;
+            lastSpongePos = null;
+        }
+    }
+}
+
+function keydown(evt){
+    if(evt.keyCode === 71){
+        // g key
+        attachPlateToLeftHand();
+    }else if(evt.keyCode === 83){
+        // s key
+        attachSpongeToRightHand();
     }
 }
 
@@ -210,6 +286,42 @@ function keyup(evt){
 
 document.addEventListener("keydown", keydown);
 document.addEventListener("keyup", keyup);
+
+// allow objects in renderer to be 'clickable'
+renderer.domElement.addEventListener('mousedown', (evt) => {
+    mouse.x = (evt.offsetX / evt.target.width) * 2 - 1;
+    mouse.y = -(evt.offsetY / evt.target.height) * 2 + 1;
+    raycaster.setFromCamera(mouse, camera);
+    
+    const intersects = raycaster.intersectObjects(scene.children, true); // make sure it's recursive
+    const gotSponge = intersects.filter(x => x.object.name === "sponge");
+    const gotPlate = intersects.filter(x => x.object.name === "plate");
+    
+    if(gotSponge.length > 0){
+        attachSpongeToRightHand();
+    }else if(gotPlate.length > 0){
+        attachPlateToLeftHand();
+    }
+});
+
+renderer.domElement.addEventListener('mousemove', (evt) => {
+    if(spongeAttached){
+        mouse.x = (evt.offsetX / evt.target.width) * 2 - 1;
+        mouse.y = -(evt.offsetY / evt.target.height) * 2 + 1;
+        raycaster.setFromCamera(mouse, camera);
+        
+        const zPos = rightHand.position.z;
+        
+        // get the position that's dist along the new ray and set rightHand's position to that
+        const dist = rightHand.position.distanceTo(camera.position);
+        raycaster.ray.at(dist, rightHand.position);
+        
+        rightHand.position.z = zPos; // lock the z-axis by reusing the same x pos
+        //console.log(rightHand.position);
+        
+        detectSpongeToPlateContact(mouse);
+    }
+});
 
 
 function update(){
@@ -225,8 +337,6 @@ function update(){
 }
 
 function animate(){
-    //stats.begin();
-    //stats.end();
     requestAnimationFrame(animate);
     update();
     renderer.render(scene, camera);
