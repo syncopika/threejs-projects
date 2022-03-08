@@ -21,7 +21,7 @@ renderer.setSize(container.clientWidth, container.clientHeight);
 container.appendChild(renderer.domElement);
 
 const camera = defaultCamera;
-camera.position.set(0,4,9);
+camera.position.set(0, 4, 8);
 camera.rotateX(-Math.PI/5);
 
 const scene = new THREE.Scene();
@@ -29,12 +29,12 @@ scene.background = new THREE.Color(0xcccccc);
 scene.add(camera);
 
 const pointLight = new THREE.PointLight(0xffffff, 1, 0);
-pointLight.position.set(0, 10, 0);
+pointLight.position.set(0, 3, 0);
 pointLight.castShadow = true;
 scene.add(pointLight);
 
 const hemiLight = new THREE.HemisphereLight(0xffffff);
-hemiLight.position.set(0, 20, 0);
+hemiLight.position.set(0, 10, 0);
 scene.add(hemiLight);
 
 const clock = new THREE.Clock();
@@ -46,6 +46,8 @@ let animationClips = null;
 
 let rightHand;
 let leftHand;
+let plate;
+let sponge;
 
 function getModel(modelFilePath, side, name){
     return new Promise((resolve, reject) => {
@@ -70,7 +72,8 @@ function getModel(modelFilePath, side, name){
                             //console.log(obj);
                         }
                         if(name === "rightHand" && child.type === "SkinnedMesh"){
-                            obj.add(child.skeleton.bones[0]);
+                            obj.add(child.skeleton.bones[0]); // this step is important for getting the mesh to show up properly!
+                            //console.log(obj);
                             //console.log(child.skeleton.bones[0]);
                         }else if(name === "leftHand" && child.type === "SkinnedMesh"){
                             obj.add(child.skeleton.bones[0]);
@@ -104,6 +107,7 @@ function getModel(modelFilePath, side, name){
 loadedModels.push(getModel('models/hand-edit.gltf', '', 'rightHand'));
 loadedModels.push(getModel('models/hand-edit.gltf', '', 'leftHand'));
 loadedModels.push(getModel('models/plate.gltf', '', 'plate'));
+loadedModels.push(getModel('models/sponge.gltf', '', 'sponge'));
 
 Promise.all(loadedModels).then((objects) => {
     objects.forEach((mesh) => {
@@ -113,15 +117,23 @@ Promise.all(loadedModels).then((objects) => {
         }else if(mesh.name === "plate"){
             // objs that can be equipped
             mesh.castShadow = true;
-            mesh.position.set(0, -5, 0);
+            mesh.position.set(-2, -5, 0);
             mesh.scale.x *= 8;
             mesh.scale.y *= 8;
             mesh.scale.z *= 8;
+            plate = mesh;
+        }else if(mesh.name === "sponge"){
+            mesh.castShadow = true;
+            mesh.position.set(3, -5, 0);
+            mesh.scale.x *= 8;
+            mesh.scale.y *= 8;
+            mesh.scale.z *= 8;   
+            sponge = mesh;
         }else if(mesh.name === "rightHand"){
             mesh.castShadow = true;
-
             rightHand = mesh;
-            rightHand.translateX(3);
+            rightHand.translateX(4);
+            rightHand.translateY(-2);
             rightHand.rotateX(-Math.PI/3);
             rightHand.rotateY((3*Math.PI)/2);
             const rightAxesHelper = new THREE.AxesHelper(4);
@@ -131,14 +143,23 @@ Promise.all(loadedModels).then((objects) => {
             const action = animationMixerRightHand.clipAction(animationClips["idle"]);
             console.log(animationMixerRightHand);
             
+            for(let bone of rightHand.skeleton.bones){
+                if(bone.name === "Bone"){
+                    rightHand.hand = bone;
+                    break;
+                }
+            }
+            
             action.play();
             
             animate();
+            
         }else if(mesh.name === "leftHand"){
             mesh.castShadow = true;
             leftHand = mesh;
             leftHand.applyMatrix4(new THREE.Matrix4().makeScale(1,1,-1));
-            leftHand.translateX(2);
+            leftHand.translateX(4);
+            leftHand.translateY(-2);
             leftHand.rotateX(Math.PI/3);
             leftHand.rotateY((3*Math.PI)/2);
             const leftAxesHelper = new THREE.AxesHelper(4);
@@ -146,7 +167,14 @@ Promise.all(loadedModels).then((objects) => {
             
             animationMixerLeftHand = new THREE.AnimationMixer(leftHand);
             const action = animationMixerLeftHand.clipAction(animationClips["hold2"]);
-            console.log(animationMixerLeftHand);
+            
+            // add hand bone to equip tool with as a child of the player mesh
+            for(let bone of leftHand.skeleton.bones){
+                if(bone.name === "Bone"){
+                    leftHand.hand = bone; // set an arbitrary new property to access the hand bone
+                    break;
+                }
+            }
             
             action.play();
         }
@@ -156,6 +184,25 @@ Promise.all(loadedModels).then((objects) => {
 });
 
 function keydown(evt){
+    if(evt.keyCode === 71){
+        // g key
+        const handBone = leftHand.hand;
+        //console.log(handBone);
+        handBone.add(plate);
+        plate.position.set(0.6, 0.8, 1.6);
+        plate.rotateZ(-Math.PI/2);
+    }else if(evt.keyCode === 83){
+        // s key
+        const handBone = rightHand.hand;
+        handBone.add(sponge);
+        sponge.position.set(0, 0.7, 0.3);
+        sponge.rotateY(-Math.PI/2);
+        sponge.rotateZ(Math.PI/2);
+        
+        animationMixerRightHand = new THREE.AnimationMixer(rightHand);
+        const action = animationMixerRightHand.clipAction(animationClips["hold1"]);
+        action.play();
+    }
 }
 
 function keyup(evt){
@@ -169,8 +216,10 @@ function update(){
     const sec = clock.getDelta();
     const moveDistance = 8 * sec;
     const rotationAngle = (Math.PI / 2) * sec;
-    //leftHand.rotateX(rotationAngle);
-    //rightHand.rotateY(rotationAngle);
+    
+    //if(leftHand) leftHand.rotateY(rotationAngle);
+    //if(rightHand) rightHand.rotateY(rotationAngle);
+    
     if(animationMixerLeftHand) animationMixerLeftHand.update(sec);
     if(animationMixerRightHand) animationMixerRightHand.update(sec);
 }
