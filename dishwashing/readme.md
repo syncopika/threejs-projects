@@ -1,5 +1,5 @@
 ## dishwashing    
-ust a little idea I had. probably would be more fun in VR :)    
+just a little idea I had. probably would be more fun in VR :)    
     
 ![dishwashing demo](08-03-2022_141113.gif)    
     
