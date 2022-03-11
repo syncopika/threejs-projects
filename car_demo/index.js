@@ -13,7 +13,7 @@ setupLoadingManager(loadingManager);
 
 const loader = new THREE.GLTFLoader(loadingManager);
 
-const renderer = new THREE.WebGLRenderer();
+const renderer = new THREE.WebGLRenderer({antialias: true});
 renderer.shadowMap.enabled = true;
 renderer.setSize(container.clientWidth, container.clientHeight);    
 container.appendChild(renderer.domElement);

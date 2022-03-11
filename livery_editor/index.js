@@ -5,7 +5,7 @@ const loader = new THREE.GLTFLoader();
 const textureLoader = new THREE.TextureLoader();
 
 const container = document.getElementById("container");
-const renderer = new THREE.WebGLRenderer();
+const renderer = new THREE.WebGLRenderer({antialias: true});
 const fov = 60;
 const camera = new THREE.PerspectiveCamera(fov, container.clientWidth / container.clientHeight, 0.01, 1000);
 const scene = new THREE.Scene();
