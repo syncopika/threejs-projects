@@ -104,7 +104,6 @@ function getModel(modelFilePath, side, name){
     });
 }
 
-// https://threejs.org/docs/#api/en/textures/Texture
 loadedModels.push(getModel('models/hand-edit.gltf', '', 'rightHand'));
 loadedModels.push(getModel('models/hand-edit.gltf', '', 'leftHand'));
 loadedModels.push(getModel('models/plate.gltf', '', 'plate'));
@@ -118,6 +117,7 @@ Promise.all(loadedModels).then((objects) => {
         }else if(mesh.name === "plate"){
             // objs that can be equipped
             mesh.castShadow = true;
+            mesh.receiveShadow = true;
             mesh.position.set(-2, -5, 0);
             mesh.scale.x *= 8;
             mesh.scale.y *= 8;
@@ -125,6 +125,7 @@ Promise.all(loadedModels).then((objects) => {
             plate = mesh;
         }else if(mesh.name === "sponge"){
             mesh.castShadow = true;
+            mesh.receiveShadow = true;
             mesh.position.set(3, -5, 0);
             mesh.scale.x *= 8;
             mesh.scale.y *= 8;
@@ -138,8 +139,8 @@ Promise.all(loadedModels).then((objects) => {
             rightHand.rotateX(-Math.PI/3);
             rightHand.rotateY((3*Math.PI)/2);
             
-            const rightAxesHelper = new THREE.AxesHelper(4);
-            rightHand.add(rightAxesHelper);
+            //const rightAxesHelper = new THREE.AxesHelper(4);
+            //rightHand.add(rightAxesHelper);
             
             animationMixerRightHand = new THREE.AnimationMixer(rightHand);
             const action = animationMixerRightHand.clipAction(animationClips["idle"]);
@@ -165,8 +166,8 @@ Promise.all(loadedModels).then((objects) => {
             leftHand.rotateX(Math.PI/3);
             leftHand.rotateY((3*Math.PI)/2);
             
-            const leftAxesHelper = new THREE.AxesHelper(4);
-            leftHand.add(leftAxesHelper);
+            //const leftAxesHelper = new THREE.AxesHelper(4);
+            //leftHand.add(leftAxesHelper);
             
             animationMixerLeftHand = new THREE.AnimationMixer(leftHand);
             const action = animationMixerLeftHand.clipAction(animationClips["hold2"]);
@@ -220,7 +221,7 @@ function detectSpongeToPlateContact(mouse){
     // after a certain duration, we can consider the plate to be getting "cleaned"
     // so e.g. one sponge stroke over 1 sec can lower the plate's
     // "dirtiness" rating
-    if(dirtiness > 0){
+    if(plateAttached && dirtiness > 0){
         raycaster.setFromCamera(mouse, camera);
     
         const intersects = raycaster.intersectObjects(scene.children, true); // make sure it's recursive

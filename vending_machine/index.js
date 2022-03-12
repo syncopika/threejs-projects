@@ -19,7 +19,6 @@ container.appendChild(renderer.domElement);
 const fontLoader = new THREE.FontLoader();
 
 const scene = new THREE.Scene();
-//scene.background = new THREE.Color(0xe0e0e0); // can't be ffffff because of the bloom effect
 scene.add(camera);
 
 const pointLight = new THREE.PointLight(0xffffff, 1, 0);
@@ -58,11 +57,16 @@ composer.addPass(copyShader);
 let keysEntered = "";
 let currScreenText = null;
 let vendingMachine;
+let vendingMachineColor;
+let vendingMachineNoColor;
 let keys;
 let animationHandler;
+let animationHandlerColor;
+let animationHandlerNoColor;
 let textFont;
 let rotateMachine = false;
 let bloomOn = true;
+let colorOn = true;
 
 renderer.domElement.addEventListener('mousedown', (evt) => {
     mouse.x = (evt.offsetX / evt.target.width) * 2 - 1;
@@ -149,7 +153,42 @@ document.getElementById("rotate").addEventListener("click", (evt) => {
 
 document.getElementById("toggleBloom").addEventListener("click", (evt) => {
     bloomOn = !bloomOn;
+    if(bloomOn){
+        evt.target.textContent = "bloom off";
+    }else{
+        evt.target.textContent = "bloom on";
+    }
 });
+
+document.getElementById("switchMachine").addEventListener("click", (evt) => {
+   if(colorOn){
+       if(bloomOn){
+           document.getElementById("toggleBloom").click();
+       }
+       showRegularVendingMachine();
+       evt.target.textContent = "show color";
+   }else{
+       showNeonVendingMachine();
+       evt.target.textContent = "no color";
+   }
+   colorOn = !colorOn;
+});
+
+function showRegularVendingMachine(){
+    scene.remove(vendingMachine);
+    scene.background = new THREE.Color(0xffffff);
+    scene.add(vendingMachineNoColor);
+    vendingMachine = vendingMachineNoColor;
+    animationHandler = animationHandlerNoColor;
+}
+
+function showNeonVendingMachine(){
+    scene.remove(vendingMachine);
+    scene.background = "";
+    scene.add(vendingMachineColor);
+    vendingMachine = vendingMachineColor;
+    animationHandler = animationHandlerColor;
+}
 
 
 function AnimationHandler(mesh, animations){
@@ -231,6 +270,7 @@ getModel('vending-machine-color.gltf').then((data) => {
     
     // keep track of animations
     animationHandler = new AnimationHandler(obj, anim);
+    animationHandlerColor = animationHandler;
     
     // keep track of the buttons of the vending machine
     keys = obj.children.filter(x => x.name === "display")[0].children.filter(x => x.name.indexOf('key') > 0);
@@ -249,7 +289,23 @@ getModel('vending-machine-color.gltf').then((data) => {
         obj.scale.z *= 5;
         
         vendingMachine = obj;
+        vendingMachineColor = obj;
         scene.add(obj);
+        
+        // load in the regular vending machine
+        // wish I could just change the texture of the neon one but
+        // kinda complicated atm since the machine is in parts
+        getModel('vending-machine.gltf').then((data) => {
+            vendingMachineNoColor = data.scene;
+            animationHandlerNoColor = new AnimationHandler(vendingMachineNoColor, data.animations);
+            vendingMachineNoColor.position.x += 1;
+            vendingMachineNoColor.position.y += 0.5;
+            vendingMachineNoColor.position.z -= 0.5;
+            vendingMachineNoColor.rotation.y = Math.PI;
+            vendingMachineNoColor.scale.x *= 5;
+            vendingMachineNoColor.scale.y *= 5;
+            vendingMachineNoColor.scale.z *= 5;
+        });
     });
 });
 

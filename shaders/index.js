@@ -11,7 +11,7 @@ const camera = new THREE.PerspectiveCamera(fov, container.clientWidth / containe
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0xffffff);    
 
-const renderer = new THREE.WebGLRenderer();
+const renderer = new THREE.WebGLRenderer({antialias: true});
 renderer.setSize(container.clientWidth, container.clientHeight);
 container.appendChild(renderer.domElement);
 
