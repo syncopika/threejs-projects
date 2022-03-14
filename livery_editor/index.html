@@ -27,6 +27,12 @@
             text-align: center;
         }
         
+        #liveryDisplay{
+            position: relative;
+            margin: 0px auto;
+            overflow: hidden; /* this makes sure that the visible canvas content is only within the bounds of #canvasArea */
+        }
+        
         #liveryCanvas{
             border: 1px solid #000;
         }
@@ -48,6 +54,7 @@
         <div id='main'>
             <h3> livery customizer demo </h3>
             <p> instructions: use a mouse to draw on the canvas below containing the texture of the model! then click the 'update model' button. you can also rotate the model by clicking on the canvas of the model and moving your mouse (it has trackball controls). </p>
+            <p> <strong> currently kinda buggy </strong> but you can also paste in an image via ctrl+v and drag it into place, as well as resize it after pressing the 's' key and moving the mouse around or rotate it after pressing the 'r' key and using the mouse wheel. </p>
             <div id='container'>
             </div>
         </div>
@@ -77,5 +84,6 @@
     </body>
     
     <script src='index.js'></script>
+    <script src='pasteImageUtils.js'></script>
 
 </html>

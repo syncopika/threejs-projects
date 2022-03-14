@@ -59,6 +59,11 @@ function getModel(modelFilePath, name){
                     const canvas = document.getElementById('liveryCanvas');
                     canvas.width = texture.width;
                     canvas.height = texture.height;
+                    
+                    // make sure to explicitly set size of the canvas container
+                    canvas.parentNode.style.width = texture.width + "px";
+                    canvas.parentNode.style.height = texture.height + "px";
+                    
                     canvas.getContext('2d').drawImage(texture, 0, 0);
                             
                 }else{
@@ -69,6 +74,8 @@ function getModel(modelFilePath, name){
                             const canvas = document.getElementById('liveryCanvas');
                             canvas.width = texture.width;
                             canvas.height = texture.height;
+                            canvas.parentNode.style.width = texture.width + "px";
+                            canvas.parentNode.style.height = texture.height + "px";
                             canvas.getContext('2d').drawImage(texture, 0, 0);
                             
                             let material = child.material;
