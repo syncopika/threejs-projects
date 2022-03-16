@@ -4,7 +4,7 @@ let currModelTextureMesh = null; // use this variable to keep track of the mesh 
 const loader = new THREE.GLTFLoader();
 const textureLoader = new THREE.TextureLoader();
 
-const container = document.getElementById("container");
+const container = document.getElementById("display");
 const renderer = new THREE.WebGLRenderer({antialias: true});
 const fov = 60;
 const camera = new THREE.PerspectiveCamera(fov, container.clientWidth / container.clientHeight, 0.01, 1000);
@@ -14,7 +14,7 @@ scene.background = new THREE.Color(0xffffff);
 renderer.setSize(container.clientWidth, container.clientHeight);
 container.appendChild(renderer.domElement);
 
-camera.position.set(0, 10, 15);
+camera.position.set(0, 10, 18);
 camera.rotateOnAxis(new THREE.Vector3(1,0,0), -Math.PI/8);
 scene.add(camera);
 
@@ -190,6 +190,66 @@ document.getElementById('mosaic').addEventListener('click', (evt) => {
     const pixelData = ctx.getImageData(0, 0, canvas.width, canvas.height);
     const mosaic = mosaicFilter(pixelData);
     ctx.putImageData(mosaic, 0, 0);
+});
+
+function importTexture(){
+    fileHandler();
+    
+    // define fileHandler 
+    function fileHandler(){
+        //initiate file choosing after button click
+        let input = document.createElement('input');
+        input.type = 'file';
+        input.addEventListener('change', getFile, false);
+        input.click();
+    }
+    
+    function getFile(e){
+        const img = new Image();
+        const reader = new FileReader();
+        const file = e.target.files[0];
+        if(!file.type.match(/image.*/)){
+            console.log("not a valid image");
+            return;
+        }
+        img.onload = () => {
+            const canvas = document.getElementById("liveryCanvas");
+            const context = canvas.getContext("2d");
+            const height = canvas.height;
+            const width = canvas.width;
+            context.drawImage(img, 0, 0, width, height);
+        };
+        //after reader has loaded file, put the data in the image object.
+        reader.onloadend = function(){ 
+            img.src = reader.result;
+        };
+        //read the file as a URL
+        reader.readAsDataURL(file);
+    }
+}
+document.getElementById("importTexture").addEventListener('click', () => {
+    importTexture();
+});
+
+function exportTexture(){
+    const canvas = document.getElementById("liveryCanvas");
+    canvas.toBlob((blob) => {
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        
+        const name = prompt("please enter a name for the file");
+        if(name === null) {
+            return;
+        }else{
+            link.download = name;
+            //simulate a click on the blob's url to download it 
+            link.click();
+        }
+    });
+}
+document.getElementById("exportTexture").addEventListener('click', () => {
+    exportTexture();
 });
 
 

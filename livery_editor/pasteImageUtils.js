@@ -133,7 +133,6 @@ function addPastCanvasEventListeners(pasteCanvas){
             // https://stackoverflow.com/questions/24429830/html5-canvas-how-to-change-putimagedata-scale
             // https://stackoverflow.com/questions/23104582/scaling-an-image-to-fit-on-canvas
             const ctx = pasteCanvas.getContext('2d');
-            //ctx.clearRect(0, 0, pasteCanvas.width, pasteCanvas.height);
             
             const x = evt.pageX;
             const y = evt.pageY;
