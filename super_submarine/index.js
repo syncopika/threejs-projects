@@ -70,7 +70,9 @@ function createJellyfishGroup(mesh){
 // https://github.com/donmccurdy/three-gltf-viewer/blob/master/src/viewer.js
 const container = document.getElementById("container");
 const fov = 60;
-const defaultCamera = new THREE.PerspectiveCamera(fov, container.clientWidth / container.clientHeight, 0.01, 1000);
+const camera = new THREE.PerspectiveCamera(fov, container.clientWidth / container.clientHeight, 0.01, 1000);
+camera.position.set(0,2,0);
+
 const keyboard = new THREEx.KeyboardState();
 const raycaster = new THREE.Raycaster();
 const loadingManager = new THREE.LoadingManager();
@@ -116,9 +118,6 @@ setupGoalObjectMessage(
     "sunkenShipMessage",
     "hold space to recover important parts of the sunken ship"
 );
-
-const camera = defaultCamera;
-camera.position.set(0,2,0);
 
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x000000);    

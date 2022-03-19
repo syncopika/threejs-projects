@@ -178,9 +178,7 @@ loadedModels.push(getModel('models/f-35.gltf', 'player', 'f35'));
 loadedModels.push(getModel('models/airbase.gltf', 'airbase', 'bg'));
 
 function processMesh(mesh){
-    
     if(mesh.type === "player"){
-        
         let meshName = mesh.name;
         
         // the local axis of the imported mesh is a bit weird and not consistent with the world axis. so, to fix that,
@@ -320,6 +318,9 @@ document.addEventListener("keyup", (evt) => {
     }else if(evt.keyCode === 80){
         // 'p' key to toggle smoke
         state['smokeOn'] = !state['smokeOn'];
+    }else if(evt.keyCode === 88){
+        // x key - toggle wireframe of plane
+        thePlayer.children[0].material.wireframe = !thePlayer.children[0].material.wireframe;
     }
 });
 

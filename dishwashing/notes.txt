@@ -5,4 +5,6 @@ https://stackoverflow.com/questions/57381278/threejs-2d-pixels-to-3d-coordinates
 TODO:
 - more plates/kitchenware
 - take into account sponge distance/movement
-- performance issues with raycasting?
+- performance issues with raycasting? would web workers help?
+
+https://r105.threejsfundamentals.org/threejs/lessons/threejs-offscreencanvas.html

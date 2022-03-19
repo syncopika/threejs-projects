@@ -1,6 +1,10 @@
 const container = document.getElementById("container");
+
 const fov = 60;
-const defaultCamera = new THREE.PerspectiveCamera(fov, container.clientWidth / container.clientHeight, 0.01, 1000);
+const camera = new THREE.PerspectiveCamera(fov, container.clientWidth / container.clientHeight, 0.01, 1000);
+camera.position.set(0, 4, 8);
+camera.rotateX(-Math.PI/5);
+
 const keyboard = new THREEx.KeyboardState();
 const raycaster = new THREE.Raycaster();
 const mouse = new THREE.Vector2();
@@ -15,10 +19,6 @@ renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 renderer.setSize(container.clientWidth, container.clientHeight);    
 container.appendChild(renderer.domElement);
-
-const camera = defaultCamera;
-camera.position.set(0, 4, 8);
-camera.rotateX(-Math.PI/5);
 
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0xcccccc);
@@ -222,10 +222,7 @@ function detectSpongeToPlateContact(mouse){
     // so e.g. one sponge stroke over 1 sec can lower the plate's
     // "dirtiness" rating
     if(plateAttached && dirtiness > 0){
-        raycaster.setFromCamera(mouse, camera);
-    
-        const intersects = raycaster.intersectObjects(scene.children, true); // make sure it's recursive
-        const gotPlate = intersects.filter(x => x.object.name === "plate");
+        const gotPlate = raycaster.intersectObject(plate);
         
         if(gotPlate.length > 0){
             // we'll 2 results (that are the same) because a plate has 2 sides, and both

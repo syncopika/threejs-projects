@@ -357,7 +357,9 @@ let selectMarker = false;
 const container = document.getElementById("container");
 const fov = 60;
 
-const defaultCamera = new THREE.PerspectiveCamera(fov, container.clientWidth / container.clientHeight, 0.01, 1000);
+const camera = new THREE.PerspectiveCamera(fov, container.clientWidth / container.clientHeight, 0.01, 1000);
+camera.position.set(0,5,15);
+
 const keyboard = new THREEx.KeyboardState();
 const raycaster = new THREE.Raycaster();
 const loadingManager = new THREE.LoadingManager();
@@ -367,9 +369,6 @@ const renderer = new THREE.WebGLRenderer({antialias: true});
 renderer.shadowMap.enabled = true;
 renderer.setSize(container.clientWidth, container.clientHeight);
 container.appendChild(renderer.domElement);
-
-const camera = defaultCamera;
-camera.position.set(0,5,15);
 
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0xffffff);    
