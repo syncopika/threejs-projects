@@ -5,7 +5,6 @@ const camera = new THREE.PerspectiveCamera(fov, container.clientWidth / containe
 camera.position.set(0, 4, 8);
 camera.rotateX(-Math.PI/5);
 
-const keyboard = new THREEx.KeyboardState();
 const raycaster = new THREE.Raycaster();
 const mouse = new THREE.Vector2();
 
