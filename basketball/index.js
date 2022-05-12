@@ -1,4 +1,5 @@
 // https://sbcode.net/threejs/physics-cannonjs/
+// https://github.com/schteppe/cannon.js/tree/master/tools/threejs
 
 const container = document.getElementById("container");
 //const keyboard = new THREEx.KeyboardState();
@@ -7,6 +8,8 @@ const fov = 60;
 const camera = new THREE.PerspectiveCamera(fov, container.clientWidth / container.clientHeight, 0.01, 1000);
 camera.position.set(0, 4, 10);
 camera.rotateX(-Math.PI/10);
+const camRotation = new THREE.Quaternion();
+camera.getWorldQuaternion(camRotation);
 
 const raycaster = new THREE.Raycaster();
 const mouse = new THREE.Vector2();
@@ -71,7 +74,7 @@ scene.add(sphereMesh);
 
 // based on these CANNON shapes and bodies which abide by physics,
 // we can move the actual three.js meshes correspondingly
-const sphereShape = new CANNON.Sphere(1);
+const sphereShape = new CANNON.Sphere(0.7);
 const sphereMat = new CANNON.Material();
 const sphereBody = new CANNON.Body({material: sphereMat, mass: 0.8});
 sphereBody.addShape(sphereShape);
@@ -85,6 +88,8 @@ world.addBody(sphereBody);
 // https://github.com/schteppe/cannon.js/issues/444
 const contactMat = new CANNON.ContactMaterial(groundMat, sphereMat, {friction: 0.0,  restitution: 0.5});
 world.addContactMaterial(contactMat);
+
+const cannonDebugRenderer = new THREE.CannonDebugRenderer(scene, world);
 
 // for basketball
 // - to simplify things, make the hoop a torus
@@ -114,23 +119,35 @@ function keydown(evt){
         // spacebar
         // remember that gravity is -9.8! this affects the suitable amount for the y-axis to use.
         sphereBody.applyForce(new CANNON.Vec3(0, 30, -10), sphereBody.position);
+    }else if(evt.keyCode === 49){
+        //1 key
+        camera.position.set(0, 4, 10);
+        camera.setRotationFromQuaternion(camRotation);
+    }else if(evt.keyCode === 50){
+        //2 key
+        camera.position.set(0, 15, -8);
+        camera.rotateX(Math.PI*(3/2));
     }
+    
+    // TODO: be able to restart
 }
 document.addEventListener("keydown", keydown);
 
 function createBasketballHoop(){
     // backboard
     // https://github.com/schteppe/cannon.js/issues/403
-    const planeGeometry = new THREE.PlaneGeometry(5, 3);
+    const planeGeometry = new THREE.BoxGeometry(5, 3, 0.3);
     const material = new THREE.MeshLambertMaterial({color: 0xffffff});
     const plane = new THREE.Mesh(planeGeometry, material);
     plane.receiveShadow = true;
     plane.castShadow = true;
     plane.position.x = 0;
-    plane.position.y = 2;
-    plane.position.z = -10;
+    plane.position.y = 3;
+    plane.position.z = -9;
     scene.add(plane);
-    const planeShape = new CANNON.Box(new CANNON.Vec3(5, 3, 1));
+    
+    // !? https://stackoverflow.com/questions/26183492/cannonjs-and-three-js-one-unit-off
+    const planeShape = new CANNON.Box(new CANNON.Vec3(2.5, 1.5, 0.15));
     const backboardMat = new CANNON.Material();
     const planeBody = new CANNON.Body({material: backboardMat, mass: 0});
     // make sure the body is positioned where the mesh is.
@@ -144,18 +161,34 @@ function createBasketballHoop(){
     world.addContactMaterial(contactMat);
     
     // the hoop
-    const hoopGeometry = new THREE.TorusGeometry(0.8, 0.1, 15, 100);
+    const hoopGeometry = new THREE.TorusGeometry(0.90, 0.1, 15, 100);
     const hoopMaterial = new THREE.MeshBasicMaterial({color: 0xffa500, wireframe: true});
     const hoop = new THREE.Mesh(hoopGeometry, hoopMaterial);
     hoop.receiveShadow = true;
     hoop.castShadow = true;
-    hoop.rotateX(-Math.PI / 2);
+    hoop.rotateX(-Math.PI/2);
     hoop.position.x = 0;
     hoop.position.y = 2.3;
     hoop.position.z = -8;
     scene.add(hoop);
     
-    // TODO: set up rigidbody for hoop
+    // set up rigidbody for hoop
+    //console.log(hoop.geometry);
+    const indices = hoop.geometry.faces.map(face => [face.a, face.b, face.c]).reduce((x, acc) => acc.concat(x), []);
+    const vertices = hoop.geometry.vertices.map(vert => [vert.x, vert.y, vert.z]).reduce((x, acc) => acc.concat(x), []);
+    
+    const hoopShape = new CANNON.Trimesh(vertices, indices);
+    const hoopMat = new CANNON.Material();
+    const hoopBody = new CANNON.Body({material: hoopMat, mass: 0});
+    hoopBody.quaternion.setFromEuler(-Math.PI/2, 0, 0);
+    hoopBody.position.x = hoop.position.x;
+    hoopBody.position.y = hoop.position.y;
+    hoopBody.position.z = hoop.position.z;
+    hoopBody.addShape(hoopShape);
+    world.addBody(hoopBody);
+    
+    const hoopContactMat = new CANNON.ContactMaterial(hoopMat, sphereMat, {friction: 0.0,  restitution: 0.1});
+    world.addContactMaterial(hoopContactMat);
 }
 
 
@@ -163,6 +196,7 @@ function animate(){
     requestAnimationFrame(animate);
     renderer.render(scene, camera);
     update();
+    cannonDebugRenderer.update();
 }
 
 animate();
