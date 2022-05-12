@@ -12,6 +12,7 @@ For convenience, I opted just to pull three.js from a CDN, which requires an int
 ## acknowledgements:    
 many thanks to 
 - mr.doob for three.js and its associated libraries (e.g. TrackballControls, GLTFLoader) and all the people who have contributed to them
+- Stefan Hedman for cannon.js
 - Ronen Ness for partykals.js
 - Jerome Etienne for threex.keyboardstate.js
 - jbouny et al. for the water shader
