@@ -83,7 +83,7 @@ sphereBody.position.y = sphereMesh.position.y;
 sphereBody.position.z = sphereMesh.position.z;
 world.addBody(sphereBody);
 
-// make the sphere bounce a bit
+// make the sphere bounce a bit. smaller restitution = less bounce
 // https://github.com/pmndrs/cannon-es/blob/master/examples/bounce.html
 // https://github.com/schteppe/cannon.js/issues/444
 const contactMat = new CANNON.ContactMaterial(groundMat, sphereMat, {friction: 0.0,  restitution: 0.5});
@@ -118,7 +118,7 @@ function keydown(evt){
     if(evt.keyCode === 32){
         // spacebar
         // remember that gravity is -9.8! this affects the suitable amount for the y-axis to use.
-        sphereBody.applyForce(new CANNON.Vec3(0, 30, -10), sphereBody.position);
+        sphereBody.applyImpulse(new CANNON.Vec3(0, 0.8, -0.5), sphereBody.position);
     }else if(evt.keyCode === 49){
         //1 key
         camera.position.set(0, 4, 10);
@@ -127,9 +127,15 @@ function keydown(evt){
         //2 key
         camera.position.set(0, 15, -8);
         camera.rotateX(Math.PI*(3/2));
+    }else if(evt.keyCode === 82){
+        // r key
+        sphereBody.position.x = 0;
+        sphereBody.position.y = 4;
+        sphereBody.position.z = 7;
+        sphereBody.velocity = new CANNON.Vec3(0, 0, 0);
+        camera.position.set(0, 4, 10);
+        camera.setRotationFromQuaternion(camRotation);
     }
-    
-    // TODO: be able to restart
 }
 document.addEventListener("keydown", keydown);
 
@@ -142,7 +148,7 @@ function createBasketballHoop(){
     plane.receiveShadow = true;
     plane.castShadow = true;
     plane.position.x = 0;
-    plane.position.y = 3;
+    plane.position.y = 4;
     plane.position.z = -9;
     scene.add(plane);
     
@@ -168,7 +174,7 @@ function createBasketballHoop(){
     hoop.castShadow = true;
     hoop.rotateX(-Math.PI/2);
     hoop.position.x = 0;
-    hoop.position.y = 2.3;
+    hoop.position.y = 3.6;
     hoop.position.z = -8;
     scene.add(hoop);
     
@@ -189,6 +195,30 @@ function createBasketballHoop(){
     
     const hoopContactMat = new CANNON.ContactMaterial(hoopMat, sphereMat, {friction: 0.0,  restitution: 0.1});
     world.addContactMaterial(hoopContactMat);
+    
+    // the pole
+    const poleGeometry = new THREE.CylinderGeometry(0.2, 0.2, 7, 20); // radius top, radius bottom, height, radial segments
+    const poleMaterial = new THREE.MeshBasicMaterial({color: 0xdddddd, wireframe: true});
+    const pole = new THREE.Mesh(poleGeometry, poleMaterial);
+    pole.receiveShadow = true;
+    pole.position.x = 0;
+    pole.position.y = 0;
+    pole.position.z = -9.2;
+    scene.add(pole);
+    
+    const poleIndices = pole.geometry.faces.map(face => [face.a, face.b, face.c]).reduce((x, acc) => acc.concat(x), []);
+    const poleVertices = pole.geometry.vertices.map(vert => [vert.x, vert.y, vert.z]).reduce((x, acc) => acc.concat(x), []);
+    const poleShape = new CANNON.Trimesh(poleVertices, poleIndices);
+    const poleMat = new CANNON.Material();
+    const poleBody = new CANNON.Body({material: poleMat, mass: 0});
+    poleBody.position.x = pole.position.x;
+    poleBody.position.y = pole.position.y;
+    poleBody.position.z = pole.position.z;
+    poleBody.addShape(poleShape);
+    world.addBody(poleBody);
+    
+    const poleContactMat = new CANNON.ContactMaterial(poleMat, sphereMat, {friction: 0.0,  restitution: 0.1});
+    world.addContactMaterial(poleContactMat);
 }
 
 
