@@ -7,7 +7,7 @@ const container = document.getElementById("container");
 
 const fov = 60;
 const camera = new THREE.PerspectiveCamera(fov, container.clientWidth / container.clientHeight, 0.01, 1000);
-camera.position.set(0, 4, 10);
+camera.position.set(0, 2, 15);
 
 //const raycaster = new THREE.Raycaster();
 const mouse = new THREE.Vector2();
@@ -35,7 +35,7 @@ spotLight.shadow.mapSize.height = 1024;
 scene.add(spotLight);
 
 const pointLight = new THREE.PointLight(0xffffff, 1, 0);
-pointLight.position.set(0, 10, 5);
+pointLight.position.set(0, 15, 10);
 //pointLight.castShadow = true;
 scene.add(pointLight);
 
@@ -58,9 +58,16 @@ scene.add(plane);
 
 // set up web audio stuff
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-const analyser = audioCtx.createAnalyser();
+const analyser = audioCtx.createAnalyser(); // default fft size is 2048
 const bufferLength = analyser.frequencyBinCount;
 const buffer = new Uint8Array(bufferLength);
+
+// make a separate analyser node for frequency-domain data (it'll have a different fftSize)
+const freqAnalyser = audioCtx.createAnalyser();
+analyser.fftSize = 256;
+const freqBufferLength = freqAnalyser.frequencyBinCount;
+const freqBuffer = new Uint8Array(freqBufferLength);
+
 let audioSource;
 let audioFileUrl;
 let isPlaying = false;
@@ -77,6 +84,7 @@ function loadAudioFile(url){
         audioCtx.decodeAudioData(req.response, (buffer) => {
             if (!audioSource.buffer) audioSource.buffer = buffer;
             audioSource.connect(analyser);
+            audioSource.connect(freqAnalyser);
             audioSource.connect(audioCtx.destination);
         });
     }
@@ -92,12 +100,22 @@ function createVisualizationSphere(){
     return sphere;
 }
 
+function createVisualizationCube(){
+    const boxGeometry = new THREE.BoxGeometry(0.3, 0.3, 0.3);
+    const boxMaterial = new THREE.MeshPhongMaterial({color: '#aaff00'});
+    const box = new THREE.Mesh(boxGeometry, boxMaterial);
+    box.receiveShadow = true;
+    box.castShadow = true;
+    return box;    
+}
+
+// visualization for time domain
 const visualizationSpheres = [];
-function createVisualization(){
+function createTimeDomainVisualization(){
     const numSpheres = 50;
     const increment = Math.floor(bufferLength / numSpheres);
-    const xIncrement = 0.5 + 0.6; // 0.5 is the radius of a sphere, 0.5 for buffer space
-    let xPos = -20;
+    const xIncrement = 0.5 + 0.6; // 0.5 is the radius of a sphere, + extra buffer space between the next sphere
+    let xPos = -25;
     
     for(let i = 0; i < bufferLength; i += increment){
         const newSphere = createVisualizationSphere();
@@ -112,7 +130,7 @@ function createVisualization(){
     }
 }
 
-function updateVisualization(audioDataBuffer){
+function updateTimeDomainVisualization(audioDataBuffer){
     const increment = Math.floor(bufferLength / visualizationSpheres.length);
     
     for(let i = 0; i < visualizationSpheres.length; i++){
@@ -120,51 +138,66 @@ function updateVisualization(audioDataBuffer){
         const y = value * 10; // multiply by maximum height
         
         const sphere = visualizationSpheres[i];
-        sphere.position.lerp(new THREE.Vector3(sphere.position.x, y, sphere.position.z), 0.15);
+        sphere.position.lerp(new THREE.Vector3(sphere.position.x, y, sphere.position.z), 0.3); // lerp for smoother animation
         //sphere.position.y = y; // corresponds to amplitude from time domain
     }
 }
 
+// visualization for frequency domain
+const visualizationCubes = [];
+function createFrequencyDomainVisualization(){
+    const numCubes = 50;
+    const increment = Math.floor(freqBufferLength / numCubes);
+    const xIncrement = 0.3 + 0.2; // cube is 0.3 x 0.3 x 0.3
+    let xPos = -12;
+    
+    for(let i = 0; i < freqBufferLength; i += increment){
+        const newCube = createVisualizationCube();
+        newCube.position.x = xPos + xIncrement;
+        newCube.position.z = -20;
+        visualizationCubes.push(newCube);
+        scene.add(newCube);
+        xPos += xIncrement;
+    }
+}
+
+function updateFreqDomainVisualization(audioDataBuffer){
+    const increment = Math.floor(freqBufferLength / visualizationCubes.length);
+    for(let i = 0; i < visualizationCubes.length; i++){
+        const value = audioDataBuffer[i*increment];
+        const cube = visualizationCubes[i];
+        
+        // scale the cube based on freq bin value
+        cube.scale.lerp(new THREE.Vector3(1, value, 1), 0.2);
+    }
+}
+
 function play(){
-    isPlaying = true;
-    isStopped = false;
-    audioSource.start();
+    if(!isPlaying && audioSource){
+        isPlaying = true;
+        isStopped = false;
+        audioSource.start();
+    }
 }
 document.getElementById("play").addEventListener("click", play);
 
 function stop(){
-    isPlaying = false;
-    isStopped = true;
-    audioSource.stop();
+    if(isPlaying && audioSource){
+        isPlaying = false;
+        isStopped = true;
+        audioSource.stop();
+    }
     
     // reload since we can't restart buffer source
     if(audioFileUrl) loadAudioFile(audioFileUrl);
 }
 document.getElementById("stop").addEventListener("click", stop);
 
-function update(){
-    if(isPlaying){
-        analyser.getByteTimeDomainData(buffer);
-        updateVisualization(buffer);
-    }
-}
-
-function keydown(evt){
-    if(evt.keyCode === 32){
-        // spacebar
-    }else if(evt.keyCode === 49){
-        //1 key
-    }else if(evt.keyCode === 50){
-        //2 key
-    }else if(evt.keyCode === 82){
-        // r key
-    }
-}
-document.addEventListener("keydown", keydown);
-
 // enable audio file finding
-const openFile = (function(){
+const openFile = (function(){    
    return function(handleFileFunc){
+       if(isPlaying) return;
+       
        const fileInput = document.getElementById('fileInput');
        
        function onFileChange(evt){
@@ -201,11 +234,25 @@ document.getElementById("importAudio").addEventListener("click", () => {
     openFile(handleFile);
 });
 
+function update(){
+    if(isPlaying){
+        // time domain viz
+        analyser.fftSize = 2048;
+        analyser.getByteTimeDomainData(buffer);
+        updateTimeDomainVisualization(buffer);
+        
+        // freq domain viz
+        freqAnalyser.getByteFrequencyData(freqBuffer);
+        updateFreqDomainVisualization(freqBuffer);
+    }
+}
+
 function animate(){
     requestAnimationFrame(animate);
     renderer.render(scene, camera);
     update();
 }
 
-createVisualization();
+createTimeDomainVisualization();
+createFrequencyDomainVisualization();
 animate();
