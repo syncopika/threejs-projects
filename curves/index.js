@@ -25,6 +25,26 @@ function getModel(modelFilePath){
     });
 }
 
+function generateHelixCurvePoints(numPoints, radius, separationConstant){
+    const points = [];
+    
+    const angleSlice = (2*Math.PI)/numPoints; // in radians
+    
+    let currAngle = 0;
+    for(let i = 0; i < numPoints; i++){
+        // note we're assuming the z axis in/out of the page and x and y form a vertical plane relative to the camera
+        const y = radius * Math.cos(currAngle);
+        const z = radius * Math.sin(currAngle);
+        const x = separationConstant * currAngle;
+        
+        points.push(new THREE.Vector3(x, y, z));
+        
+        currAngle += angleSlice;
+    }
+    
+    return points;
+}
+
 function setupCurveAndGetLine(curve, closed=false){
     curve.closed = closed;
 
@@ -87,7 +107,7 @@ const plane = new THREE.Mesh(planeGeometry, planeMaterial);
 plane.rotateX(-Math.PI / 2);
 plane.receiveShadow = true;
 plane.castShadow = true;
-scene.add(plane);
+//scene.add(plane);
 
 const sphereGeometry = new THREE.SphereGeometry(0.9, 32, 16);
 const sphereMaterial = new THREE.MeshPhongMaterial();
@@ -109,7 +129,18 @@ const curve = new THREE.CatmullRomCurve3([
 ]);
 
 // more curves
-const barrelRollCurve = new THREE.CatmullRomCurve3([
+let helix = generateHelixCurvePoints(50, 2, 3);
+helix = helix.map((v) => {
+    //console.log(v.x);
+    v.x -= 9.3;
+    v.y += 0.8;
+    v.z -= 1.5;
+    return v;
+});
+const barrelRollCurve = new THREE.CatmullRomCurve3(helix);
+
+/*
+new THREE.CatmullRomCurve3([
     new THREE.Vector3(11, 0, -3),
     new THREE.Vector3(8, 3, -5),
     new THREE.Vector3(3, 5, -2),
@@ -120,6 +151,7 @@ const barrelRollCurve = new THREE.CatmullRomCurve3([
     new THREE.Vector3(-7, 3, 0),
     new THREE.Vector3(-9, 0, -2),
 ]);
+*/
 
 const curveOptions = [
     {
@@ -132,8 +164,8 @@ const curveOptions = [
     }
 ];
 
-let currCurve = curveOptions[0].curve;
-scene.add(curveOptions[0].line);
+let currCurve = curveOptions[1].curve;
+scene.add(curveOptions[1].line);
 
 
 let flow = null;
