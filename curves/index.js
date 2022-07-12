@@ -25,21 +25,24 @@ function getModel(modelFilePath){
     });
 }
 
-function generateHelixCurvePoints(numPoints, radius, separationConstant){
+function generateHelixCurvePoints(numLoops, radius, separationConstant){
     const points = [];
     
-    const angleSlice = (2*Math.PI)/numPoints; // in radians
+    const numPointsPerLoop = 30;
+    const angleSlice = (2*Math.PI)/numPointsPerLoop; // in radians
     
     let currAngle = 0;
-    for(let i = 0; i < numPoints; i++){
-        // note we're assuming the z axis in/out of the page and x and y form a vertical plane relative to the camera
-        const y = radius * Math.cos(currAngle);
-        const z = radius * Math.sin(currAngle);
-        const x = separationConstant * currAngle;
-        
-        points.push(new THREE.Vector3(x, y, z));
-        
-        currAngle += angleSlice;
+    for(let i = 0; i < numLoops; i++){
+        for(let i = 0; i < numPointsPerLoop; i++){
+            // note we're assuming the z axis in/out of the page and x and y form a vertical plane relative to the camera
+            const y = radius * Math.cos(currAngle);
+            const z = radius * Math.sin(currAngle);
+            const x = separationConstant * currAngle;
+            
+            points.push(new THREE.Vector3(x, y, z));
+            
+            currAngle += angleSlice;
+        }
     }
     
     return points;
@@ -55,7 +58,6 @@ function setupCurveAndGetLine(curve, closed=false){
     );
     
     return line;
-    //scene.add(line);
 }
 
 const container = document.getElementById("container");
@@ -107,7 +109,7 @@ const plane = new THREE.Mesh(planeGeometry, planeMaterial);
 plane.rotateX(-Math.PI / 2);
 plane.receiveShadow = true;
 plane.castShadow = true;
-//scene.add(plane);
+scene.add(plane);
 
 const sphereGeometry = new THREE.SphereGeometry(0.9, 32, 16);
 const sphereMaterial = new THREE.MeshPhongMaterial();
@@ -129,12 +131,12 @@ const curve = new THREE.CatmullRomCurve3([
 ]);
 
 // more curves
-let helix = generateHelixCurvePoints(50, 2, 3);
+let helix = generateHelixCurvePoints(3, 3.2, 1.5);
 helix = helix.map((v) => {
     //console.log(v.x);
-    v.x -= 9.3;
-    v.y += 0.8;
-    v.z -= 1.5;
+    v.x -= 13.3;
+    v.y += 6.8;
+    v.z -= 7.5;
     return v;
 });
 const barrelRollCurve = new THREE.CatmullRomCurve3(helix);
@@ -160,7 +162,7 @@ const curveOptions = [
     },
     {
         curve: barrelRollCurve,
-        line: setupCurveAndGetLine(barrelRollCurve),
+        line: setupCurveAndGetLine(barrelRollCurve, false),
     }
 ];
 
@@ -179,6 +181,8 @@ getModel("f5tiger.gltf").then((modelData) => {
     modelData.scale.x *= 1;
     modelData.scale.y *= 1;
     modelData.scale.z *= 1;
+    
+    modelData.castShadow = true;
     
     const modelAxesHelper = new THREE.AxesHelper(10);
     modelData.add(modelAxesHelper);
@@ -202,13 +206,14 @@ flow.updateCurve(0, curve);
 scene.add(flow.object3D);
 */
 
+let speed = 0.0018;
 function update(){
     if(pause) return;
     
     //if(flow) flow.moveAlongCurve(0.003);
     
     if(model){
-        t += 0.003;
+        t += speed;
         
         if(t > 1) t = 0;
         
