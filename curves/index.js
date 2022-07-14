@@ -111,6 +111,7 @@ plane.receiveShadow = true;
 plane.castShadow = true;
 scene.add(plane);
 
+/*
 const sphereGeometry = new THREE.SphereGeometry(0.9, 32, 16);
 const sphereMaterial = new THREE.MeshPhongMaterial();
 const sphere = new THREE.Mesh(sphereGeometry, sphereMaterial);
@@ -119,8 +120,8 @@ sphere.castShadow = true;
 sphere.position.x = 0;
 sphere.position.y = 4;
 sphere.position.z = 0;
-//scene.add(sphere);
-
+scene.add(sphere);
+*/
 
 // add a curve
 const curve = new THREE.CatmullRomCurve3([
@@ -133,7 +134,7 @@ const curve = new THREE.CatmullRomCurve3([
 // more curves
 let helix = generateHelixCurvePoints(3, 3.2, 1.5);
 helix = helix.map((v) => {
-    //console.log(v.x);
+    // move curve
     v.x -= 13.3;
     v.y += 6.8;
     v.z -= 7.5;
@@ -141,19 +142,28 @@ helix = helix.map((v) => {
 });
 const barrelRollCurve = new THREE.CatmullRomCurve3(helix);
 
-/*
-new THREE.CatmullRomCurve3([
-    new THREE.Vector3(11, 0, -3),
-    new THREE.Vector3(8, 3, -5),
-    new THREE.Vector3(3, 5, -2),
-    new THREE.Vector3(1, 3, 0),
-    new THREE.Vector3(-1, 0, -2),
-    new THREE.Vector3(-3, 3, -6),
-    new THREE.Vector3(-5, 5, -2),
-    new THREE.Vector3(-7, 3, 0),
-    new THREE.Vector3(-9, 0, -2),
+let helix2 = generateHelixCurvePoints(3, 0.1, 1.8);
+helix2 = helix2.map((v) => {
+    v.x -= 15.3;
+    v.y += 6.8;
+    v.z -= 7.5;
+    return v;
+});
+const aileronRollCurve = new THREE.CatmullRomCurve3(helix2);
+
+const vertLoop = new THREE.CatmullRomCurve3([
+    new THREE.Vector3(15, 3, -12),
+    new THREE.Vector3(8, 3, -12),
+    new THREE.Vector3(2, 5, -12),
+    new THREE.Vector3(-3, 8, -12),
+    new THREE.Vector3(-5, 13, -12),
+    new THREE.Vector3(-3, 16, -12),
+    new THREE.Vector3(-1, 15.8, -12),
+    new THREE.Vector3(4, 10, -8),
+    new THREE.Vector3(2, 6, -8),
+    new THREE.Vector3(-15, 3, -8)
 ]);
-*/
+
 
 const curveOptions = [
     {
@@ -163,11 +173,19 @@ const curveOptions = [
     {
         curve: barrelRollCurve,
         line: setupCurveAndGetLine(barrelRollCurve, false),
+    },
+    {
+        curve: aileronRollCurve,
+        line: setupCurveAndGetLine(aileronRollCurve, false),
+    },
+    {
+        curve: vertLoop,
+        line: setupCurveAndGetLine(vertLoop, false),
     }
 ];
 
-let currCurve = curveOptions[1].curve;
-scene.add(curveOptions[1].line);
+let currCurve = curveOptions[0];
+scene.add(currCurve.line);
 
 
 let flow = null;
@@ -218,15 +236,11 @@ function update(){
         if(t > 1) t = 0;
         
         // move the model to the next position
-        model.position.copy(currCurve.getPoint(t));
+        model.position.copy(currCurve.curve.getPoint(t));
         
         // rotate the model based on tangent to curve
-        const tangent = currCurve.getTangent(t);
+        const tangent = currCurve.curve.getTangent(t);
         model.quaternion.setFromUnitVectors(new THREE.Vector3(-1, 0, 0), tangent);
-        
-        // TODO:
-        // what if we want rotation but tangent doesn't change?
-        // probably need to interpolate rotation based on distance from start to end points
     }
 }
 
@@ -257,6 +271,37 @@ document.getElementById('pause').addEventListener('click', (evt) => {
         evt.target.textContent = 'pause';
     }
     pause = !pause;
+});
+
+document.getElementById('toggleCurve').addEventListener('click', (evt) => {
+    if(evt.target.textContent === "show curve"){
+        currCurve.line.material.opacity = 1;
+        currCurve.line.material.transparent = false;
+        evt.target.textContent = "hide curve";
+    }else{
+        evt.target.textContent = "show curve";
+        currCurve.line.material.opacity = 0;
+        currCurve.line.material.transparent = true;
+        
+    }
+});
+
+document.getElementById('selectCurve').addEventListener('change', (evt) => {
+    const curveName = evt.target.value;
+    
+    scene.remove(currCurve.line);
+    
+    if(curveName === "curved lateral loop"){
+        currCurve = curveOptions[0];
+    }else if(curveName === "aileron roll"){
+        currCurve = curveOptions[2];
+    }else if(curveName === "barrel roll"){
+        currCurve = curveOptions[1];
+    }else if(curveName === "vertical loop"){
+        currCurve = curveOptions[3];
+    }
+    
+    scene.add(currCurve.line);
 });
 
 animate();

@@ -11,4 +11,10 @@ https://stackoverflow.com/questions/28195990/how-do-i-calculate-the-coordinates-
 maneuvers to try to implement:
 - barrel roll
 - aileron roll
-- simple loop
+- simple vertical loop
+- immelmann turn
+- cuban eight
+
+add smoke
+
+maneuvers with multiple aircraft?
