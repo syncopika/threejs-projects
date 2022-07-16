@@ -10,7 +10,7 @@ function getModel(modelFilePath){
                     if(child.type === "Mesh"){
                         resolve(child);
                     }
-                });    
+                });
             },
             // called while loading is progressing
             function(xhr){
@@ -27,20 +27,6 @@ function getModel(modelFilePath){
 
 function generateHelixCurvePoints(numLoops, radius, separationConstant){
     const points = [];
-    
-    /*
-    const length = 20;
-    const aa = length*2.0*Math.PI/4;
-    for(let i = 0; i < 1; i += 0.01){
-        const y = radius * Math.cos(aa * i);
-        const z = radius * Math.sin(aa * i);
-        const x = length*i;
-        
-        points.push(new THREE.Vector3(x, y, z));
-    }
-    console.log(points);
-    */
-    
     const numPointsPerLoop = 20;
     const angleSlice = (2*Math.PI)/numPointsPerLoop; // in radians
     
@@ -64,34 +50,23 @@ function generateHelixCurvePoints(numLoops, radius, separationConstant){
 function generateImmelmannTurn(){
     let points = [
         // first create a straight line
-        new THREE.Vector3(-13, 2, -12),
-        new THREE.Vector3(-8, 2, -12),
-        new THREE.Vector3(0, 2, -12.1),
-        new THREE.Vector3(6, 2, -12.5),
+        new THREE.Vector3(-13, 2, -4),
+        new THREE.Vector3(-8, 2, -4),
+        new THREE.Vector3(0, 2, -4.1),
+        new THREE.Vector3(6, 2, -4.5),
     
         // then a vertical curve
-        new THREE.Vector3(9.3, 4, -12),
-        new THREE.Vector3(11, 9, -12),
-        new THREE.Vector3(9.4, 13, -12),
-        new THREE.Vector3(5.8, 14.9, -12),
+        new THREE.Vector3(9.3, 4, -4),
+        new THREE.Vector3(11, 9, -4),
+        new THREE.Vector3(9.4, 13, -4),
+        new THREE.Vector3(5.8, 14.9, -4),
         
         // level off
-        new THREE.Vector3(0, 15.6, -12),
-        new THREE.Vector3(-6, 15.7, -12),
-        new THREE.Vector3(-11, 15.8, -12),  
-        new THREE.Vector3(-13, 15.8, -12),          
+        new THREE.Vector3(0, 15.6, -4),
+        new THREE.Vector3(-6, 15.7, -4),
+        new THREE.Vector3(-11, 15.8, -4),  
+        new THREE.Vector3(-13, 15.8, -4),          
     ];
-    
-    /* then a small helix
-    const helix = generateHelixCurvePoints(3, 0.1, 1.2);
-    helix.forEach(v => {
-        v.x -= 14;
-        v.y += 16;
-        v.z -= 12;
-    });
-    helix.reverse();
-    points = points.concat(helix);
-    */
     
     return new THREE.CatmullRomCurve3(points);
 }
@@ -113,7 +88,8 @@ const container = document.getElementById("container");
 
 const fov = 60;
 const camera = new THREE.PerspectiveCamera(fov, container.clientWidth / container.clientHeight, 0.01, 1000);
-camera.position.set(0, 4, 10);
+const initialCameraRotation = camera.rotation.clone();
+camera.position.set(0, 4, 19);
 
 const loadingManager = new THREE.LoadingManager();
 setupLoadingManager(loadingManager);
@@ -156,10 +132,10 @@ scene.add(plane);
 
 // add a curve
 const curve = new THREE.CatmullRomCurve3([
-    new THREE.Vector3(5, 3, -8),
-    new THREE.Vector3(5, 4.2, 4),
-    new THREE.Vector3(-5, 3, 4),
-    new THREE.Vector3(-5, 4.4, -8)
+    new THREE.Vector3(5, 3, -4),
+    new THREE.Vector3(5, 4.2, 8),
+    new THREE.Vector3(-5, 3, 8),
+    new THREE.Vector3(-5, 4.4, -4)
 ]);
 
 // more curves
@@ -168,31 +144,31 @@ helix.forEach(v => {
     // translate curve
     v.x -= 13;
     v.y += 6.8;
-    v.z -= 10.5;
+    v.z -= 5.5;
 });
 const barrelRollCurve = new THREE.CatmullRomCurve3(helix);
 
 const helix2 = generateHelixCurvePoints(3, 0.1, 1.8);
 helix2.forEach(v => {
-    v.x -= 15.3;
+    v.x -= 16.5;
     v.y += 6.8;
-    v.z -= 7.5;
+    v.z -= 1.5;
 });
 const aileronRollCurve = new THREE.CatmullRomCurve3(helix2);
 
 const vertLoop = new THREE.CatmullRomCurve3([
-    new THREE.Vector3(15, 3, -12),
-    new THREE.Vector3(8, 3, -12),
-    new THREE.Vector3(2, 5, -12),
-    new THREE.Vector3(-3, 8, -12),
-    new THREE.Vector3(-5, 12, -12),
-    new THREE.Vector3(-3, 16, -12),
-    new THREE.Vector3(1, 15.4, -12),
-    new THREE.Vector3(4, 11.2, -9),
-    new THREE.Vector3(2, 6.1, -9),
-    new THREE.Vector3(-5, 4, -9),
-    new THREE.Vector3(-10, 3.4, -9),
-    new THREE.Vector3(-15, 3, -9)
+    new THREE.Vector3(15, 2, -5),
+    new THREE.Vector3(8, 2, -5),
+    new THREE.Vector3(2, 4, -5),
+    new THREE.Vector3(-3, 7, -5),
+    new THREE.Vector3(-5, 11, -5),
+    new THREE.Vector3(-3, 15, -5),
+    new THREE.Vector3(1, 14.6, -4),
+    new THREE.Vector3(4, 10.2, -4),
+    new THREE.Vector3(2, 5.1, -3),
+    new THREE.Vector3(-5, 3, -2),
+    new THREE.Vector3(-10, 2.4, -2),
+    new THREE.Vector3(-15, 2, -2)
 ]);
 
 
@@ -233,9 +209,9 @@ let pause = false;
 
 // add the object that will follow the curve
 getModel("f5tiger.gltf").then((modelData) => {
-    modelData.scale.x *= 1;
-    modelData.scale.y *= 1;
-    modelData.scale.z *= 1;
+    //modelData.scale.x *= 1;
+    //modelData.scale.y *= 1;
+    //modelData.scale.z *= 1;
     
     modelData.castShadow = true;
     
@@ -262,6 +238,7 @@ scene.add(flow.object3D);
 */
 
 let speed = 0.0018;
+let slerpFactor = 0;
 function update(){
     if(pause) return;
     
@@ -270,7 +247,10 @@ function update(){
     if(model){
         t += speed;
         
-        if(t > 1) t = 0;
+        if(t > 1){
+            t = 0;
+            slerpFactor = 0;
+        }
         
         // move the model to the next position
         model.position.copy(currCurve.curve.getPoint(t));
@@ -286,8 +266,17 @@ function update(){
         }
         
         if(currCurve == curveOptions[4]){
-            if(model.position.y < 15){
-                model.rotateX(Math.PI);
+            model.rotateX(Math.PI);
+            if(model.position.y > 15){
+                // get the quaternion we want to rotate towards
+                // this is where the plane levels off so I think the quaternion should approx be consistent
+                // all the way through the end so when we take the inverse, we should always get the same resulting
+                // end quaternion we want to rotate towards
+                const rot = model.quaternion.clone();
+                rot.inverse();
+                
+                model.quaternion.slerp(rot, slerpFactor);
+                slerpFactor += 0.015;
             }
         }
     }
@@ -295,14 +284,30 @@ function update(){
 }
 
 function keydown(evt){
-    if(evt.keyCode === 112){
-        // f1
-    }else if(evt.keyCode === 113){
-        // f2
-    }else if(evt.keyCode === 114){
-        // f3
-    }else if(evt.keyCode === 115){
-        // f4
+    if(evt.keyCode === 49){
+        // 1
+        camera.position.set(0, 4, 19);
+        camera.setRotationFromEuler(initialCameraRotation);
+    }else if(evt.keyCode === 50){
+        // 2
+        camera.position.set(18, 4, 0);
+        camera.setRotationFromEuler(initialCameraRotation);
+        camera.rotateY(Math.PI/2);
+    }else if(evt.keyCode === 51){
+        // 3
+        camera.position.set(-18, 4, 0);
+        camera.setRotationFromEuler(initialCameraRotation);
+        camera.rotateY(-Math.PI/2);
+    }else if(evt.keyCode === 52){
+        // 4
+        camera.position.set(0, 4, -19);
+        camera.setRotationFromEuler(initialCameraRotation);
+        camera.rotateY(Math.PI);
+    }else if(evt.keyCode === 53){
+        // 5
+        camera.position.set(0, 25, 0);
+        camera.setRotationFromEuler(initialCameraRotation);
+        camera.rotateX(-Math.PI/2);
     }
 }
 document.addEventListener("keydown", keydown);
