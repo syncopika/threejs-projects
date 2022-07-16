@@ -28,12 +28,25 @@ function getModel(modelFilePath){
 function generateHelixCurvePoints(numLoops, radius, separationConstant){
     const points = [];
     
-    const numPointsPerLoop = 30;
+    /*
+    const length = 20;
+    const aa = length*2.0*Math.PI/4;
+    for(let i = 0; i < 1; i += 0.01){
+        const y = radius * Math.cos(aa * i);
+        const z = radius * Math.sin(aa * i);
+        const x = length*i;
+        
+        points.push(new THREE.Vector3(x, y, z));
+    }
+    console.log(points);
+    */
+    
+    const numPointsPerLoop = 20;
     const angleSlice = (2*Math.PI)/numPointsPerLoop; // in radians
     
     let currAngle = 0;
     for(let i = 0; i < numLoops; i++){
-        for(let i = 0; i < numPointsPerLoop; i++){
+        for(let j = 0; j < numPointsPerLoop; j++){
             // note we're assuming the z axis in/out of the page and x and y form a vertical plane relative to the camera
             const y = radius * Math.cos(currAngle);
             const z = radius * Math.sin(currAngle);
@@ -48,13 +61,48 @@ function generateHelixCurvePoints(numLoops, radius, separationConstant){
     return points;
 }
 
+function generateImmelmannTurn(){
+    let points = [
+        // first create a straight line
+        new THREE.Vector3(-13, 2, -12),
+        new THREE.Vector3(-8, 2, -12),
+        new THREE.Vector3(0, 2, -12.1),
+        new THREE.Vector3(6, 2, -12.5),
+    
+        // then a vertical curve
+        new THREE.Vector3(9.3, 4, -12),
+        new THREE.Vector3(11, 9, -12),
+        new THREE.Vector3(9.4, 13, -12),
+        new THREE.Vector3(5.8, 14.9, -12),
+        
+        // level off
+        new THREE.Vector3(0, 15.6, -12),
+        new THREE.Vector3(-6, 15.7, -12),
+        new THREE.Vector3(-11, 15.8, -12),  
+        new THREE.Vector3(-13, 15.8, -12),          
+    ];
+    
+    /* then a small helix
+    const helix = generateHelixCurvePoints(3, 0.1, 1.2);
+    helix.forEach(v => {
+        v.x -= 14;
+        v.y += 16;
+        v.z -= 12;
+    });
+    helix.reverse();
+    points = points.concat(helix);
+    */
+    
+    return new THREE.CatmullRomCurve3(points);
+}
+
 function setupCurveAndGetLine(curve, closed=false){
     curve.closed = closed;
 
     const points = curve.getPoints(60);
     const line = new THREE.LineLoop(
         new THREE.BufferGeometry().setFromPoints(points),
-        new THREE.LineBasicMaterial({color: 0xffff00, /*opacity: 0, transparent: true*/})
+        new THREE.LineBasicMaterial({color: 0x00ffff})
     );
     
     return line;
@@ -66,8 +114,6 @@ const container = document.getElementById("container");
 const fov = 60;
 const camera = new THREE.PerspectiveCamera(fov, container.clientWidth / container.clientHeight, 0.01, 1000);
 camera.position.set(0, 4, 10);
-
-const mouse = new THREE.Vector2();
 
 const loadingManager = new THREE.LoadingManager();
 setupLoadingManager(loadingManager);
@@ -96,13 +142,9 @@ pointLight.position.set(2, 10, 2);
 pointLight.castShadow = true;
 scene.add(pointLight);
 
-//const hemiLight = new THREE.HemisphereLight(0xffffff);
-//hemiLight.position.set(0, 10, 0);
-//scene.add(hemiLight);
-
 const clock = new THREE.Clock();
 
-// add a plane and a sphere
+// add a plane
 const planeGeometry = new THREE.PlaneGeometry(25, 25);
 const planeMaterial = new THREE.MeshLambertMaterial({color: 0x055C9D});
 const plane = new THREE.Mesh(planeGeometry, planeMaterial);
@@ -111,17 +153,6 @@ plane.receiveShadow = true;
 plane.castShadow = true;
 scene.add(plane);
 
-/*
-const sphereGeometry = new THREE.SphereGeometry(0.9, 32, 16);
-const sphereMaterial = new THREE.MeshPhongMaterial();
-const sphere = new THREE.Mesh(sphereGeometry, sphereMaterial);
-sphere.receiveShadow = true;
-sphere.castShadow = true;
-sphere.position.x = 0;
-sphere.position.y = 4;
-sphere.position.z = 0;
-scene.add(sphere);
-*/
 
 // add a curve
 const curve = new THREE.CatmullRomCurve3([
@@ -132,22 +163,20 @@ const curve = new THREE.CatmullRomCurve3([
 ]);
 
 // more curves
-let helix = generateHelixCurvePoints(3, 3.2, 1.5);
-helix = helix.map((v) => {
-    // move curve
-    v.x -= 13.3;
+const helix = generateHelixCurvePoints(3, 3.2, 1.5);
+helix.forEach(v => {
+    // translate curve
+    v.x -= 13;
     v.y += 6.8;
-    v.z -= 7.5;
-    return v;
+    v.z -= 10.5;
 });
 const barrelRollCurve = new THREE.CatmullRomCurve3(helix);
 
-let helix2 = generateHelixCurvePoints(3, 0.1, 1.8);
-helix2 = helix2.map((v) => {
+const helix2 = generateHelixCurvePoints(3, 0.1, 1.8);
+helix2.forEach(v => {
     v.x -= 15.3;
     v.y += 6.8;
     v.z -= 7.5;
-    return v;
 });
 const aileronRollCurve = new THREE.CatmullRomCurve3(helix2);
 
@@ -156,13 +185,18 @@ const vertLoop = new THREE.CatmullRomCurve3([
     new THREE.Vector3(8, 3, -12),
     new THREE.Vector3(2, 5, -12),
     new THREE.Vector3(-3, 8, -12),
-    new THREE.Vector3(-5, 13, -12),
+    new THREE.Vector3(-5, 12, -12),
     new THREE.Vector3(-3, 16, -12),
-    new THREE.Vector3(-1, 15.8, -12),
-    new THREE.Vector3(4, 10, -8),
-    new THREE.Vector3(2, 6, -8),
-    new THREE.Vector3(-15, 3, -8)
+    new THREE.Vector3(1, 15.4, -12),
+    new THREE.Vector3(4, 11.2, -9),
+    new THREE.Vector3(2, 6.1, -9),
+    new THREE.Vector3(-5, 4, -9),
+    new THREE.Vector3(-10, 3.4, -9),
+    new THREE.Vector3(-15, 3, -9)
 ]);
+
+
+const immelmannTurn = generateImmelmannTurn();
 
 
 const curveOptions = [
@@ -181,6 +215,10 @@ const curveOptions = [
     {
         curve: vertLoop,
         line: setupCurveAndGetLine(vertLoop, false),
+    },
+    {
+        curve: immelmannTurn,
+        line: setupCurveAndGetLine(immelmannTurn, false),
     }
 ];
 
@@ -195,7 +233,6 @@ let pause = false;
 
 // add the object that will follow the curve
 getModel("f5tiger.gltf").then((modelData) => {
-    //console.log(modelData);
     modelData.scale.x *= 1;
     modelData.scale.y *= 1;
     modelData.scale.z *= 1;
@@ -239,20 +276,33 @@ function update(){
         model.position.copy(currCurve.curve.getPoint(t));
         
         // rotate the model based on tangent to curve
-        const tangent = currCurve.curve.getTangent(t);
+        const tangent = currCurve.curve.getTangent(t).normalize();
         model.quaternion.setFromUnitVectors(new THREE.Vector3(-1, 0, 0), tangent);
+    
+        // pretty hacky but not really sure of a better
+        // way to handle when I want the model rotated a certain way
+        if(currCurve != curveOptions[0]){
+            model.rotateX(Math.PI/2);
+        }
+        
+        if(currCurve == curveOptions[4]){
+            if(model.position.y < 15){
+                model.rotateX(Math.PI);
+            }
+        }
     }
+        
 }
 
 function keydown(evt){
-    if(evt.keyCode === 32){
-        // spacebar
-    }else if(evt.keyCode === 49){
-        //1 key
-    }else if(evt.keyCode === 50){
-        //2 key
-    }else if(evt.keyCode === 82){
-        // r key
+    if(evt.keyCode === 112){
+        // f1
+    }else if(evt.keyCode === 113){
+        // f2
+    }else if(evt.keyCode === 114){
+        // f3
+    }else if(evt.keyCode === 115){
+        // f4
     }
 }
 document.addEventListener("keydown", keydown);
@@ -299,9 +349,16 @@ document.getElementById('selectCurve').addEventListener('change', (evt) => {
         currCurve = curveOptions[1];
     }else if(curveName === "vertical loop"){
         currCurve = curveOptions[3];
+    }else if(curveName === "Immelmann Turn"){
+        currCurve = curveOptions[4];
     }
     
     scene.add(currCurve.line);
+});
+
+document.getElementById('speedSlider').addEventListener('input', (evt) => {
+    //console.log(evt.target.value);
+    speed = parseFloat(evt.target.value);
 });
 
 animate();
