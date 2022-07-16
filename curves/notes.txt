@@ -1,0 +1,20 @@
+https://discourse.threejs.org/t/struggling-with-paths/26486/5
+https://discourse.threejs.org/t/moving-objects-along-curve-very-slowly-with-instanced-curve-modifier-instancedflow/31233
+https://stackoverflow.com/questions/24997066/three-js-why-is-my-object-flipping-whilst-travelling-along-a-spline
+https://stackoverflow.com/questions/11179327/orient-objects-rotation-to-a-spline-point-tangent-in-three-js
+https://stackoverflow.com/questions/49604847/object-rotating-while-travelling-along-a-curve-path
+
+https://mathworld.wolfram.com/Helix.html
+https://stackoverflow.com/questions/28195990/how-do-i-calculate-the-coordinates-of-the-points-of-an-helix
+
+// TODO
+maneuvers to try to implement:
+- barrel roll
+- aileron roll
+- simple vertical loop
+- immelmann turn
+- cuban eight
+
+add smoke
+
+maneuvers with multiple aircraft?
