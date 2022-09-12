@@ -10,3 +10,4 @@ https://discourse.threejs.org/t/solved-get-dimensions-of-material-texture-image-
 https://stackoverflow.com/questions/18436431/three-js-update-texture-image
 https://discourse.threejs.org/t/updating-material-map/2381/2
 https://discourse.threejs.org/t/textures-map-incorrectly-to-gltf-object/11544/2
+https://stackoverflow.com/questions/41469623/preventdefault-and-stoppropagation-not-working-with-pointermove

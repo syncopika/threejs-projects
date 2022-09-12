@@ -65,7 +65,6 @@ function getModel(modelFilePath, name){
                     canvas.parentNode.style.height = texture.height + "px";
                     
                     canvas.getContext('2d').drawImage(texture, 0, 0);
-                            
                 }else{
                     gltf.scene.traverse((child) => {
                         if(child.type === "Mesh"){
