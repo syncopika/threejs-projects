@@ -14,6 +14,7 @@ scene.background = new THREE.Color(0xffffff);
 const renderer = new THREE.WebGLRenderer({antialias: true});
 renderer.setSize(container.clientWidth, container.clientHeight);
 container.appendChild(renderer.domElement);
+container.style.border = '1px solid #000';
 
 camera.position.set(0, 10, 18);
 const cameraZPos = camera.position.z;

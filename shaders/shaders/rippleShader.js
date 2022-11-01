@@ -34,7 +34,7 @@ const rippleShader = {
             vec3 brightness = vec3(brightness);
             float pixelDist = distance(pt, center);
             
-            if(pixelDist > 0.3){
+            if(pixelDist > 0.4){
                 gl_FragColor = vec4(1.0, 1.0, 1.0, 0.0);
                 return;
             }
