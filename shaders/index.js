@@ -14,6 +14,7 @@ scene.background = new THREE.Color(0xffffff);
 const renderer = new THREE.WebGLRenderer({antialias: true});
 renderer.setSize(container.clientWidth, container.clientHeight);
 container.appendChild(renderer.domElement);
+container.style.border = '1px solid #000';
 
 camera.position.set(0, 10, 18);
 const cameraZPos = camera.position.z;
@@ -99,6 +100,7 @@ function update(){
     animationReqId = requestAnimationFrame(update);
     controls.update();
     
+    // update time uniform variable
     if(currModel && currModel.material.uniforms){
         currModel.material.uniforms.u_time.value += 0.01;
     }
@@ -127,6 +129,10 @@ document.getElementById('selectModel').addEventListener('change', (evt) => {
         processMesh(currModel);
     }else if(evt.target.value === "scene2"){
         currModel = createRaymarchShader();
+        processMesh(currModel);
+        camera.position.z = cameraZPos;
+    }else if(evt.target.value === "ripple"){
+        currModel = updateRipple();
         processMesh(currModel);
         camera.position.z = cameraZPos;
     }else{
@@ -383,3 +389,38 @@ function updateWhaleShark(){
     
     currModel.material = newShaderMaterial;
 }
+
+// ripple shader
+function updateRipple(){
+    const width = 50;
+    const height = 50;
+    const geometry = new THREE.PlaneGeometry(width, height);
+    
+    const vertexShader = rippleShader.vertexShader;
+    const fragShader = rippleShader.fragShader;
+    showShaderCode(vertexShader, fragShader, document.getElementById('shader'));
+    
+    const uniforms = {
+        u_time: {type: "f", value: 0.0},
+        u_resolution: {type: "vec2", value: new THREE.Vector2(renderer.domElement.width, renderer.domElement.height)},
+        center: {type: "vec2", value: new THREE.Vector2(0.5, 0.5)},
+        color: {type: "vec4", value: new THREE.Vector4(0.3, 0.6, 1, 0.8)},
+        speed: {type: "f", value: 0.7},
+        density: {type: "f", value: 30},
+        strength: {type: "f", value: 2},
+        brightness: {type: "f", value: 1}
+    };
+    
+    const newShaderMaterial = new THREE.ShaderMaterial({
+        uniforms: uniforms,
+        vertexShader: vertexShader,
+        fragmentShader: fragShader,
+        side: THREE.DoubleSide,
+    });
+    
+    const mesh = new THREE.Mesh(geometry, newShaderMaterial);
+    mesh.name = "rippleScene";
+    
+    return mesh;
+}
+
