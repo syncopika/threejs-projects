@@ -46,6 +46,7 @@ const rippleShader = {
             
             vec3 gradientColor = vec3(color.r, color.g, color.b) * brightness;
             
+            // we can tune the ripple to audio data! e.g.
             // set gradient color to be a function of the freq bin delta
             // if (freqBinDelta > 0) gradientColor *= freqBinDelta * 2.0;
             
