@@ -26,7 +26,7 @@ const rippleShader = {
         uniform float brightness;
         
         void main() {
-            vec2 pt = gl_FragCoord.xy/u_resolution.xy;
+            vec2 pt = vUv.xy; //gl_FragCoord.xy/u_resolution.xy; -> this gets a fragment's position relative to viewport and not relative to mesh
             vec4 col = color;
 
             float waveSpeed = -(u_time * speed * 10.0);
@@ -34,7 +34,7 @@ const rippleShader = {
             vec3 brightness = vec3(brightness);
             float pixelDist = distance(pt, center);
             
-            if(pixelDist > 0.4){
+            if(pixelDist > 0.5){
                 gl_FragColor = vec4(1.0, 1.0, 1.0, 0.0);
                 return;
             }

@@ -103,6 +103,7 @@ function update(){
     // update time uniform variable
     if(currModel && currModel.material.uniforms){
         currModel.material.uniforms.u_time.value += 0.01;
+        //currModel.rotateOnAxis(new THREE.Vector3(0, 1, 0), 0.01);
     }
     
     renderer.render(scene, camera);
@@ -134,6 +135,7 @@ document.getElementById('selectModel').addEventListener('change', (evt) => {
     }else if(evt.target.value === "ripple"){
         currModel = updateRipple();
         processMesh(currModel);
+        currModel.rotation.x = -Math.PI / 2;
         camera.position.z = cameraZPos;
     }else{
         getModel(`../shared_assets/${evt.target.value}.gltf`, evt.target.value);
@@ -405,8 +407,8 @@ function updateRipple(){
         u_resolution: {type: "vec2", value: new THREE.Vector2(renderer.domElement.width, renderer.domElement.height)},
         center: {type: "vec2", value: new THREE.Vector2(0.5, 0.5)},
         color: {type: "vec4", value: new THREE.Vector4(0.3, 0.6, 1, 0.8)},
-        speed: {type: "f", value: 0.7},
-        density: {type: "f", value: 30},
+        speed: {type: "f", value: 0.3},
+        density: {type: "f", value: 50},
         strength: {type: "f", value: 2},
         brightness: {type: "f", value: 1}
     };
@@ -417,6 +419,8 @@ function updateRipple(){
         fragmentShader: fragShader,
         side: THREE.DoubleSide,
     });
+    
+    //const mat = new THREE.MeshLambertMaterial({color: '#cccddd'});
     
     const mesh = new THREE.Mesh(geometry, newShaderMaterial);
     mesh.name = "rippleScene";

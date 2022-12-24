@@ -119,7 +119,7 @@ const raymarchShader = {
         
         
         void main() {
-            vec2 st = (gl_FragCoord.xy - 0.5 * u_resolution.xy) / u_resolution.y;  //2.0*gl_FragCoord.xy/u_resolution;
+            vec2 st = (gl_FragCoord.xy - 0.5 * u_resolution.xy) / u_resolution.y; // TODO: how to get frag coord relative to plane mesh and not canvas?
             
             vec3 ro = vec3(0, 1, 0);
             vec3 rd = normalize(vec3(st.x, st.y, 1));
