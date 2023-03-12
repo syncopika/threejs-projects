@@ -1,5 +1,5 @@
-# new_project_template  
+# Bb trumpet  
     
-Talk about your new project.    
+a 3D Bb trumpet! You can move the valves with the 1, 2 and 3 keyboard keys or play a demo that plays notes according to their fingerings.    
     
-![show a gif or screenshot here!]()    
+![gif of demo](demo.gif)    
