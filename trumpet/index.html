@@ -1,0 +1,49 @@
+<!doctype html>
+<html>
+    <head>
+        <title> Bb trumpet </title>
+        
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r120/three.min.js" integrity="sha512-kgjZw3xjgSUDy9lTU085y+UCVPz3lhxAtdOVkcO4O2dKl2VSBcNsQ9uMg/sXIM4SoOmCiYfyFO/n1/3GSXZtSg==" crossorigin="anonymous"></script>
+        <script src="../libs/utils.js"></script>
+        <script src="../libs/GLTFLoader.js"></script>
+        <script src="../libs/threex.keyboardstate.js"></script>
+
+        <style>
+            body {
+                text-align: center;
+                font-family: monospace;
+            }
+            
+            #container{
+                width: 1200px;
+                height: 800px;
+                text-align: center;
+                margin: 0 auto;
+            }
+        </style>
+    </head>
+
+    <body>
+        <h3> a Bb trumpet </h3>
+
+        <div id='container'>
+        </div>
+        
+        <p id='status'></p>
+        
+        <select id='selectExamplePiece'>
+            <option value='examplePiece1'>example piece 1</option>
+            <option value='examplePiece2'>example piece 2</option>
+        </select>
+        <button id='playExample'>play</button>
+        
+        <p> instructions: </p>
+        <p> use keys 1, 2 and 3 on the keyboard to move the valves of the trumpet! </p>
+        <p> in this demo I'm using shape keys to make the valves 'move'. </p>
+
+    </body>
+
+    <script type="module" src="index.js">
+    </script>
+
+</html>
