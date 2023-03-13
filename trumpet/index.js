@@ -1,4 +1,4 @@
-// new project template
+// trumpet
 
 const container = document.getElementById("container");
 
@@ -73,19 +73,19 @@ let readyToPlay = false;
 function loadInNotes(){
     document.getElementById('status').textContent = "loading in notes...";
     const notesToLoad = [
-        "piano-C4",
-        "piano-Cs4",
-        "piano-D4",
-        "piano-Ds4",
-        "piano-E4",
-        "piano-F4",
-        "piano-Fs4",
-        "piano-G4",
-        "piano-Gs4",
-        "piano-A4",
-        "piano-Bb4",
-        "piano-B4",
-        "piano-C5",
+        "c4",
+        "cs4",
+        "d4",
+        "ds4",
+        "e4",
+        "f4",
+        "fs4",
+        "g4",
+        "gs4",
+        "a4",
+        "bb4",
+        "b4",
+        "c5",
     ];
     let totalNotes = notesToLoad.length;
     notesToLoad.forEach(note => {
@@ -197,7 +197,39 @@ function playExamplePiece1(){
         {
             'note': 'c5',
             'length': 500,
-        }
+        },
+        {
+            'note': 'c5',
+            'length': 400,
+        },
+        {
+            'note': 'b4',
+            'length': 400,
+        },
+        {
+            'note': 'a4',
+            'length': 400,
+        },
+        {
+            'note': 'g4',
+            'length': 400,
+        },
+        {
+            'note': 'f4',
+            'length': 400,
+        },
+        {
+            'note': 'e4',
+            'length': 400,
+        },
+        {
+            'note': 'd4',
+            'length': 400,
+        },
+        {
+            'note': 'c4',
+            'length': 400,
+        },
     ];
     play(piece);
 }

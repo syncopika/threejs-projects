@@ -1,0 +1,5 @@
+TODO:
+- add ability to play note on keypress with given valve combo + given octave
+- more piece ideas
+- add a mouthpiece
+- C trumpet? different finishes?
