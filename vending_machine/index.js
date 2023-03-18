@@ -19,6 +19,7 @@ container.appendChild(renderer.domElement);
 const fontLoader = new THREE.FontLoader();
 
 const scene = new THREE.Scene();
+scene.background = new THREE.Color(0xffffff);
 scene.add(camera);
 
 const pointLight = new THREE.PointLight(0xffffff, 1, 0);
@@ -65,8 +66,8 @@ let animationHandlerColor;
 let animationHandlerNoColor;
 let textFont;
 let rotateMachine = false;
-let bloomOn = true;
-let colorOn = true;
+let bloomOn = false;
+let colorOn = false;
 
 renderer.domElement.addEventListener('mousedown', (evt) => {
     mouse.x = (evt.offsetX / evt.target.width) * 2 - 1;
@@ -184,7 +185,7 @@ function showRegularVendingMachine(){
 
 function showNeonVendingMachine(){
     scene.remove(vendingMachine);
-    scene.background = "";
+    scene.background = new THREE.Color(0x000000);
     scene.add(vendingMachineColor);
     vendingMachine = vendingMachineColor;
     animationHandler = animationHandlerColor;
@@ -264,47 +265,43 @@ function getModel(modelFilePath, side, name){
     });
 }
 
-getModel('vending-machine-color.gltf').then((data) => {
-    const obj = data.scene;
-    const anim = data.animations;
-    
-    // keep track of animations
-    animationHandler = new AnimationHandler(obj, anim);
-    animationHandlerColor = animationHandler;
+function setVendingMachine(obj){
+    obj.position.x += 1;
+    obj.position.y += 0.5;
+    obj.position.z -= 0.5;
+    obj.rotation.y = Math.PI;
+    obj.scale.x *= 5;
+    obj.scale.y *= 5;
+    obj.scale.z *= 5;
+}
+
+getModel('vending-machine.gltf').then(data => {
+    vendingMachineNoColor = data.scene;
+    animationHandlerNoColor = new AnimationHandler(vendingMachineNoColor, data.animations);
+    animationHandler = animationHandlerNoColor;
     
     // keep track of the buttons of the vending machine
-    keys = obj.children.filter(x => x.name === "display")[0].children.filter(x => x.name.indexOf('key') > 0);
+    keys = data.scene.children.filter(x => x.name === "display")[0].children.filter(x => x.name.indexOf('key') > 0);
     
     // load font for displaying text
     fontLoader.load("helvetiker_bold.typeface.json", (tex) => {
         textFont = tex;
         
-        // place vending machine
-        obj.position.x += 1;
-        obj.position.y += 0.5;
-        obj.position.z -= 0.5;
-        obj.rotation.y = Math.PI;
-        obj.scale.x *= 5;
-        obj.scale.y *= 5;
-        obj.scale.z *= 5;
+        setVendingMachine(vendingMachineNoColor);
         
-        vendingMachine = obj;
-        vendingMachineColor = obj;
-        scene.add(obj);
+        vendingMachine = vendingMachineNoColor;
+        scene.add(vendingMachineNoColor);
         
         // load in the regular vending machine
         // wish I could just change the texture of the neon one but
         // kinda complicated atm since the machine is in parts
-        getModel('vending-machine.gltf').then((data) => {
-            vendingMachineNoColor = data.scene;
-            animationHandlerNoColor = new AnimationHandler(vendingMachineNoColor, data.animations);
-            vendingMachineNoColor.position.x += 1;
-            vendingMachineNoColor.position.y += 0.5;
-            vendingMachineNoColor.position.z -= 0.5;
-            vendingMachineNoColor.rotation.y = Math.PI;
-            vendingMachineNoColor.scale.x *= 5;
-            vendingMachineNoColor.scale.y *= 5;
-            vendingMachineNoColor.scale.z *= 5;
+        getModel('vending-machine-color.gltf').then(data => {
+            const obj = data.scene;
+            
+            vendingMachineColor = obj;
+            animationHandlerColor = new AnimationHandler(obj, data.animations);
+    
+            setVendingMachine(obj);
         });
     });
 });

@@ -68,9 +68,9 @@ function getModel(modelFilePath, name){
                     // handle racetrack
                     gltf.scene.traverse((child) => {
                         if(child.type === "Mesh"){
-                            child.material.shininess = 0; // doesn't seem to work? maybe a lighting issue?
+                            child.material.shininess = 0;
+                            child.material.roughness = 1;
                             child.name = name;
-                            //console.log(child.material); //check doubleface
                             resolve(child);
                         }
                     });
