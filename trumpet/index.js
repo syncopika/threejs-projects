@@ -29,7 +29,6 @@ spotLight.shadow.mapSize.height = 1024;
 scene.add(spotLight);
 
 const valves = {1: null, 2: null, 3: null};
-//let currentValveCombo = {};
 
 const noteToValveComboMap = {
     'a': '12',
@@ -48,13 +47,29 @@ const noteToValveComboMap = {
     'gs': '23', // g sharp
 };
 
+// bit of a tricky problem. different notes within the same octave
+// can have the same fingering, e.g. F and Bb are both played with the 1st valve down.
+// G can be played open, but that's the same as C. alternatively you can do 1 and 3 but then
+// D also shares that fingering. :/
+// is it possible to create a sensible system to differentiate notes with the same fingering?
+const valveToNoteComboMap = {
+    '12': 'e',
+    '23': 'gs',
+    '1': 'f',
+    '2': 'b',
+    '0': 'c',
+    '123': 'cs',
+    '13': 'd',
+    '3': 'a',
+};
+
 function setValves(note){
     const valveCombo = noteToValveComboMap[note];
     if(!valveCombo) return;
     
-    let firstOpen = !valveCombo.includes('1');
-    let secondOpen = !valveCombo.includes('2');
-    let thirdOpen = !valveCombo.includes('3');
+    const firstOpen = !valveCombo.includes('1');
+    const secondOpen = !valveCombo.includes('2');
+    const thirdOpen = !valveCombo.includes('3');
     
     valves[1].morphTargetInfluences[0] = firstOpen ? 0.0 : 1.0;
     valves[2].morphTargetInfluences[0] = secondOpen ? 0.0 : 1.0;
@@ -86,6 +101,14 @@ function loadInNotes(){
         "bb4",
         "b4",
         "c5",
+        "cs5",
+        "d5",
+        "e5",
+        "f5",
+        "g5",
+        "gs5",
+        "a5",
+        "b5",
     ];
     let totalNotes = notesToLoad.length;
     notesToLoad.forEach(note => {
@@ -107,10 +130,10 @@ function loadInNotes(){
                     document.getElementById('status').textContent = "";
                     readyToPlay = true;
                     
-                    console.log(noteBufferMap);
+                    //console.log(noteBufferMap);
                 }
             });
-        });    
+        });
     });
 }
 loadInNotes();
@@ -131,7 +154,7 @@ function play(piece){
         piece.forEach((note, index) => {
             // set up buffer nodes
             const newBufNode = audioContext.createBufferSource();
-            newBufNode.buffer = noteBufferMap[note.note].buffer;
+            if(note.note) newBufNode.buffer = noteBufferMap[note.note].buffer;
             newBufNode.connect(gainNode);
             
             // schedule note (use seconds for start time)
@@ -292,6 +315,107 @@ function playExamplePiece2(){
     play(piece);
 }
 
+// excerpt of 'nostalgia' by fats navarro
+function playNostalgiaExcerpt(){
+    const piece = [
+        {
+            'note': '',
+            'length': 80,
+        },
+        {
+            'note': 'cs5',
+            'length': 200, //ms
+        },
+        {
+            'note': 'e5',
+            'length': 160,
+        },
+        {
+            'note': '',
+            'length': 60,
+        },
+        {
+            'note': 'cs5',
+            'length': 200,
+        },
+        {
+            'note': 'e5',
+            'length': 260,
+        },
+        {
+            'note': 'e5',
+            'length': 200,
+        },
+        {
+            'note': '',
+            'length': 120,
+        },
+        {
+            'note': 'cs5',
+            'length': 220,
+        },
+        {
+            'note': 'e5',
+            'length': 200,
+        },
+        {
+            'note': '',
+            'length': 240,
+        },
+        {
+            'note': 'cs5',
+            'length': 200,
+        },
+        {
+            'note': 'fs4',
+            'length': 460,
+        },
+        {
+            'note': 'e4',
+            'length': 200,
+        },
+        // triplet
+        {
+            'note': 'fs4',
+            'length': 100,
+        },
+        {
+            'note': 'g4',
+            'length': 100,
+        },
+        {
+            'note': 'fs4',
+            'length': 100,
+        },
+        // end triplet
+        {
+            'note': 'e4',
+            'length': 200,
+        },
+        {
+            'note': 'gs4',
+            'length': 480,
+        },
+        {
+            'note': 'e4',
+            'length': 250,
+        },
+        {
+            'note': 'cs4',
+            'length': 210,
+        },
+        {
+            'note': 'gs4',
+            'length': 240,
+        },
+        {
+            'note': 'fs4',
+            'length': 520,
+        }
+    ];
+    play(piece);
+}
+
 function getModel(modelFilePath){
     return new Promise((resolve, reject) => {
         loader.load(
@@ -332,14 +456,11 @@ function update(){
 }
 
 function keydown(evt){
-    if(evt.keyCode === 49){
-        //1 key
+    if(evt.key === '1'){
         valves[1].morphTargetInfluences[0] = 1.0;
-    }else if(evt.keyCode === 50){
-        //2 key
+    }else if(evt.key === '2'){
         valves[2].morphTargetInfluences[0] = 1.0;
-    }else if(evt.keyCode === 51){
-        //3 key
+    }else if(evt.key === '3'){
         valves[3].morphTargetInfluences[0] = 1.0;
     }
     
@@ -353,15 +474,40 @@ function keydown(evt){
 document.addEventListener("keydown", keydown);
 
 function keyup(evt){
-    if(evt.keyCode === 49){
-        //1 key
+    if(evt.key === '1'){
         valves[1].morphTargetInfluences[0] = 0.0;
-    }else if(evt.keyCode === 50){
-        //2 key
+    }else if(evt.key === '2'){
         valves[2].morphTargetInfluences[0] = 0.0;
-    }else if(evt.keyCode === 51){
-        //3 key
+    }else if(evt.key === '3'){
         valves[3].morphTargetInfluences[0] = 0.0;
+    }
+    
+    if(evt.key === 'Shift'){
+        // evaluate the current valves that are down and play corresponding note
+        let valveCombo = "";
+        valveCombo += valves[1].morphTargetInfluences[0] > 0 ? "1" : "";
+        valveCombo += valves[2].morphTargetInfluences[0] > 0 ? "2" : "";
+        valveCombo += valves[3].morphTargetInfluences[0] > 0 ? "3" : "";
+        if(valveCombo === "") valveCombo = "0";
+        
+        const note = valveToNoteComboMap[valveCombo];
+        const octave = document.getElementById('octave').value;
+        
+        audioContext.resume().then(() => {
+            // set up buffer nodes
+            const newBufNode = audioContext.createBufferSource();
+            newBufNode.buffer = noteBufferMap[(note+octave)].buffer;
+            newBufNode.connect(gainNode);
+            
+            // schedule note (use seconds for start time)
+            const start = audioContext.currentTime;
+            const end = start + 0.5;
+            gainNode.gain.setTargetAtTime(1.5, start, 0.0045);
+            gainNode.gain.setTargetAtTime(0.0, (end - .0025), 0.0070);
+            
+            newBufNode.start(start);
+            newBufNode.stop(end);
+        });
     }
 }
 document.addEventListener("keyup", keyup);
@@ -373,6 +519,7 @@ document.getElementById('playExample').addEventListener('click', () => {
     if(readyToPlay){
         if(selectedExample === "examplePiece1") playExamplePiece1();
         else if(selectedExample === "examplePiece2") playExamplePiece2();
+        else if(selectedExample === "nostalgia-excerpt") playNostalgiaExcerpt();
     }
 });
 
