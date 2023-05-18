@@ -20,6 +20,29 @@
                 text-align: center;
                 margin: 0 auto;
             }
+            
+            #displayCard {
+                display: none;
+                width: 500px;
+                height: 500px;
+                border: 1px solid #000;
+                text-align: center;
+                font-family: sans-serif;
+                position: absolute;
+                left: 50%;
+                top: 40%;
+                transform: translate(-50%, -50%);
+                background-color: #fff;
+                z-index: 100;
+                opacity: 95%;
+                padding: 10px;
+            }
+            
+            #displayItemRenderer {
+                height: 300px;
+                width: 300px;
+                margin: 0 auto;
+            }
         </style>
     </head>
 
@@ -29,8 +52,17 @@
         <div id='container'>
         </div>
         
+        <br />
+        
         <button id='left'><<</button>
         <button id='right'>>></button>
+        
+        <div id='displayCard'>
+            <h1 id='displayCardHeader'>selected item</h1>
+            <div id='displayItemRenderer'></div>
+            <p id='displayCardDescription'>description of selected item goes here</p>
+            <button id='displayCardCloseBtn'>close</button>
+        </div>
         
         <p> instructions and stuff </p>
 
