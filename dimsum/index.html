@@ -1,0 +1,73 @@
+<!doctype html>
+<html>
+    <head>
+        <title> dimsum </title>
+        
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r120/three.min.js" integrity="sha512-kgjZw3xjgSUDy9lTU085y+UCVPz3lhxAtdOVkcO4O2dKl2VSBcNsQ9uMg/sXIM4SoOmCiYfyFO/n1/3GSXZtSg==" crossorigin="anonymous"></script>
+        <script src="../libs/utils.js"></script>
+        <script src="../libs/GLTFLoader.js"></script>
+        <script src="../libs/threex.keyboardstate.js"></script>
+
+        <style>
+            body {
+                text-align: center;
+                font-family: monospace;
+            }
+            
+            #container{
+                width: 1200px;
+                height: 800px;
+                text-align: center;
+                margin: 0 auto;
+            }
+            
+            #displayCard {
+                display: none;
+                width: 500px;
+                height: 500px;
+                border: 1px solid #000;
+                text-align: center;
+                font-family: sans-serif;
+                position: absolute;
+                left: 50%;
+                top: 40%;
+                transform: translate(-50%, -50%);
+                background-color: #fff;
+                z-index: 100;
+                padding: 10px;
+            }
+            
+            #displayItemRenderer {
+                height: 300px;
+                width: 380px;
+                margin: 0 auto;
+            }
+        </style>
+    </head>
+
+    <body>
+        <h3> dim sum </h3>
+
+        <div id='container'>
+        </div>
+        
+        <br />
+        
+        <button id='left'><<</button>
+        <button id='right'>>></button>
+        
+        <div id='displayCard'>
+            <h1 id='displayCardHeader'>selected item</h1>
+            <div id='displayItemRenderer'></div>
+            <p id='displayCardDescription'>description of selected item goes here</p>
+            <button id='displayCardCloseBtn'>close</button>
+        </div>
+        
+        <p> click on a food to get more info about it! </p>
+
+    </body>
+
+    <script type="module" src="index.js">
+    </script>
+
+</html>
