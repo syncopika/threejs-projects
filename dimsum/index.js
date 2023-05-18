@@ -3,7 +3,7 @@
 const container = document.getElementById("container");
 
 const fov = 55;
-const camera = new THREE.PerspectiveCamera(fov, container.clientWidth / container.clientHeight, 0.01, 1000);
+const camera = new THREE.PerspectiveCamera(fov, container.clientWidth / container.clientHeight, 0.01, 2000);
 camera.position.set(0, 30, 50);
 camera.rotateX(-Math.PI / 6);
 
@@ -18,7 +18,7 @@ const loader = new THREE.GLTFLoader(loadingManager);
 const renderer = new THREE.WebGLRenderer({antialias: true});
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-renderer.setSize(container.clientWidth, container.clientHeight);    
+renderer.setSize(container.clientWidth, container.clientHeight); 
 container.appendChild(renderer.domElement);
 
 const scene = new THREE.Scene();
@@ -269,16 +269,16 @@ function displaySelectedItemInfo(mesh){
     const description = document.getElementById('displayCardDescription');
     if(mesh.name.includes('siumai')){
         header.textContent = "siu mai (燒賣)";
-        description.textContent = "a dumpling whose filling consists of pork and shrimp. it is topped with fish eggs sometimes.";
+        description.textContent = "A dumpling whose filling consists of pork and shrimp. It is topped with crab roe or minced carrot sometimes.";
     }else if(mesh.name.includes('hagao')){
         header.textContent = "ha gao (蝦餃)";
-        description.textContent = "a dumpling with a translucent wrapper and shrimp filling";
+        description.textContent = "A dumpling with a translucent wrapper and shrimp filling.";
     }else if(mesh.name.includes('dantat')){
         header.textContent = "dan ta (蛋撻)";
-        description.textContent = "a custard tart";
+        description.textContent = "An eggy custard tart with a flaky crust.";
     }else if(mesh.name.includes('chasiubao')){
         header.textContent = "cha siu bao (叉燒包)";
-        description.textContent = "a bun with a sweet meat filling";
+        description.textContent = "A bun with a sweet, roasted pork filling.";
     }
 }
 document.getElementById('displayCardCloseBtn').addEventListener('click', () => {
