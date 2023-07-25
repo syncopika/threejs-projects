@@ -1,10 +1,11 @@
 https://stackoverflow.com/questions/28630097/flip-mirror-any-object-with-three-js
 https://discourse.threejs.org/t/cloning-a-skinned-mesh/4775/18
 https://stackoverflow.com/questions/57381278/threejs-2d-pixels-to-3d-coordinates-conversion
+https://stackoverflow.com/questions/47799977/three-js-raycasting-performance
+https://stackoverflow.com/questions/42232001/three-js-performance-very-slow-using-onmousemove-with-raycaster
 
 TODO:
 - more plates/kitchenware
 - take into account sponge distance/movement
-- performance issues with raycasting? would web workers help?
 
 https://r105.threejsfundamentals.org/threejs/lessons/threejs-offscreencanvas.html
