@@ -221,7 +221,10 @@ function detectSpongeToPlateContact(mouse){
     // so e.g. one sponge stroke over 1 sec can lower the plate's
     // "dirtiness" rating
     if(plateAttached && dirtiness > 0){
+        // https://stackoverflow.com/questions/47799977/three-js-raycasting-performance
+        //console.time('raycast: ');
         const gotPlate = raycaster.intersectObject(plate);
+        //console.timeEnd('raycast: ');
         
         if(gotPlate.length > 0){
             // we'll 2 results (that are the same) because a plate has 2 sides, and both
@@ -301,8 +304,16 @@ renderer.domElement.addEventListener('mousedown', (evt) => {
     }
 });
 
+let lastMove = Date.now();
 renderer.domElement.addEventListener('mousemove', (evt) => {
     if(spongeAttached){
+        // https://stackoverflow.com/questions/42232001/three-js-performance-very-slow-using-onmousemove-with-raycaster
+        if(Date.now() - lastMove < 21){
+            return;
+        }
+
+        lastMove = Date.now();
+        
         mouse.x = (evt.offsetX / evt.target.width) * 2 - 1;
         mouse.y = -(evt.offsetY / evt.target.height) * 2 + 1;
         raycaster.setFromCamera(mouse, camera);
@@ -313,7 +324,7 @@ renderer.domElement.addEventListener('mousemove', (evt) => {
         const dist = rightHand.position.distanceTo(camera.position);
         raycaster.ray.at(dist, rightHand.position);
         
-        rightHand.position.z = zPos; // lock the z-axis by reusing the same x pos
+        rightHand.position.z = zPos; // lock the z-axis by reusing the same z pos
         //console.log(rightHand.position);
         
         detectSpongeToPlateContact(mouse);
