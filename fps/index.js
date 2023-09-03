@@ -51,12 +51,15 @@ let firstPersonViewOn = false;
 let sideViewOn = false;
 //let playerBody;
 
+const cannonBodies = [];
+const projectiles = new Set();
+
 const world = new CANNON.World();
 world.gravity.set(0, -9.82, 0);
 
 const cannonDebugRenderer = new THREE.CannonDebugRenderer(scene, world);
 
-function addCannonBox(width, height, length, x, y, z, mass=0){
+function addCannonBox(mesh, width, height, length, x, y, z, mass=0){
     const box = new CANNON.Box(new CANNON.Vec3(width, height, length));
     const mat = new CANNON.Material();
     const body = new CANNON.Body({material: mat, mass});
@@ -68,11 +71,22 @@ function addCannonBox(width, height, length, x, y, z, mass=0){
     body.addShape(box);
     world.addBody(body);
     
-    // detect collision?
+    body.mesh = mesh; // associate mesh with body (not sure there's an official way of doing this atm but it works at least?
+    
+    // detect collision
     // https://stackoverflow.com/questions/31750026/cannon-js-registering-collision-without-colliding
     body.addEventListener("collide", (e) => {
-        // TODO: associate mesh with this body
-        console.log("got a collision");
+        const collidingObj = e.body.mesh;
+        if(collidingObj.name === "projectile"){
+            const hitTarget = e.target.mesh;
+            
+            const hitMaterial = new THREE.MeshBasicMaterial({color: 0xff0000});
+            const temp = hitTarget.material;
+            hitTarget.material = hitMaterial;
+            setTimeout(() => {
+                hitTarget.material = temp;
+            }, 300);
+        }
     });
     
     return {planeBody: body, mat};
@@ -87,6 +101,7 @@ function generateProjectile(x, y, z){
     sphereMesh.position.x = x;
     sphereMesh.position.y = y;
     sphereMesh.position.z = z;
+    sphereMesh.name = "projectile";
     scene.add(sphereMesh);
 
     const sphereShape = new CANNON.Sphere(0.1);
@@ -96,6 +111,7 @@ function generateProjectile(x, y, z){
     sphereBody.position.x = sphereMesh.position.x;
     sphereBody.position.y = sphereMesh.position.y;
     sphereBody.position.z = sphereMesh.position.z;
+    sphereBody.mesh = sphereMesh;
     world.addBody(sphereBody);
     
     return {sphereMesh, sphereBody};
@@ -156,7 +172,6 @@ function getModel(modelFilePath, name){
                 // for the carbine (or really any scene with multiple meshes)
                 if(name === "obj"){
                     let m4carbine = carbine[0];
-                    //console.log(m4carbine.skeleton);
                     m4carbine.add(m4carbine.skeleton.bones[0]);
                     m4carbine.name = name;
                     
@@ -197,6 +212,7 @@ const plane = new THREE.Mesh(terrainGeometry, terrainMat);
 plane.receiveShadow = true;
 plane.castShadow = false;
 plane.rotateX(Math.PI / 2);
+plane.name = "ground";
 plane.translateY(0.6);
 terrain = plane;
 scene.add(plane);
@@ -206,10 +222,8 @@ const groundMat = new CANNON.Material();
 const planeBody = new CANNON.Body({material: groundMat, mass: 0}); // this plane extends infinitely
 planeBody.addShape(planeShape);
 planeBody.quaternion.setFromAxisAngle(new CANNON.Vec3(1, 0, 0), -Math.PI/2);
+planeBody.mesh = plane;
 world.addBody(planeBody);
-
-const cannonBodies = [];
-const projectiles = [];
 
 Promise.all(loadedModels).then(objects => {
     objects.forEach(mesh => {
@@ -235,6 +249,7 @@ Promise.all(loadedModels).then(objects => {
                 const bbox = new THREE.Box3().setFromObject(mesh);
                 
                 const body = addCannonBox(
+                    mesh,
                     Math.abs(bbox.max.x - bbox.min.x) / 3.8, 
                     Math.abs(bbox.max.y - bbox.min.y) / 2.5, 
                     Math.abs(bbox.max.z - bbox.min.z) / 5, 
@@ -256,6 +271,7 @@ Promise.all(loadedModels).then(objects => {
                 const bbox = new THREE.Box3().setFromObject(mesh);
                 
                 cannonBodies.push(addCannonBox(
+                    mesh,
                     Math.abs(bbox.max.x - bbox.min.x) / 2, 
                     Math.abs(bbox.max.y - bbox.min.y) / 2, 
                     Math.abs(bbox.max.z - bbox.min.z) / 2, 
@@ -270,6 +286,7 @@ Promise.all(loadedModels).then(objects => {
                 const bbox = new THREE.Box3().setFromObject(mesh);
                 
                 cannonBodies.push(addCannonBox(
+                    mesh,
                     Math.abs(bbox.max.x - bbox.min.x) / 2, 
                     Math.abs(bbox.max.y - bbox.min.y) / 2, 
                     Math.abs(bbox.max.z - bbox.min.z) / 2, 
@@ -318,6 +335,7 @@ Promise.all(loadedModels).then(objects => {
             // might be helpful? https://github.com/schteppe/cannon.js/issues/188
             const bbox = new THREE.Box3().setFromObject(mesh);
             const body = addCannonBox(
+                mesh,
                 Math.abs(bbox.max.x - bbox.min.x), 
                 Math.abs(bbox.max.y - bbox.min.y), 
                 Math.abs(bbox.max.z - bbox.min.z), 
@@ -460,7 +478,7 @@ document.getElementById("theCanvas").addEventListener("pointerdown", (evt) => {
         const sphere = generateProjectile(player.position.x, player.position.y + 1.0, player.position.z);
         sphere.sphereBody.applyImpulse(new CANNON.Vec3(forwardVec.x, forwardVec.y, forwardVec.z), sphere.sphereBody.position);
         
-        projectiles.push(sphere);
+        projectiles.add(sphere);
     }
 });
 
@@ -521,7 +539,7 @@ function update(){
     let relCameraOffset;
     
     if(firstPersonViewOn){
-        // nothing to do
+        // TODO: have crosshairs showing
     }else if(sideViewOn){
         relCameraOffset = new THREE.Vector3(-10, 3, 0);
     }else if(!changeCameraView){
@@ -549,6 +567,13 @@ function animate(){
     world.step(0.01);
     
     projectiles.forEach(p => {
+        if(p.sphereMesh.position.y < 0.5){
+            // remove projectile from scene and set of projectiles
+            scene.remove(p.sphereMesh);
+            world.remove(p.sphereBody);
+            projectiles.delete(p);
+            return;
+        }
         p.sphereMesh.position.set(p.sphereBody.position.x, p.sphereBody.position.y, p.sphereBody.position.z);
         p.sphereMesh.quaternion.set(
             p.sphereBody.quaternion.x,
@@ -556,6 +581,22 @@ function animate(){
             p.sphereBody.quaternion.z,
             p.sphereBody.quaternion.w,
         );
+    });
+    
+    cannonBodies.forEach(b => {
+        const bBody = b.planeBody;
+        const bMesh = bBody.mesh;
+        
+        // for now only have boxes be able to move on projectile impact
+        if(bMesh.name === "box"){
+            bMesh.position.set(bBody.position.x, bBody.position.y, bBody.position.z);    
+            bMesh.quaternion.set(
+                bBody.quaternion.x,
+                bBody.quaternion.y,
+                bBody.quaternion.z,
+                bBody.quaternion.w,
+            );
+        }
     });
     
     /* adjust player's rigidbody based on the player model
