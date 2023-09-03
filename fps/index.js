@@ -5,11 +5,8 @@ const fov = 60;
 const defaultCamera = new THREE.PerspectiveCamera(fov, container.clientWidth / container.clientHeight, 0.01, 1000);
 const keyboard = new THREEx.KeyboardState();
 const raycaster = new THREE.Raycaster();
-const loadingManager = new THREE.LoadingManager();
 
-setupLoadingManager(loadingManager);
-
-const loader = new THREE.GLTFLoader(loadingManager);
+const loader = new THREE.GLTFLoader();
 
 const renderer = new THREE.WebGLRenderer({antialias: true});
 renderer.shadowMap.enabled = true;
@@ -17,6 +14,32 @@ renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 renderer.setSize(container.clientWidth, container.clientHeight); 
 renderer.domElement.id = "theCanvas";  
 container.appendChild(renderer.domElement);
+
+// overlay canvas for displaying crosshairs
+const crosshairCanvas = document.createElement('canvas');
+crosshairCanvas.style.position = 'absolute';
+crosshairCanvas.style.left = '0';
+crosshairCanvas.style.top = '0';
+crosshairCanvas.style.border = '1px solid #000';
+crosshairCanvas.style.width = renderer.domElement.width + 'px';
+crosshairCanvas.style.height = renderer.domElement.height + 'px';
+crosshairCanvas.style.display = 'none';
+crosshairCanvas.width = renderer.domElement.width;
+crosshairCanvas.height = renderer.domElement.height;
+
+// make background color transparent
+const ctx = crosshairCanvas.getContext('2d');
+ctx.fillStyle = 'rgba(255, 255, 255, 0)';
+ctx.fillRect(0, 0, crosshairCanvas.width, crosshairCanvas.height);
+
+// TODO: put crosshair image on canvas
+const crosshairImg = new Image();
+crosshairImg.onload = () => {
+    ctx.drawImage(crosshairImg, 200, 130);
+};
+crosshairImg.src = "crosshairs.png";
+
+container.appendChild(crosshairCanvas);
 
 const camera = defaultCamera;
 camera.position.set(0, 5, 20);
@@ -81,10 +104,10 @@ function addCannonBox(mesh, width, height, length, x, y, z, mass=0){
             const hitTarget = e.target.mesh;
             
             const hitMaterial = new THREE.MeshBasicMaterial({color: 0xff0000});
-            const temp = hitTarget.material;
             hitTarget.material = hitMaterial;
+            
             setTimeout(() => {
-                hitTarget.material = temp;
+                hitTarget.material = hitTarget.originalColor;
             }, 300);
         }
     });
@@ -93,7 +116,7 @@ function addCannonBox(mesh, width, height, length, x, y, z, mass=0){
 }
 
 function generateProjectile(x, y, z){
-    const sphereGeometry = new THREE.SphereGeometry(0.08, 32, 16);
+    const sphereGeometry = new THREE.SphereGeometry(0.05, 32, 16);
     const normalMaterial = new THREE.MeshPhongMaterial({color: 0x055C9D});
     const sphereMesh = new THREE.Mesh(sphereGeometry, normalMaterial);
     sphereMesh.receiveShadow = true;
@@ -104,7 +127,7 @@ function generateProjectile(x, y, z){
     sphereMesh.name = "projectile";
     scene.add(sphereMesh);
 
-    const sphereShape = new CANNON.Sphere(0.1);
+    const sphereShape = new CANNON.Sphere(0.05);
     const sphereMat = new CANNON.Material();
     const sphereBody = new CANNON.Body({material: sphereMat, mass: 0.2});
     sphereBody.addShape(sphereShape);
@@ -171,11 +194,11 @@ function getModel(modelFilePath, name){
                 
                 // for the carbine (or really any scene with multiple meshes)
                 if(name === "obj"){
-                    let m4carbine = carbine[0];
+                    const m4carbine = carbine[0];
                     m4carbine.add(m4carbine.skeleton.bones[0]);
                     m4carbine.name = name;
                     
-                    let magazine = carbine[1];
+                    const magazine = carbine[1];
                     m4carbine.magazine = magazine;
                     m4carbine.skeleton.bones[1].add(magazine); // add magazine to the mag bone
 
@@ -306,9 +329,10 @@ Promise.all(loadedModels).then(objects => {
             // we know that we're on an uphill part of the terrain 
             // and can adjust our character accordingly
             // similarly, if the height is > the character height, we're going downhill
-            let cubeGeometry = new THREE.BoxGeometry(0.2, 0.2, 0.2);
-            let material = new THREE.MeshBasicMaterial({color: 0x00ff00});
-            let head = new THREE.Mesh(cubeGeometry, material); 
+            const cubeGeometry = new THREE.BoxGeometry(0.2, 0.2, 0.2);
+            const material = new THREE.MeshBasicMaterial({color: 0x00ff00});
+            const head = new THREE.Mesh(cubeGeometry, material);
+            head.visible = false;
             
             mesh.add(head);
             mesh.head = head;
@@ -320,13 +344,16 @@ Promise.all(loadedModels).then(objects => {
 
             mesh.position.set(0, 1.4, -10);
             mesh.rotateOnAxis(new THREE.Vector3(0, 1, 0), Math.PI);
-            mesh.originalColor = mesh.material;
             
             // add hand bone to equip tool with as a child of the player mesh
             for(let bone of player.skeleton.bones){
                 if(bone.name === "HandR001"){ // lol why is it like this??
                     player.hand = bone; // set an arbitrary new property to access the hand bone
-                    break;
+                }
+                
+                if(bone.name === "Chest"){
+                    player.chest = bone;
+                    player.head.quaternion.copy(bone.quaternion); // make sure head mesh follows chest bone rotation
                 }
             }
             
@@ -344,19 +371,12 @@ Promise.all(loadedModels).then(objects => {
             );
             
             playerBody = body.planeBody;
-            
-            cannonBodies.forEach(b => {
-                const contactMat = new CANNON.ContactMaterial(b.mat, body.mat, {friction: 3.0,  restitution: 0.05});
-                world.addContactMaterial(contactMat);
-            });
-            
-            // contact material for plane
-            const groundContactMat = new CANNON.ContactMaterial(body.mat, groundMat, {friction: 0.0,  restitution: 0.0});
-            world.addContactMaterial(groundContactMat);
             */
 
             animate();
         }
+        
+        mesh.originalColor = mesh.material;
         
         scene.add(mesh);
         renderer.render(scene, camera);
@@ -445,9 +465,10 @@ function keydown(evt){
         if(firstPersonViewOn){
             player.add(camera);
             camera.position.copy(player.head.position);
-            camera.position.z += 1.0;
+            camera.position.z += 0.9;
             camera.position.y -= 0.4;
-            camera.rotation.set(0, Math.PI, 0);
+            camera.rotation.copy(player.head.rotation);
+            camera.rotateY(Math.PI);
         }else{
             scene.add(camera);
         }
@@ -469,7 +490,7 @@ function keyup(evt){
 
 document.addEventListener("keydown", keydown);
 document.addEventListener("keyup", keyup);
-document.getElementById("theCanvas").addEventListener("pointerdown", (evt) => {
+document.getElementById("theCanvas").parentNode.addEventListener("pointerdown", (evt) => {
     if(animationController.currState !== "normal"){
         const forwardVec = new THREE.Vector3();
         player.getWorldDirection(forwardVec);
@@ -539,7 +560,8 @@ function update(){
     let relCameraOffset;
     
     if(firstPersonViewOn){
-        // TODO: have crosshairs showing
+        // have crosshairs showing
+        crosshairCanvas.style.display = 'block';
     }else if(sideViewOn){
         relCameraOffset = new THREE.Vector3(-10, 3, 0);
     }else if(!changeCameraView){
@@ -549,13 +571,15 @@ function update(){
     }
     
     if(!firstPersonViewOn){
-        let cameraOffset = relCameraOffset.applyMatrix4(player.matrixWorld);
+        crosshairCanvas.style.display = 'none';
+        
+        const cameraOffset = relCameraOffset.applyMatrix4(player.matrixWorld);
         camera.position.x = cameraOffset.x;
         camera.position.y = cameraOffset.y;
         camera.position.z = cameraOffset.z;
+        
+        camera.lookAt(player.position);
     }
-    
-    if(!firstPersonViewOn) camera.lookAt(player.position);
 }
 
 function animate(){
