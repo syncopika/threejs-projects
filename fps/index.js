@@ -74,6 +74,8 @@ let firstPersonViewOn = false;
 let sideViewOn = false;
 //let playerBody;
 
+let cowProjectileMesh;
+
 const cannonBodies = [];
 const projectiles = new Set();
 
@@ -81,6 +83,27 @@ const world = new CANNON.World();
 world.gravity.set(0, -9.82, 0);
 
 const cannonDebugRenderer = new THREE.CannonDebugRenderer(scene, world);
+
+// add ground
+const texture = new THREE.TextureLoader().load('../car_demo/models/grass2.jpg');
+const terrainMat = new THREE.MeshPhongMaterial({map: texture, side: THREE.DoubleSide});
+const terrainGeometry = new THREE.PlaneGeometry(200, 200);
+const plane = new THREE.Mesh(terrainGeometry, terrainMat);
+plane.receiveShadow = true;
+plane.castShadow = false;
+plane.rotateX(Math.PI / 2);
+plane.name = "ground";
+plane.translateY(0.6);
+terrain = plane;
+scene.add(plane);
+
+const planeShape = new CANNON.Plane();
+const groundMat = new CANNON.Material();
+const planeBody = new CANNON.Body({material: groundMat, mass: 0}); // this plane extends infinitely
+planeBody.addShape(planeShape);
+planeBody.quaternion.setFromAxisAngle(new CANNON.Vec3(1, 0, 0), -Math.PI/2);
+planeBody.mesh = plane;
+world.addBody(planeBody);
 
 function addCannonBox(mesh, width, height, length, x, y, z, mass=0){
     const box = new CANNON.Box(new CANNON.Vec3(width, height, length));
@@ -116,28 +139,52 @@ function addCannonBox(mesh, width, height, length, x, y, z, mass=0){
 }
 
 function generateProjectile(x, y, z){
-    const sphereGeometry = new THREE.SphereGeometry(0.05, 32, 16);
-    const normalMaterial = new THREE.MeshPhongMaterial({color: 0x055C9D});
-    const sphereMesh = new THREE.Mesh(sphereGeometry, normalMaterial);
-    sphereMesh.receiveShadow = true;
-    sphereMesh.castShadow = true;
-    sphereMesh.position.x = x;
-    sphereMesh.position.y = y;
-    sphereMesh.position.z = z;
-    sphereMesh.name = "projectile";
-    scene.add(sphereMesh);
+    const useCowProjectile = document.getElementById('useCowProjectile').checked;
+    if(!useCowProjectile){
+        const sphereGeometry = new THREE.SphereGeometry(0.05, 32, 16);
+        const normalMaterial = new THREE.MeshPhongMaterial({color: 0x055C9D});
+        const sphereMesh = new THREE.Mesh(sphereGeometry, normalMaterial);
+        sphereMesh.receiveShadow = true;
+        sphereMesh.castShadow = true;
+        sphereMesh.position.x = x;
+        sphereMesh.position.y = y;
+        sphereMesh.position.z = z;
+        sphereMesh.name = "projectile";
+        scene.add(sphereMesh);
 
-    const sphereShape = new CANNON.Sphere(0.05);
-    const sphereMat = new CANNON.Material();
-    const sphereBody = new CANNON.Body({material: sphereMat, mass: 0.2});
-    sphereBody.addShape(sphereShape);
-    sphereBody.position.x = sphereMesh.position.x;
-    sphereBody.position.y = sphereMesh.position.y;
-    sphereBody.position.z = sphereMesh.position.z;
-    sphereBody.mesh = sphereMesh;
-    world.addBody(sphereBody);
-    
-    return {sphereMesh, sphereBody};
+        const sphereShape = new CANNON.Sphere(0.05);
+        const sphereMat = new CANNON.Material();
+        const sphereBody = new CANNON.Body({material: sphereMat, mass: 0.2});
+        sphereBody.addShape(sphereShape);
+        sphereBody.position.x = sphereMesh.position.x;
+        sphereBody.position.y = sphereMesh.position.y;
+        sphereBody.position.z = sphereMesh.position.z;
+        sphereBody.mesh = sphereMesh;
+        world.addBody(sphereBody);
+        
+        return {sphereMesh, sphereBody};
+    }else{
+        const sphereMesh = cowProjectileMesh.clone();
+        sphereMesh.receiveShadow = true;
+        sphereMesh.castShadow = true;
+        sphereMesh.position.x = x;
+        sphereMesh.position.y = y;
+        sphereMesh.position.z = z;
+        sphereMesh.name = "projectile";
+        scene.add(sphereMesh);
+        
+        const sphereShape = new CANNON.Sphere(1.2);
+        const sphereMat = new CANNON.Material();
+        const sphereBody = new CANNON.Body({material: sphereMat, mass: 0.2});
+        sphereBody.addShape(sphereShape);
+        sphereBody.position.x = sphereMesh.position.x;
+        sphereBody.position.y = sphereMesh.position.y;
+        sphereBody.position.z = sphereMesh.position.z;
+        sphereBody.mesh = sphereMesh;
+        world.addBody(sphereBody);
+
+        return {sphereMesh, sphereBody};        
+    }
 }
 
 function getModel(modelFilePath, name){
@@ -161,7 +208,7 @@ function getModel(modelFilePath, name){
                 let carbine = [];
                 gltf.scene.traverse((child) => {
                     if(child.type === "Mesh" || child.type === "SkinnedMesh"){
-                        let obj = child;
+                        const obj = child;
 
                         if(name === "obj"){
                             obj.scale.x = child.scale.x * 1.1;
@@ -206,7 +253,7 @@ function getModel(modelFilePath, name){
                     m4carbine.rotateOnAxis(new THREE.Vector3(0,0,-1), Math.PI/2);
 
                     resolve(m4carbine);
-                }  
+                }
             },
             // called while loading is progressing
             function(xhr){
@@ -225,28 +272,12 @@ loadedModels.push(getModel('../character_demo/models/humanoid-rig-with-gun.gltf'
 loadedModels.push(getModel('../character_demo/models/m4carbine-final.gltf', 'obj'));
 loadedModels.push(getModel('./target.gltf', 'target'));
 loadedModels.push(getModel('./box.gltf', 'box'));
+loadedModels.push(getModel('./box.gltf', 'box2'));
 loadedModels.push(getModel('./barrel.gltf', 'barrel'));
 
-// add ground
-const texture = new THREE.TextureLoader().load('../car_demo/models/grass2.jpg');
-const terrainMat = new THREE.MeshPhongMaterial({map: texture, side: THREE.DoubleSide});
-const terrainGeometry = new THREE.PlaneGeometry(200, 200);
-const plane = new THREE.Mesh(terrainGeometry, terrainMat);
-plane.receiveShadow = true;
-plane.castShadow = false;
-plane.rotateX(Math.PI / 2);
-plane.name = "ground";
-plane.translateY(0.6);
-terrain = plane;
-scene.add(plane);
-
-const planeShape = new CANNON.Plane();
-const groundMat = new CANNON.Material();
-const planeBody = new CANNON.Body({material: groundMat, mass: 0}); // this plane extends infinitely
-planeBody.addShape(planeShape);
-planeBody.quaternion.setFromAxisAngle(new CANNON.Vec3(1, 0, 0), -Math.PI/2);
-planeBody.mesh = plane;
-world.addBody(planeBody);
+getModel('./cow.gltf', 'cow').then(model => {
+    cowProjectileMesh = model;
+});
 
 Promise.all(loadedModels).then(objects => {
     objects.forEach(mesh => {
@@ -257,7 +288,7 @@ Promise.all(loadedModels).then(objects => {
             mesh.castShadow = true;
             tool = mesh;
             tool.visible = false;
-        }else if(mesh.name === "target" || mesh.name === "box" || mesh.name === "barrel"){
+        }else if(mesh.name === "target" || mesh.name.includes("box") || mesh.name === "barrel"){
             mesh.castShadow = true;
             if(mesh.name === "target"){
                 mesh.position.set(10, mesh.position.y, -30);
@@ -300,6 +331,22 @@ Promise.all(loadedModels).then(objects => {
                     Math.abs(bbox.max.z - bbox.min.z) / 2, 
                     mesh.position.x, mesh.position.y, mesh.position.z,
                     5
+                ));
+            }
+            
+            if(mesh.name === "box2"){
+                mesh.position.set(-10, mesh.position.y, -20);
+                mesh.translateY(2);
+                
+                const bbox = new THREE.Box3().setFromObject(mesh);
+                
+                cannonBodies.push(addCannonBox(
+                    mesh,
+                    Math.abs(bbox.max.x - bbox.min.x) / 2, 
+                    Math.abs(bbox.max.y - bbox.min.y) / 2, 
+                    Math.abs(bbox.max.z - bbox.min.z) / 2, 
+                    mesh.position.x, mesh.position.y, mesh.position.z,
+                    2
                 ));
             }
             
@@ -347,7 +394,7 @@ Promise.all(loadedModels).then(objects => {
             
             // add hand bone to equip tool with as a child of the player mesh
             for(let bone of player.skeleton.bones){
-                if(bone.name === "HandR001"){ // lol why is it like this??
+                if(bone.name === "HandR001"){
                     player.hand = bone; // set an arbitrary new property to access the hand bone
                 }
                 
@@ -414,7 +461,7 @@ function checkCollision(moveDistance, isReverse){
         if(destPos.distanceTo(bodyPos) < 2){
             return true;
         }
-    };
+    }
     return false;
 }
 
@@ -449,7 +496,7 @@ function keydown(evt){
             tool.visible = true;
             animationController.changeState("equip"); // equip weapon
         }else{
-            animationController.changeState("normal"); // go back to normal state
+            animationController.changeState("normal");
             timeScale = -1; // need to play equip animation backwards to put away weapon
         }
         animationController.setUpdateTimeDivisor(0.002);
@@ -492,9 +539,12 @@ document.addEventListener("keydown", keydown);
 document.addEventListener("keyup", keyup);
 document.getElementById("theCanvas").parentNode.addEventListener("pointerdown", (evt) => {
     if(animationController.currState !== "normal"){
+        evt.preventDefault();
         const forwardVec = new THREE.Vector3();
         player.getWorldDirection(forwardVec);
-        forwardVec.multiplyScalar(20);
+        
+        const impulseVal = parseInt(document.getElementById('impulseSlider').value);
+        forwardVec.multiplyScalar(impulseVal);
         
         const sphere = generateProjectile(player.position.x, player.position.y + 1.0, player.position.z);
         sphere.sphereBody.applyImpulse(new CANNON.Vec3(forwardVec.x, forwardVec.y, forwardVec.z), sphere.sphereBody.position);
@@ -562,6 +612,9 @@ function update(){
     if(firstPersonViewOn){
         // have crosshairs showing
         crosshairCanvas.style.display = 'block';
+        
+        // https://stackoverflow.com/questions/25567369/show-children-of-invisible-parents
+        player.material.visible = false;
     }else if(sideViewOn){
         relCameraOffset = new THREE.Vector3(-10, 3, 0);
     }else if(!changeCameraView){
@@ -572,6 +625,7 @@ function update(){
     
     if(!firstPersonViewOn){
         crosshairCanvas.style.display = 'none';
+        player.material.visible = true;
         
         const cameraOffset = relCameraOffset.applyMatrix4(player.matrixWorld);
         camera.position.x = cameraOffset.x;
@@ -612,7 +666,7 @@ function animate(){
         const bMesh = bBody.mesh;
         
         // for now only have boxes be able to move on projectile impact
-        if(bMesh.name === "box"){
+        if(bMesh.name.includes("box")){
             bMesh.position.set(bBody.position.x, bBody.position.y, bBody.position.z);    
             bMesh.quaternion.set(
                 bBody.quaternion.x,
@@ -633,3 +687,7 @@ function animate(){
         player.quaternion.w,
     );*/
 }
+
+document.getElementById('impulseSlider').addEventListener('change', (evt) => {
+    document.getElementById('impulseVal').textContent = evt.target.value;
+});
