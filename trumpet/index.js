@@ -612,12 +612,15 @@ function noteFromPitch(frequency) {
 }
 
 function syncTrumpetToAudio(){
-    // TODO: remember that Bb trumpet is a transposing instrument! so valve combos need to be adjusted to match the actual pitch
     analyser.getFloatTimeDomainData(buffer);
     const result = autoCorrelate(buffer, audioCtx.sampleRate);
     if(result !== -1){
         const freq = result;
-        const note = ["c", "cs", "d", "ds", "e", "f", "fs", "g", "gs", "a", "as", "b"][noteFromPitch(freq)%12];
+        
+        // Bb trumpet is a transposing instrument! it's a step lower than concert pitch
+        // so valve combos need to be adjusted to match the actual pitch
+        const note = ["c", "cs", "d", "ds", "e", "f", "fs", "g", "gs", "a", "as", "b"][(noteFromPitch(freq)+2)%12];
+        document.getElementById('currentNote').textContent = "curr note (Bb concert pitch): " + note.replace('s', '#');
         setValves(note);
     }
     animationFrameReqId = window.requestAnimationFrame(syncTrumpetToAudio)
