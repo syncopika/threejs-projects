@@ -30,6 +30,15 @@ scene.add(spotLight);
 
 const valves = {1: null, 2: null, 3: null};
 
+const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+const analyser = audioCtx.createAnalyser();
+const buffer = new Float32Array(2048);
+let audioSource;
+let audioFileUrl;
+let animationFrameReqId;
+let isPlaying = false;
+let isStopped = true;
+
 const noteToValveComboMap = {
     'a': '12',
     'ab': '23', // a flat
@@ -137,7 +146,6 @@ function loadInNotes(){
     });
 }
 loadInNotes();
-
 
 function play(piece){
     const startTime = audioContext.currentTime;
@@ -523,6 +531,165 @@ document.getElementById('playExample').addEventListener('click', () => {
     }
 });
 
+function playAudio(){
+    if(!isPlaying && audioSource){
+        isPlaying = true;
+        isStopped = false;
+        audioSource.start();
+        syncTrumpetToAudio();
+    }
+}
+document.getElementById("play").addEventListener("click", playAudio);
+
+function stopAudio(){
+    if(isPlaying && audioSource){
+        isPlaying = false;
+        isStopped = true;
+        audioSource.stop();
+        
+        window.cancelAnimationFrame(animationFrameReqId);
+    }
+    
+    // reload since we can't restart buffer source
+    if(audioFileUrl) loadAudioFile(audioFileUrl);
+}
+document.getElementById("stop").addEventListener("click", stopAudio);
+
+// trying pitch detection from imported audio to sync trumpet with
+// TODO: try/explore other methods other than autocorrelation? (if possible)
+// https://github.com/cwilso/PitchDetect/blob/main/js/pitchdetect.js
+// https://stackoverflow.com/questions/69237143/how-do-i-get-the-audio-frequency-from-my-mic-using-javascript
+// https://stackoverflow.com/questions/42614146/web-audio-api-get-correct-frequency
+// https://stackoverflow.com/questions/57827830/at-what-point-does-analysernode-execute-its-fft
+// https://courses.physics.illinois.edu/phys406/sp2017/NSF_REU_Reports/2005_reu/Real-Time_Time-Domain_Pitch_Tracking_Using_Wavelets.pdf
+function autoCorrelate(buf, sampleRate){
+    // Implements the ACF2+ algorithm
+    let SIZE = buf.length;
+    let rms = 0;
+
+    for(let i = 0; i < SIZE; i++){
+        let val = buf[i];
+        rms += val*val;
+    }
+    rms = Math.sqrt(rms/SIZE);
+    if(rms < 0.01) // not enough signal
+        return -1;
+
+    let r1 = 0;
+    let r2 = SIZE-1;
+    const thres = 0.2;
+    for(let i = 0; i < SIZE/2; i++)
+        if(Math.abs(buf[i]) < thres){ r1=i; break; }
+    
+    for(let i= 1; i < SIZE/2; i++)
+        if(Math.abs(buf[SIZE-i]) < thres){ r2=SIZE-i; break; }
+
+    buf = buf.slice(r1, r2);
+    SIZE = buf.length;
+
+    const c = new Array(SIZE).fill(0);
+    for(let i = 0; i < SIZE; i++)
+        for(let j = 0; j < SIZE-i; j++)
+            c[i] = c[i] + buf[j]*buf[j+i];
+
+    let d = 0; 
+    while(c[d] > c[d+1]) d++;
+    
+    let maxval=-1, maxpos=-1;
+    for(let i = d; i < SIZE; i++){
+        if(c[i] > maxval){
+            maxval = c[i];
+            maxpos = i;
+        }
+    }
+    
+    let T0 = maxpos;
+    const x1 = c[T0-1];
+    const x2 = c[T0];
+    const x3 = c[T0+1];
+    const a = (x1 + x3 - 2*x2)/2;
+    const b = (x3 - x1)/2;
+    if(a) T0 = T0 - b/(2*a);
+
+    return sampleRate/T0;
+}
+
+function noteFromPitch(frequency){
+    const noteNum = 12 * (Math.log(frequency / 440)/Math.log(2));
+    return Math.round(noteNum) + 69;
+}
+
+function syncTrumpetToAudio(){
+    analyser.getFloatTimeDomainData(buffer);
+    const result = autoCorrelate(buffer, audioCtx.sampleRate);
+    if(result !== -1){
+        const freq = result;
+        
+        // Bb trumpet is a transposing instrument! it's a step lower than concert pitch
+        // so valve combos need to be adjusted to match the actual pitch
+        const note = ["c", "cs", "d", "ds", "e", "f", "fs", "g", "gs", "a", "as", "b"][(noteFromPitch(freq)+2)%12];
+        document.getElementById('currentNote').textContent = "curr note (Bb concert pitch): " + note.replace('s', '#');
+        setValves(note);
+    }
+    animationFrameReqId = window.requestAnimationFrame(syncTrumpetToAudio)
+}
+
+function loadAudioFile(url){
+    audioSource = audioCtx.createBufferSource();  
+
+    const req = new XMLHttpRequest();
+    req.open("GET", url, true);
+    req.responseType = 'arraybuffer';
+    req.onload = function(){
+        audioCtx.decodeAudioData(req.response, (buffer) => {
+            if (!audioSource.buffer) audioSource.buffer = buffer;
+            audioSource.connect(analyser);
+            audioSource.connect(audioCtx.destination);
+        });
+    }
+    req.send();
+}
+
+const openFile = (function(){
+   return function(handleFileFunc){
+       if(isPlaying) return;
+       
+       const fileInput = document.createElement('input');
+       fileInput.type = 'file';
+       
+       function onFileChange(evt){
+           const files = evt.target.files;
+           if(files && files.length > 0){
+               handleFileFunc(files[0]);
+           }
+       }
+       
+       fileInput.addEventListener("change", onFileChange, false);
+       fileInput.click();
+   } 
+})();
+
+function handleFile(file){
+    audioFileUrl = URL.createObjectURL(file);
+    const type = /audio.*/;
+    if(!file.type.match(type)){
+        return;
+    }
+    
+    const reader = new FileReader();
+    reader.onload = (function(f){
+        return function(evt){
+            //document.getElementById('audioFileName').textContent = f.name;
+        }
+    })(file);
+    
+    reader.readAsDataURL(file);
+    loadAudioFile(audioFileUrl);
+}
+
+document.getElementById("importAudio").addEventListener("click", () => {
+    openFile(handleFile);
+});
 
 function animate(){
     requestAnimationFrame(animate);
