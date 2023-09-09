@@ -402,22 +402,6 @@ Promise.all(loadedModels).then(objects => {
                     player.head.quaternion.copy(bone.quaternion); // make sure head mesh follows chest bone rotation
                 }
             }
-            
-            /* for the player I'm going just detect collision
-            // with objects manually (having some trouble with the rigidbody)
-            // might be helpful? https://github.com/schteppe/cannon.js/issues/188
-            const bbox = new THREE.Box3().setFromObject(mesh);
-            const body = addCannonBox(
-                mesh,
-                Math.abs(bbox.max.x - bbox.min.x), 
-                Math.abs(bbox.max.y - bbox.min.y), 
-                Math.abs(bbox.max.z - bbox.min.z), 
-                mesh.position.x, mesh.position.y / 1.8, mesh.position.z,
-                10
-            );
-            
-            playerBody = body.planeBody;
-            */
 
             animate();
         }
