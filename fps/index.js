@@ -74,6 +74,9 @@ let firstPersonViewOn = false;
 let sideViewOn = false;
 //let playerBody;
 
+let mouseX = 0;
+let mouseY = 0;
+
 let cowProjectileMesh;
 
 const cannonBodies = [];
@@ -146,9 +149,7 @@ function generateProjectile(x, y, z){
         const sphereMesh = new THREE.Mesh(sphereGeometry, normalMaterial);
         sphereMesh.receiveShadow = true;
         sphereMesh.castShadow = true;
-        sphereMesh.position.x = x;
-        sphereMesh.position.y = y;
-        sphereMesh.position.z = z;
+        sphereMesh.position.set(x, y, z);
         sphereMesh.name = "projectile";
         scene.add(sphereMesh);
 
@@ -164,26 +165,24 @@ function generateProjectile(x, y, z){
         
         return {sphereMesh, sphereBody};
     }else{
-        const sphereMesh = cowProjectileMesh.clone();
-        sphereMesh.receiveShadow = true;
-        sphereMesh.castShadow = true;
-        sphereMesh.position.x = x;
-        sphereMesh.position.y = y;
-        sphereMesh.position.z = z;
-        sphereMesh.name = "projectile";
-        scene.add(sphereMesh);
+        const cowMesh = cowProjectileMesh.clone();
+        cowMesh.receiveShadow = true;
+        cowMesh.castShadow = true;
+        cowMesh.position.set(x, y, z);
+        cowMesh.name = "projectile";
+        scene.add(cowMesh);
         
         const sphereShape = new CANNON.Sphere(1.2);
         const sphereMat = new CANNON.Material();
         const sphereBody = new CANNON.Body({material: sphereMat, mass: 0.2});
         sphereBody.addShape(sphereShape);
-        sphereBody.position.x = sphereMesh.position.x;
-        sphereBody.position.y = sphereMesh.position.y;
-        sphereBody.position.z = sphereMesh.position.z;
-        sphereBody.mesh = sphereMesh;
+        sphereBody.position.x = cowMesh.position.x;
+        sphereBody.position.y = cowMesh.position.y;
+        sphereBody.position.z = cowMesh.position.z;
+        sphereBody.mesh = cowMesh;
         world.addBody(sphereBody);
 
-        return {sphereMesh, sphereBody};        
+        return {sphereMesh: cowMesh, sphereBody};        
     }
 }
 
@@ -514,7 +513,7 @@ function keydown(evt){
             camera.position.copy(player.head.position);
             camera.position.z += 0.9;
             camera.position.y -= 0.4;
-            camera.rotation.copy(player.head.rotation);
+            camera.rotation.copy(player.chest.rotation);
             camera.rotateY(Math.PI);
         }else{
             scene.add(camera);
@@ -538,10 +537,10 @@ function keyup(evt){
 document.addEventListener("keydown", keydown);
 document.addEventListener("keyup", keyup);
 document.getElementById("theCanvas").parentNode.addEventListener("pointerdown", (evt) => {
-    if(animationController.currState !== "normal"){
+    if(animationController && animationController.currState !== "normal"){
         evt.preventDefault();
         const forwardVec = new THREE.Vector3();
-        player.getWorldDirection(forwardVec);
+        camera.getWorldDirection(forwardVec);
         
         const impulseVal = parseInt(document.getElementById('impulseSlider').value);
         forwardVec.multiplyScalar(impulseVal);
@@ -550,6 +549,26 @@ document.getElementById("theCanvas").parentNode.addEventListener("pointerdown", 
         sphere.sphereBody.applyImpulse(new CANNON.Vec3(forwardVec.x, forwardVec.y, forwardVec.z), sphere.sphereBody.position);
         
         projectiles.add(sphere);
+    }
+});
+
+// https://stackoverflow.com/questions/48131322/three-js-first-person-camera-rotation
+document.getElementById("theCanvas").parentNode.addEventListener("mousemove", (evt) => {
+    if(firstPersonViewOn){
+        document.body.style.cursor = 'none';
+        evt.preventDefault();
+        
+        const mouseMoveX = -(evt.clientX / renderer.domElement.clientWidth) * 2 + 1;
+        const mouseMoveY = -(evt.clientY / renderer.domElement.clientHeight) * 2 + 1;
+        
+        player.chest.rotation.x = -mouseMoveY;
+        player.chest.rotation.y = mouseMoveX;
+        
+        camera.position.copy(player.head.position);
+        camera.position.z += 0.9;
+        camera.position.y -= 0.4;
+        camera.rotation.copy(player.chest.rotation);
+        camera.rotateY(Math.PI);
     }
 });
 
@@ -604,8 +623,12 @@ function update(){
         player.rotateOnAxis(new THREE.Vector3(0, 1, 0), -rotationAngle);
     }
     
-    // keep the current animation running
-    animationController.update();
+    // we don't want idle animation to run if in first-person mode since I want to
+    // manually control the chest bone for look-around rotation
+    if(animationController.currAction !== 'idle' || !firstPersonViewOn){
+        // keep the current animation running
+        animationController.update();
+    }
     
     let relCameraOffset;
     
@@ -625,6 +648,8 @@ function update(){
     
     if(!firstPersonViewOn){
         crosshairCanvas.style.display = 'none';
+        document.body.style.cursor = 'default';
+        
         player.material.visible = true;
         
         const cameraOffset = relCameraOffset.applyMatrix4(player.matrixWorld);
