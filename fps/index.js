@@ -701,16 +701,6 @@ function animate(){
             );
         }
     });
-    
-    /* adjust player's rigidbody based on the player model
-    playerBody.position.set(player.position.x, player.position.y, player.position.z);
-    
-    playerBody.quaternion.set(
-        player.quaternion.x,
-        player.quaternion.y,
-        player.quaternion.z,
-        player.quaternion.w,
-    );*/
 }
 
 document.getElementById('impulseSlider').addEventListener('change', (evt) => {
