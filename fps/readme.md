@@ -7,6 +7,5 @@ This demo is a bit of an extension/combo of `character_demo` and `basketball`. I
     
 TODO:    
 - improve player model (specifically figure out how to set up model for first-person vs third-person mode)
-- be able to look around with mouse in first-person mode + be able to launch projectile in various directions (this might be restricted currently though by the humanoid model I'm using)
 - be able to import any gltf model to use as projectile?
 - get lighting/shadows better
