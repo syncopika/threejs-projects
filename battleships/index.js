@@ -76,9 +76,7 @@ renderer.domElement.addEventListener('mousedown', (evt) => {
             }else if(selected.object.name === 'selectArea'){
                 togglePlayerSelectArea(currentPlayerUnit, scene)
                 currentPlayerUnit.isMoving = true;
-                //console.log(`3d space - x: ${v.x}, y: ${v.y}, z: ${v.z}`);
-                //console.log(`player pos - x: ${self.state.currentPlayerUnit.position.x}, y: ${self.state.currentPlayerUnit.position.y}, z: ${self.state.currentPlayerUnit.position.z}`);
-                v.y = 0;
+                v.y = currentPlayerUnit.position.y;
                 moveObj(currentPlayerUnit, v);
             }
             
@@ -88,9 +86,9 @@ renderer.domElement.addEventListener('mousedown', (evt) => {
                     
                     if(airstrikeOn){
                         airstrike(planeModel.clone(), selected.object, scene);
+                    }else{
+                        explosionEffect(selected.object, scene);
                     }
-                    
-                    explosionEffect(selected.object, scene);
                 }
             }
             
@@ -116,9 +114,6 @@ renderer.domElement.addEventListener('mousedown', (evt) => {
             
             if(selected.object.name === 'selectArea'){
                 // TODO: how to know correct z-index based on where user clicked on selectArea? maybe don't allow movement in perspective cam mode
-                
-                //self.state.currentPlayerUnit.isMoving = true;
-                //const v = new THREE.Vector3(mouse.x, mouse.y, -450).unproject(this.perspCamera);
                 //moveObj(self.state.currentPlayerUnit, v);
             }else if(selected.object.name === 'player'){
                 // TODO: maybe don't allow movement in perspective cam mode
@@ -127,9 +122,9 @@ renderer.domElement.addEventListener('mousedown', (evt) => {
                 if(currentPlayerUnit && selected.object.position.distanceTo(currentPlayerUnit.position) <= currentPlayerUnit.selectArea.geometry.parameters.radius + 5){
                     if(airstrikeOn){
                         airstrike(planeModel.clone(), selected.object, scene);
+                    }else{
+                        explosionEffect(selected.object, scene);
                     }
-                    
-                    explosionEffect(selected.object, scene);
                 }
             }
         }                
@@ -372,7 +367,6 @@ function explosionEffect(mesh, scene){
 }
 
 function airstrike(plane, target, scene){
-    console.log("setting up airstrike!");
     plane.scale.set(0.85, 0.85, 0.85);
     plane.add(new THREE.AxesHelper(5));
     
@@ -388,7 +382,7 @@ function airstrike(plane, target, scene){
     
     plane.position.copy(start);
     
-    // TODO: set plane rotation?
+    // TODO: put plane on a path (with some turns) for more realistic/cool airstrike?
     
     plane.direction = new THREE.Vector3(3, 0, 0);
     plane.target = target;
@@ -412,7 +406,8 @@ function togglePlayerSelectArea(playerMesh, scene){
         playerMesh.selectAreaOn = false;
         scene.remove(playerMesh.selectArea);
     }else{
-        playerMesh.selectArea.position.set(playerMesh.position.x, playerMesh.position.y + 1.0, playerMesh.position.z);
+        // a delta of 1.0 from the current y pos of playerMesh seems good (although not sure why if setting it to a lower y it doesn't appear in the orthographic camera but things look fine in the perspective camera :/)
+        playerMesh.selectArea.position.set(playerMesh.position.x, playerMesh.position.y + 1.7, playerMesh.position.z);
         scene.add(playerMesh.selectArea);
         playerMesh.selectAreaOn = true;
     }
@@ -423,6 +418,8 @@ function placeObject(object){
     
     if(object.name === 'enemy'){
         object.position.set(v.x, -1.5, v.y);
+    }else if(object.name === 'player'){
+        object.position.set(v.x, -0.7, v.y); // note the y pos here. important for the selectArea circle mesh
     }else{
         object.position.set(v.x, 0, v.y);
     }
@@ -466,7 +463,7 @@ document.getElementById('toggleAirstrike').addEventListener('change', () => {
 });
 
 const loadedModels = [];
-loadedModels.push(getModel('battleship-edit.glb', 'player', 'player'));
+loadedModels.push(getModel('battleship-edit2.gltf', 'player', 'player'));
 loadedModels.push(getModel('battleship2.glb', 'enemy', 'enemy'));
 loadedModels.push(getModel('spiky-thing.gltf', 'none', 'obstacle'));
 loadedModels.push(getModel('f14.gltf', 'none', 'plane'));
@@ -483,9 +480,16 @@ function getModel(modelFilePath, side, name){
                         let geometry = child.geometry;
                         let obj = new THREE.Mesh(geometry, material);
                         
-                        obj.scale.x = child.scale.x * 20;
-                        obj.scale.y = child.scale.y * 20;
-                        obj.scale.z = child.scale.z * 20;
+                        if(name !== 'player'){
+                            obj.scale.x = child.scale.x * 20;
+                            obj.scale.y = child.scale.y * 20;
+                            obj.scale.z = child.scale.z * 20;
+                        }else{
+                            obj.scale.x = child.scale.x * 3;
+                            obj.scale.y = child.scale.y * 3;
+                            obj.scale.z = child.scale.z * 3;
+                        }
+                        
                         obj.rotateOnAxis(new THREE.Vector3(0,1,0), Math.PI / 2); // note this on object's local axis! so when you rotate, the axes change (i.e. x becomes z)
                         //obj.rotateOnAxis(new THREE.Vector3(0,0,1), Math.PI / 2);
                     
@@ -502,7 +506,7 @@ function getModel(modelFilePath, side, name){
                             circle.rotateX(Math.PI / 2);
                             
                             obj.isMoving = false;
-                            obj.selectArea = circle; 
+                            obj.selectArea = circle;
                             obj.selectAreaOn = false; // TODO: maybe we don't need this flag? can we just check the circle mesh's parent? e.g. scene if in scene, nothing if not in scene?
                         }
                     }
