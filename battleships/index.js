@@ -70,10 +70,10 @@ renderer.domElement.addEventListener('mousedown', (evt) => {
             if(!selected) return;
             
             if(selected.object.name === 'player'){
-                
                 // toggle select area visibility
                 togglePlayerSelectArea(selected.object, scene);
             }else if(selected.object.name === 'selectArea'){
+                // TODO: what if there's an obstacle in the way?
                 togglePlayerSelectArea(currentPlayerUnit, scene)
                 currentPlayerUnit.isMoving = true;
                 v.y = currentPlayerUnit.position.y;
@@ -87,15 +87,17 @@ renderer.domElement.addEventListener('mousedown', (evt) => {
                     if(airstrikeOn){
                         airstrike(planeModel.clone(), selected.object, scene);
                     }else{
-                        explosionEffect(selected.object, scene);
+                        explosionEffect(selected.object, scene, 20);
                     }
                 }
             }
             
-            if(selected.object.material) selected.object.material.wireframe = true;
-            setTimeout(() => {
-                if(selected.object.material) selected.object.material.wireframe = false;
-            }, 1000);
+            if(selected.object.name !== 'player'){
+                if(selected.object.material) selected.object.material.wireframe = true;
+                setTimeout(() => {
+                    if(selected.object.material) selected.object.material.wireframe = false;
+                }, 1000);
+            }
         }
     }else{
         const x = evt.clientX - renderer.domElement.getBoundingClientRect().left;
@@ -123,7 +125,7 @@ renderer.domElement.addEventListener('mousedown', (evt) => {
                     if(airstrikeOn){
                         airstrike(planeModel.clone(), selected.object, scene);
                     }else{
-                        explosionEffect(selected.object, scene);
+                        explosionEffect(selected.object, scene, 20);
                     }
                 }
             }
@@ -265,12 +267,14 @@ function getAngleBetween(obj, vec){
 
     const currDirectionVector = direction; 
     const angleBetween = currDirectionVector.angleTo(vec);
+    
     return angleBetween;
 }
 
 function rotate(object, angle, targetVec, setIntervalName, resolve){
     const limit = 0.03;
     const angleBetween = getAngleBetween(object, targetVec);
+    
     if(angleBetween >= -limit && angleBetween <= limit){
         console.log("finished rotating");
         clearInterval(setIntervalName);
@@ -282,15 +286,16 @@ function rotate(object, angle, targetVec, setIntervalName, resolve){
 
 function moveObj(objToMove, targetPos){
     // check to make sure what moves are valid.
-    // i.e. if an enemy ship is alread in another enemy's circle, they can move outside the circle
+    // i.e. if an enemy ship is already in another enemy's circle, they can move outside the circle
     // or rotate. they can't move closer if already in range to a fellow enemy. 
     let obj = objToMove;
     let v = targetPos;
     let vec = new THREE.Vector3(v.x - obj.position.x, v.y - obj.position.y, v.z - obj.position.z);
+    vec.normalize();
             
-    // get curr unit direction vector 
-    // https://github.com/mrdoob/three.js/issues/1606
+    // get curr unit direction vector
     let angleBetween = getAngleBetween(obj, vec);
+    console.log(`i need to rotate: ${180 * angleBetween / Math.PI} degrees`);
     
     // figure out if the angle should be added (clockwise) or subtracted (rotate counterclckwise)
     // https://stackoverflow.com/questions/16613616/work-out-whether-to-turn-clockwise-or-anticlockwise-from-two-angles
@@ -298,11 +303,16 @@ function moveObj(objToMove, targetPos){
     matrix.extractRotation(obj.matrix);
     let direction = new THREE.Vector3(0, 0, 1);
     direction.applyMatrix4(matrix);
-    let currDirectionVector = direction; 
+    let currDirectionVector = direction;
+    
+    //console.log(`curr forward vector: ${currDirectionVector.x}, ${currDirectionVector.y}, ${currDirectionVector.z}`);
+    //console.log(`destination vector: ${vec.x}, ${vec.y}, ${vec.z}`);
 
     let crossProductLength = currDirectionVector.cross(vec);
+    //console.log(`cross product: ${crossProductLength.x}, ${crossProductLength.y}, ${crossProductLength.z}`);
+    
     let rotatePromise = new Promise((resolve, reject) => {
-        if(Math.abs(crossProductLength.z) > 0){
+        if(crossProductLength.y > 0){ // why y? I believe it's because from the orthographic camera POV, it's an XZ plane and Y is going in/out of the screen.
             // clockwise
             let rotateFunc = setInterval(
                 function(){
@@ -334,14 +344,13 @@ function moveObj(objToMove, targetPos){
     });
 }
 
-function explosionEffect(mesh, scene){
+function explosionEffect(mesh, scene, numParticles){
     //console.log('explosion');
     const position = mesh.position;
     const geometry = new THREE.SphereGeometry(0.5, 12, 12);
     const material = new THREE.MeshBasicMaterial({color: 0xffc0cb});//0x848884});
     material.wireframe = true;
     
-    const numParticles = 20;
     for(let i = 0; i < numParticles; i++){
         const particle = new THREE.Mesh(geometry, material);
         particle.position.x = position.x - Math.random() * 3.3;
@@ -558,11 +567,14 @@ function update(){
             child.position.add(child.direction);
         }
         
+        // for airstrike
         if(child.name.includes("plane")){
             child.position.add(child.direction);
             
             if(Math.abs(child.target.position.x - child.position.x) <= 1.5){
-                explosionEffect(child.target, scene);
+                document.getElementById("container").className = "airstrikeShake";
+                setTimeout(() => { document.getElementById("container").className = ""; }, 1000);
+                explosionEffect(child.target, scene, 60);
             }
         }
     });

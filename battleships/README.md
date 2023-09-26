@@ -1,5 +1,5 @@
-# new_project_template  
+# battleships
     
-Talk about your new project.    
+A game idea featuring 3d battleships!    
     
-![show a gif or screenshot here!]()    
+![battleships gif](25-09-2023_202551.gif)    
