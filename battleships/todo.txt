@@ -1,0 +1,17 @@
+TODO:
+
+- prevent movement through obstacles?
+  - check for collisions within player unit's select area (the yellow circle)?
+
+- enemy movement
+
+- ship animation? (e.g. moving cannons, cannon smoke)
+
+- brighter sky, night sky options?
+
+- fix perspective camera? (when using orbit control and rotating the camera, the ships sometimes disappear. is that a camera parameter issue?) 
+
+- figure out why sometimes things don't show in orthographic camera until a certain y position is reached? 
+  e.g. the player selectarea needs to be at or past a certain y value to show up in the orthographic camera
+
+- more ships
