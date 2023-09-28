@@ -5,6 +5,16 @@
         
         <script src="../libs/utils.js"></script>
         
+        <!-- https://discourse.threejs.org/t/importing-orbit-controls-from-local-files/47640/4 -->
+        <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.156.1/build/three.module.min.js",
+                "three/addons/": "https://unpkg.com/three@0.156.1/examples/jsm/"
+            }
+        }
+        </script>
+        
         <!--
         <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r120/three.min.js" integrity="sha512-kgjZw3xjgSUDy9lTU085y+UCVPz3lhxAtdOVkcO4O2dKl2VSBcNsQ9uMg/sXIM4SoOmCiYfyFO/n1/3GSXZtSg==" crossorigin="anonymous"></script>
         <script src="../libs/GLTFLoader.js"></script>
@@ -47,6 +57,13 @@
               90% { transform: translate(1px, 2px) rotate(0deg); }
               100% { transform: translate(1px, -2px) rotate(-1deg); }                
             }
+            
+            #displayPlayer {
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                gap: 12%;
+            }
         </style>
     </head>
 
@@ -57,6 +74,7 @@
             <button id="toggleLerpCamera"> change camera </button>
             <label>toggle orbit controls</label> <input id='toggleOrbitControl' type='checkbox' disabled />
             <label>toggle airstrike</label> <input id='toggleAirstrike' type='checkbox' />
+            <label>toggle ship wake</label> <input id='toggleWakeAnimation' type='checkbox' checked />
         </div>
         
         <br />
@@ -64,19 +82,23 @@
         <div id='container'>
         </div>
         
-        <p> instructions and stuff </p>
+        <br />
+        
+        <div id='displayPlayer'>
+            <div id='enemy'>
+                <img width="200px" height="100px" src='battleship2-edit.png' />
+                <p>enemy</p>
+            </div>
+            <div></div>
+            <div id='player'>
+                <img width="200px" height="100px" src='battleship-edit2.png' />
+                <p>player</p>
+            </div>
+        </div>
+        
+        <p>click on the player ship and click anywhere in the yellow circle to move the ship. if you get close enough to another object, you can click on the object to attack it. when attacking, if 'toggle airstrike' is checked, an airstrike will be initiated :)</p>
 
     </body>
-    
-    <!-- https://discourse.threejs.org/t/importing-orbit-controls-from-local-files/47640/4 -->
-    <script type="importmap">
-    {
-        "imports": {
-            "three": "https://unpkg.com/three@0.156.1/build/three.module.min.js",
-            "three/addons/": "https://unpkg.com/three@0.156.1/examples/jsm/"
-        }
-    }
-    </script>
 
     <script type="module" src="index.js">
     </script>

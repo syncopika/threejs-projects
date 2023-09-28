@@ -1,4 +1,7 @@
 // battleships
+// used water demo here: https://threejs.org/examples/webgl_shaders_ocean.html
+// also see https://github.com/syncopika/war_games/blob/3d-battleships/sandbox.html
+
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
@@ -43,6 +46,9 @@ let lerpCamera = false;
 let orbitControlsOn = false;
 let airstrikeOn = false;
 let currCamera = orthoCamera;
+let wakeAnimationOn = true;
+let wakeParts = [];
+let totalWakeObjects = 1;
 
 const orbitControls = new OrbitControls(perspCamera, renderer.domElement);
 orbitControls.enabled = false;
@@ -87,7 +93,7 @@ renderer.domElement.addEventListener('mousedown', (evt) => {
                     if(airstrikeOn){
                         airstrike(planeModel.clone(), selected.object, scene);
                     }else{
-                        explosionEffect(selected.object, scene, 20);
+                        explosionEffect(selected.object, scene, 30);
                     }
                 }
             }
@@ -167,7 +173,7 @@ scene.add(perspCamera);
 
 /*
 const spotLight = new THREE.SpotLight(0xffffff);
-spotLight.position.set(0, 70, -8);
+spotLight.position.set(0, 60, 0);
 spotLight.castShadow = true;
 spotLight.shadow.mapSize.width = 1024;
 spotLight.shadow.mapSize.height = 1024;
@@ -247,28 +253,54 @@ function inRange(v1, v2, limit){
     return (v1.x <= v2.x + limit && v1.x >= v2.x - limit && v1.y <= v2.y + limit && v1.y >= v2.y - limit);
 }
 
-function move(object, targetPos, directionVec, setIntervalName){
-    // stop movement if reach target		
-    // remember that in 3d space, downward movement means increasing negative numbers (unlike in 2d where going down means increasing positive value)
-    if(inRange(object.position, targetPos, 0.1)){
-        clearInterval(setIntervalName);
-    }else{
-        object.position.addScaledVector(directionVec, 0.2);
-    }
+function getRandomSign(){
+    return Math.random() < 0.5 ? -1 : 1;
 }
 
-function getAngleBetween(obj, vec){
+function getForwardVector(obj){
     // https://github.com/mrdoob/three.js/issues/1606
     const matrix = new THREE.Matrix4();
     matrix.extractRotation(obj.matrix);
     
     const direction = new THREE.Vector3(0, 0, 1);
     direction.applyMatrix4(matrix);
+    
+    return direction;
+}
 
-    const currDirectionVector = direction; 
+function move(object, targetPos, directionVec, setIntervalName){
+    // stop movement if reach target
+    if(inRange(object.position, targetPos, 0.1)){
+        clearInterval(setIntervalName);
+        wakeParts.forEach((part) => {
+            // clear out particles
+            part.status = false;
+            part.update();
+        });
+        wakeParts = [];
+    }else{
+        object.position.addScaledVector(directionVec, 0.2);
+        if(wakeAnimationOn) wakeParts.push(new wakeAnimation(object));
+    }
+}
+
+function getAngleBetween(obj, vec){
+    const currDirectionVector = getForwardVector(obj); 
     const angleBetween = currDirectionVector.angleTo(vec);
     
     return angleBetween;
+}
+
+function getVectorAtAngleFrom(baseVec, angleTo){
+    const radians = THREE.MathUtils.degToRad(angleTo);
+    const matrix = new THREE.Matrix3().set(
+        Math.cos(radians), 0, Math.sin(radians),
+        0, 1, 0,
+        -Math.sin(radians), 0, Math.cos(radians)
+    );
+    const newVec = new THREE.Vector3(baseVec.x, baseVec.y, baseVec.z);
+    newVec.applyMatrix3(matrix);
+    return newVec;
 }
 
 function rotate(object, angle, targetVec, setIntervalName, resolve){
@@ -278,9 +310,16 @@ function rotate(object, angle, targetVec, setIntervalName, resolve){
     if(angleBetween >= -limit && angleBetween <= limit){
         console.log("finished rotating");
         clearInterval(setIntervalName);
+        wakeParts.forEach((part) => {
+            // clear out particles
+            part.status = false;
+            part.update();
+        });
+        wakeParts = [];
         resolve("done rotating");
     }else{
         object.rotateOnAxis(new THREE.Vector3(0, 1, 0), angle);
+        if(wakeAnimationOn) wakeParts.push(new wakeAnimation(object));
     }
 }
 
@@ -288,40 +327,36 @@ function moveObj(objToMove, targetPos){
     // check to make sure what moves are valid.
     // i.e. if an enemy ship is already in another enemy's circle, they can move outside the circle
     // or rotate. they can't move closer if already in range to a fellow enemy. 
-    let obj = objToMove;
-    let v = targetPos;
-    let vec = new THREE.Vector3(v.x - obj.position.x, v.y - obj.position.y, v.z - obj.position.z);
+    const obj = objToMove;
+    const v = targetPos;
+    const vec = new THREE.Vector3(v.x - obj.position.x, v.y - obj.position.y, v.z - obj.position.z);
     vec.normalize();
             
     // get curr unit direction vector
-    let angleBetween = getAngleBetween(obj, vec);
-    console.log(`i need to rotate: ${180 * angleBetween / Math.PI} degrees`);
+    const angleBetween = getAngleBetween(obj, vec);
+    console.log(`need to rotate: ${180 * angleBetween / Math.PI} degrees`);
     
     // figure out if the angle should be added (clockwise) or subtracted (rotate counterclckwise)
     // https://stackoverflow.com/questions/16613616/work-out-whether-to-turn-clockwise-or-anticlockwise-from-two-angles
-    let matrix = new THREE.Matrix4();
-    matrix.extractRotation(obj.matrix);
-    let direction = new THREE.Vector3(0, 0, 1);
-    direction.applyMatrix4(matrix);
-    let currDirectionVector = direction;
+    const currDirectionVector = getForwardVector(obj);
     
     //console.log(`curr forward vector: ${currDirectionVector.x}, ${currDirectionVector.y}, ${currDirectionVector.z}`);
     //console.log(`destination vector: ${vec.x}, ${vec.y}, ${vec.z}`);
 
-    let crossProductLength = currDirectionVector.cross(vec);
+    const crossProductLength = currDirectionVector.cross(vec);
     //console.log(`cross product: ${crossProductLength.x}, ${crossProductLength.y}, ${crossProductLength.z}`);
     
-    let rotatePromise = new Promise((resolve, reject) => {
+    const rotatePromise = new Promise((resolve, reject) => {
         if(crossProductLength.y > 0){ // why y? I believe it's because from the orthographic camera POV, it's an XZ plane and Y is going in/out of the screen.
             // clockwise
-            let rotateFunc = setInterval(
+            const rotateFunc = setInterval(
                 function(){
                     rotate(obj, angleBetween / 40, vec, rotateFunc, resolve);
                 }, 35
             );
         }else{
             // counterclockwise
-            let rotateFunc = setInterval(
+            const rotateFunc = setInterval(
                 function(){
                     rotate(obj, -angleBetween / 40, vec, rotateFunc, resolve);
                 }, 35
@@ -334,7 +369,7 @@ function moveObj(objToMove, targetPos){
         
         // move to point clicked
         vec.normalize();
-        let moveFunc = setInterval(
+        const moveFunc = setInterval(
             function(){
                 obj.isMoving = true;
                 move(obj, v, vec, moveFunc);
@@ -353,15 +388,14 @@ function explosionEffect(mesh, scene, numParticles){
     
     for(let i = 0; i < numParticles; i++){
         const particle = new THREE.Mesh(geometry, material);
-        particle.position.x = position.x - Math.random() * 3.3;
-        particle.position.y = position.y + Math.random() * 2.5;
-        particle.position.z = position.z + Math.random() * 2.3;
+        particle.position.x = position.x + 3.3 * getRandomSign();
+        particle.position.y = position.y + 2.5 * getRandomSign();
+        particle.position.z = position.z + 2.3 * getRandomSign();
         
-        const sign = Math.random() < 0.5 ? -1 : 1;
         const direction = new THREE.Vector3(
-            sign * (Math.random() * -1.2),
-            sign * (Math.random() * 2.2),
-            sign * (Math.random() * -1.2)
+            getRandomSign() * (Math.random() * -1.2),
+            getRandomSign() * (Math.random() * 2.2),
+            getRandomSign() * (Math.random() * 1.2)
         );
         direction.normalize();
         particle.name = 'particle' + i;
@@ -401,12 +435,113 @@ function airstrike(plane, target, scene){
     }, 8000);
 }
 
+function wakeAnimation(obj){
+    const geometryVertices = [];
+    const wakeDirs = [];
+    //let distance = 0.5;
+    
+    // https://github.com/mrdoob/three.js/issues/1606
+    const forward = new THREE.Vector3(0,0,1).applyQuaternion(obj.quaternion);
+    forward.normalize();
+    
+    // TODO: create a color gradient?
+    const colors = ['0xefeff9', '0xffffff', '0xe0e2f7', '0xe4e5f1', '0xf1f2fb'];
+    const color = colors[Math.floor(Math.random() * (colors.length))];
+
+    for(let i = 0; i < totalWakeObjects; i++){ 
+        // a wake will form a triangular shape 
+        // like this: / \ 
+        // so we apply a vertex for the left and right side of the wake. 
+        // given the current vector of the object the wake belongs to, we can 
+        // form the triangular shape by starting at the stern of the ship (rear - maybe should be the bow)
+        // at the stern, the left and right vertices will be closest to the vector horizontally
+        // then they gradually increase in distance (x-axis) going further from the stern
+        
+        // how about this: position the particles at an angle from the current forward vector.
+        // so the left particles are something like 30 degrees from the forward vector's REVERSE,
+        // and the right particles are -30 from the forward's REVERSE vector.
+        const reverseVec = new THREE.Vector3(forward.x * 2, 0, forward.z * 2);
+        const leftVector = getVectorAtAngleFrom(reverseVec, 20); 
+        const rightVector = getVectorAtAngleFrom(reverseVec, -20);
+    
+        leftVector.multiplyScalar(5);
+        rightVector.multiplyScalar(5);
+        reverseVec.multiplyScalar(7);
+        
+        leftVector.y = 1.7;
+        rightVector.y = 1.7;
+        reverseVec.y = 1.7;
+        
+        //console.log(`leftVector: x:${leftVector.x}, y:${leftVector.y}, z:${leftVector.z}`);
+        //console.log(`rightVector: x:${rightVector.x}, y:${rightVector.y}, z:${rightVector.z}`);
+        //console.log(`reverseVec: x:${reverseVec.x}, y:${reverseVec.y}, z:${reverseVec.z}`);
+        
+        const leftVertex = new THREE.Vector3(obj.position.x, obj.position.y, obj.position.z);
+        const rightVertex = new THREE.Vector3(obj.position.x, obj.position.y, obj.position.z);
+        const rearVertex = new THREE.Vector3(obj.position.x, obj.position.y, obj.position.z);
+    
+        leftVertex.add(leftVector);
+        rightVertex.add(rightVector);
+        rearVertex.add(reverseVec);
+        
+        //console.log(`leftVertex: x:${leftVertex.x}, y:${leftVertex.y}, z:${leftVertex.z}`);
+        //console.log(`rightVertex: x:${rightVertex.x}, y:${rightVertex.y}, z:${rightVertex.z}`);
+        //console.log(`rearVertex: x:${rearVertex.x}, y:${rearVertex.y}, z:${rearVertex.z}`);
+        
+        geometryVertices.push(leftVertex.x + Math.random());
+        geometryVertices.push(leftVertex.y);
+        geometryVertices.push(leftVertex.z - Math.random());
+        wakeDirs.push({x: leftVertex.x, y: leftVertex.y});
+
+        geometryVertices.push(rightVertex.x + Math.random());
+        geometryVertices.push(rightVertex.y);
+        geometryVertices.push(rightVertex.z - Math.random());
+        wakeDirs.push({x: rightVertex.x, y: rightVertex.y});
+        
+        geometryVertices.push(rearVertex.x + Math.random());
+        geometryVertices.push(rearVertex.y);
+        geometryVertices.push(rearVertex.z - Math.random());
+        wakeDirs.push({x: rearVertex.x, y: rearVertex.y});
+      }
+      
+      const geometry = new THREE.BufferGeometry();
+      geometry.setAttribute('position', new THREE.Float32BufferAttribute(geometryVertices, 3));
+      const material = new THREE.PointsMaterial({size: 8, color: parseInt(color, 16)});
+      const particles = new THREE.Points(geometry, material);
+      
+      //console.log(geometry);
+      //console.log(particles);
+      
+      this.object = particles;
+      this.status = true;
+      
+      scene.add(this.object);
+      
+      this.update = function(){
+        if(this.status === true){
+            /*
+            let pCount = this.verticeVectors.length;
+            while(pCount--){
+                const particle = this.verticeVectors.length[pCount];
+                particle.x = wakeDirs[pCount].x;
+                particle.y = wakeDirs[pCount].y;
+            }
+            this.object.geometry.verticesNeedUpdate = true;
+            */
+        }else{
+            // remove vertices
+            //console.log("removing particles");
+            scene.remove(this.object);
+        }
+    }
+}
+
 function convert2dCoordsTo3d(camera, containerWidth, containerHeight){
-    let posX = Math.floor(Math.random() * containerWidth);
-    let posY = Math.floor(Math.random() * containerHeight);
-	let x = posX / containerWidth * 2 - 1;
-	let y = posY / containerHeight * -2 + 1;
-	let v = new THREE.Vector3(x, y, 0).unproject(camera);
+    const posX = Math.floor(Math.random() * containerWidth);
+    const posY = Math.floor(Math.random() * containerHeight);
+	const x = posX / containerWidth * 2 - 1;
+	const y = posY / containerHeight * -2 + 1;
+	const v = new THREE.Vector3(x, y, 0).unproject(camera);
 	return v;
 }
 
@@ -469,6 +604,10 @@ document.getElementById('toggleOrbitControl').addEventListener('change', () => {
 
 document.getElementById('toggleAirstrike').addEventListener('change', () => {
     airstrikeOn = !airstrikeOn;
+});
+
+document.getElementById('toggleWakeAnimation').addEventListener('change', () => {
+    wakeAnimationOn = !wakeAnimationOn;
 });
 
 const loadedModels = [];
@@ -576,6 +715,12 @@ function update(){
                 setTimeout(() => { document.getElementById("container").className = ""; }, 1000);
                 explosionEffect(child.target, scene, 60);
             }
+        }
+        
+        // for ship wake animation if moving
+        let wCount = wakeParts.length;
+        while(wCount--){
+            wakeParts[wCount].update();
         }
     });
 
