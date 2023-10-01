@@ -1,0 +1,18 @@
+{
+	"states": {
+		"normal": {
+			"moving": {
+				"actionName": "moving1",
+				"loop": "repeat"
+			},
+			"jump": {
+				"actionName": "jump",
+				"loop": "once"
+			},
+            "braking": {
+				"actionName": "braking",
+				"loop": "repeat"
+			}
+		}
+	}
+}
