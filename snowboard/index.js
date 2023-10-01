@@ -157,7 +157,11 @@ function keydown(evt){
         // j key
         animationController.changeAction('jump');
         animationController.setUpdateTimeDivisor(.52);
-        setTimeout(() => animationController.changeAction('moving'), 2000);
+        playerMesh.translateY(0.3);
+        setTimeout(() => {
+            animationController.changeAction('moving');
+            playerMesh.translateY(-0.3);
+        }, 2000);
     }
     if(evt.keyCode === 32){
         // spacebar
