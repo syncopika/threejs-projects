@@ -24,7 +24,7 @@ scene.background = new THREE.Color(0xeeeeee);
 scene.add(camera);
 
 const spotLight = new THREE.SpotLight(0xffffff);
-spotLight.position.set(0, 100, -8);
+spotLight.position.set(0, 200, -8);
 spotLight.castShadow = true;
 spotLight.shadow.mapSize.width = 1024;
 spotLight.shadow.mapSize.height = 1024;
@@ -39,8 +39,8 @@ scene.add(spotLight);
 //hemiLight.position.set(0, 10, 0);
 //scene.add(hemiLight);
 
-const planeGeometry = new THREE.PlaneGeometry(25, 25);
-const planeMaterial = new THREE.MeshLambertMaterial({color: 0x055C9D});
+const planeGeometry = new THREE.PlaneGeometry(100, 300);
+const planeMaterial = new THREE.MeshLambertMaterial({color: 0xfffafa});
 const plane = new THREE.Mesh(planeGeometry, planeMaterial);
 plane.rotateX(-Math.PI / 2);
 plane.receiveShadow = true;
@@ -74,7 +74,7 @@ function getModel(modelFilePath, side, name){
                 
                 gltf.scene.traverse((child) => {
                     if(child.type === "Mesh" || child.type === "SkinnedMesh"){
-                        let obj = child;
+                        const obj = child;
 
                         if(name === "obj"){
                             boardMesh = obj;
@@ -119,6 +119,7 @@ function getModel(modelFilePath, side, name){
 //loadedModels.push(getModel('../shared_assets/oceanfloor.glb', 'none', 'bg'));
 loadedModels.push(getModel('snowboarder-edit.gltf', 'player', 'p1'));
 loadedModels.push(getModel('snowboard.gltf', 'tool', 'obj'));
+loadedModels.push(getModel('pine-tree.gltf', 'obj', 'tree'));
 
 Promise.all(loadedModels).then(objects => {
     objects.forEach(mesh => {
@@ -126,6 +127,7 @@ Promise.all(loadedModels).then(objects => {
         
         if(mesh.name === 'p1'){
             mesh.translateY(3.5);
+            mesh.rotateY(Math.PI);
             scene.add(mesh);
             
             animationMixer = new THREE.AnimationMixer(mesh);
@@ -136,6 +138,18 @@ Promise.all(loadedModels).then(objects => {
         
         //mesh.rotateY(Math.PI / 2);
         
+        if(mesh.name === 'tree'){
+            const numTrees = 10;
+            for(let i = 0; i < numTrees; i++){
+                const newTree = mesh.clone();
+                const sign = Math.random() > .5 ? -1 : 1;
+                newTree.position.set(Math.random() * 20 * sign, 10, Math.random() * -100);
+                newTree.scale.set(1.5, 2.5, 1.5);
+                newTree.castShadow = true;
+                scene.add(newTree);
+            }
+        }
+        
     });
     
     playerMesh.boardAttachmentBone.add(boardMesh);
@@ -143,7 +157,7 @@ Promise.all(loadedModels).then(objects => {
     boardMesh.rotateZ(Math.PI / 2);
     boardMesh.translateY(-0.2);
     boardMesh.translateZ(-0.75);
-    boardMesh.rotateX(-Math.PI / 30);
+    boardMesh.rotateX(-Math.PI / 20);
 });
 
 function moveBasedOnAction(controller, thePlayer, speed, reverse){
@@ -167,6 +181,14 @@ function keydown(evt){
         // spacebar
         animationController.changeAction('braking');
         animationController.setUpdateTimeDivisor(.52);
+    }
+    if(evt.keyCode === 65){
+        // a
+        playerMesh.rotateY(Math.PI / 20);
+    }
+    if(evt.keyCode === 68){
+        // d
+        playerMesh.rotateY(-Math.PI / 20);
     }
 }
 
