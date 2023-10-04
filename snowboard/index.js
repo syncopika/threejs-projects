@@ -7,6 +7,7 @@ const fov = 60;
 const camera = new THREE.PerspectiveCamera(fov, container.clientWidth / container.clientHeight, 0.01, 2000);
 camera.position.set(0, 4, 10);
 const mouse = new THREE.Vector2();
+const keyboard = new THREEx.KeyboardState();
 
 const loadingManager = new THREE.LoadingManager();
 setupLoadingManager(loadingManager);
@@ -126,24 +127,23 @@ Promise.all(loadedModels).then(objects => {
         //console.log(mesh);
         
         if(mesh.name === 'p1'){
-            mesh.translateY(3.5);
+            mesh.translateY(1.75);
             mesh.rotateY(Math.PI);
             scene.add(mesh);
             
             animationMixer = new THREE.AnimationMixer(mesh);
             animationController = new AnimationController(mesh, animationMixer, animationClips, clock);
-            animationController.changeState("normal");
-            animationController.changeAction('moving');
+            animationController.changeState('normal');
         }
         
         //mesh.rotateY(Math.PI / 2);
         
         if(mesh.name === 'tree'){
-            const numTrees = 10;
+            const numTrees = 12;
             for(let i = 0; i < numTrees; i++){
                 const newTree = mesh.clone();
                 const sign = Math.random() > .5 ? -1 : 1;
-                newTree.position.set(Math.random() * 20 * sign, 10, Math.random() * -100);
+                newTree.position.set(Math.random() * 40 * sign, 10, Math.random() * -120);
                 newTree.scale.set(1.5, 2.5, 1.5);
                 newTree.castShadow = true;
                 scene.add(newTree);
@@ -152,6 +152,7 @@ Promise.all(loadedModels).then(objects => {
         
     });
     
+    playerMesh.scale.set(0.5, 0.5, 0.5);
     playerMesh.boardAttachmentBone.add(boardMesh);
     
     boardMesh.rotateZ(Math.PI / 2);
@@ -164,36 +165,14 @@ function moveBasedOnAction(controller, thePlayer, speed, reverse){
 }
 
 function keydown(evt){
-    // TODO:
-    // spacebar to brake
-    // j to jump
-    if(evt.keyCode === 74){
-        // j key
-        animationController.changeAction('jump');
-        animationController.setUpdateTimeDivisor(.52);
-        playerMesh.translateY(0.3);
-        setTimeout(() => {
-            animationController.changeAction('moving');
-            playerMesh.translateY(-0.3);
-        }, 2000);
-    }
     if(evt.keyCode === 32){
         // spacebar
         animationController.changeAction('braking');
         animationController.setUpdateTimeDivisor(.52);
     }
-    if(evt.keyCode === 65){
-        // a
-        playerMesh.rotateY(Math.PI / 20);
-    }
-    if(evt.keyCode === 68){
-        // d
-        playerMesh.rotateY(-Math.PI / 20);
-    }
 }
 
 function keyup(evt){
-    // TODO: spacebar to brake. if spacebar up, stop braking
     if(evt.keyCode === 32){
         // spacebar
         animationController.changeAction('moving');
@@ -208,7 +187,40 @@ function update(){
     // move stuff around, etc.
     //if(playerMesh) playerMesh.rotateY(Math.PI / 100);
     
+    if(playerMesh){
+        const relCameraOffset = new THREE.Vector3(0, 2, -10); 
+
+        const cameraOffset = relCameraOffset.applyMatrix4(playerMesh.matrixWorld);
+        camera.position.x = cameraOffset.x;
+        camera.position.y = cameraOffset.y;
+        camera.position.z = cameraOffset.z;
+        
+        camera.lookAt(playerMesh.position);
+    }
+    
     if(animationController) animationController.update();
+    
+    if(keyboard.pressed("J")){
+        animationController.changeAction('jump');
+        animationController.setUpdateTimeDivisor(.52);
+        playerMesh.translateY(0.3);
+        setTimeout(() => {
+            animationController.changeAction('moving');
+            playerMesh.translateY(-0.3);
+        }, 2000);
+    }
+    
+    if(keyboard.pressed("A")){
+        playerMesh.rotateY(Math.PI / 40);
+    }
+    if(keyboard.pressed("D")){
+        playerMesh.rotateY(-Math.PI / 40);
+    }
+    if(keyboard.pressed("W")){
+        if(animationController.currAction === '') animationController.changeAction('moving');
+        if(animationController.currAction === 'moving' || animationController.currAction === 'jump') playerMesh.translateZ(0.3);
+        if(animationController.currAction === 'braking') playerMesh.translateZ(0.1);
+    }
 }
 
 function animate(){

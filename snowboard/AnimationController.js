@@ -77,7 +77,7 @@ class AnimationController {
     //
     // note that actionToPlay should be a generic action name like walk or run. 
     // the real animation clip name is derived below using this.animationMap and 
-    // the current character state (i.e. normal (no weapon), weapon-equipped, etc.)
+    // the current character state
     playAnimation(actionToPlay, time, timeScale){
         if(this.animationMap){
             if(this.animationMap[this.currState][actionToPlay] === undefined){
