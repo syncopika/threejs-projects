@@ -71,6 +71,7 @@ function getModel(modelFilePath, side, name){
                         clips[name] = action;
                     });
                     animationClips = clips;
+                    console.log(animationClips);
                 }
                 
                 gltf.scene.traverse((child) => {
@@ -118,7 +119,7 @@ function getModel(modelFilePath, side, name){
 }
 
 //loadedModels.push(getModel('../shared_assets/oceanfloor.glb', 'none', 'bg'));
-loadedModels.push(getModel('snowboarder-edit.gltf', 'player', 'p1'));
+loadedModels.push(getModel('snowboarder.gltf', 'player', 'p1'));
 loadedModels.push(getModel('snowboard.gltf', 'tool', 'obj'));
 loadedModels.push(getModel('pine-tree.gltf', 'obj', 'tree'));
 
@@ -178,6 +179,14 @@ function keyup(evt){
         animationController.changeAction('moving');
         animationController.setUpdateTimeDivisor(.52);
     }
+    if(evt.keyCode === 65){
+        // a
+        animationController.changeAction('moving');
+    }
+    if(evt.keyCode === 68){
+        // d
+        animationController.changeAction('moving');
+    }
 }
 
 document.addEventListener("keydown", keydown);
@@ -198,8 +207,6 @@ function update(){
         camera.lookAt(playerMesh.position);
     }
     
-    if(animationController) animationController.update();
-    
     if(keyboard.pressed("J")){
         animationController.changeAction('jump');
         animationController.setUpdateTimeDivisor(.52);
@@ -211,16 +218,27 @@ function update(){
     }
     
     if(keyboard.pressed("A")){
+        animationController.changeAction('turnleft');
         playerMesh.rotateY(Math.PI / 40);
     }
+    
     if(keyboard.pressed("D")){
+        animationController.changeAction('turnright');
         playerMesh.rotateY(-Math.PI / 40);
     }
+    
     if(keyboard.pressed("W")){
         if(animationController.currAction === '') animationController.changeAction('moving');
-        if(animationController.currAction === 'moving' || animationController.currAction === 'jump') playerMesh.translateZ(0.3);
+        if(
+            animationController.currAction === 'moving' || 
+            animationController.currAction === 'jump' ||
+            animationController.currAction === 'turnleft' ||
+            animationController.currAction === 'turnright'
+        ) playerMesh.translateZ(0.3);
         if(animationController.currAction === 'braking') playerMesh.translateZ(0.1);
     }
+    
+    if(animationController) animationController.update();
 }
 
 function animate(){

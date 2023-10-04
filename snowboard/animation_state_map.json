@@ -12,6 +12,14 @@
             "braking": {
 				"actionName": "braking",
 				"loop": "repeat"
+			},
+            "turnleft": {
+				"actionName": "turnleft",
+				"loop": "repeat"
+			},
+            "turnright": {
+				"actionName": "turnright",
+				"loop": "repeat"
 			}
 		}
 	}
