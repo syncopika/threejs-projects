@@ -36,6 +36,7 @@ class AnimationController {
                             let actionClip = this.mixer.clipAction(this.clips[actionParams.actionName]);
                             actionClip.paused = false;
                             actionClip.setLoop(THREE.LoopOnce);
+                            actionClip.clampWhenFinished = true;
                         }
                     }
                 }
@@ -102,8 +103,8 @@ class AnimationController {
         }
     }
     
-    update(){
-        this.mixer.update(this.clock.getDelta() / this.timeDivisor);
+    update(clockDelta){
+        this.mixer.update((clockDelta ? clockDelta : this.clock.getDelta()) / this.timeDivisor);
     }
     
 }

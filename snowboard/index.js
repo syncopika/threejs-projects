@@ -58,6 +58,11 @@ let animationClips = null;
 let playerMesh = null;
 let boardMesh = null;
 
+let isJumping = false;
+let time = 0;
+let originalPlayerY = 0;
+const jumpMaxY = 2.0;
+
 function getModel(modelFilePath, side, name){
     return new Promise((resolve, reject) => {
         loader.load(
@@ -132,6 +137,8 @@ Promise.all(loadedModels).then(objects => {
             mesh.rotateY(Math.PI);
             scene.add(mesh);
             
+            originalPlayerY = mesh.position.y;
+            
             animationMixer = new THREE.AnimationMixer(mesh);
             animationController = new AnimationController(mesh, animationMixer, animationClips, clock);
             animationController.changeState('normal');
@@ -171,6 +178,19 @@ function keydown(evt){
         animationController.changeAction('braking');
         animationController.setUpdateTimeDivisor(.52);
     }
+    
+    if(evt.keyCode === 74){
+        // j
+        if(!isJumping){
+            animationController.changeAction('jump');
+            animationController.setUpdateTimeDivisor(.50);
+            
+            // add a slight delay before jump so animation runs first
+            setTimeout(() => {
+                isJumping = true;
+            }, 200);
+        }
+    }
 }
 
 function keyup(evt){
@@ -187,14 +207,17 @@ function keyup(evt){
         // d
         animationController.changeAction('moving');
     }
+    if(evt.keyCode === 87){
+        // w
+        animationController.changeAction('idle');
+    }
 }
 
 document.addEventListener("keydown", keydown);
 document.addEventListener("keyup", keyup);
 
 function update(){
-    // move stuff around, etc.
-    //if(playerMesh) playerMesh.rotateY(Math.PI / 100);
+    const delta = clock.getDelta();
     
     if(playerMesh){
         const relCameraOffset = new THREE.Vector3(0, 2, -10); 
@@ -207,14 +230,17 @@ function update(){
         camera.lookAt(playerMesh.position);
     }
     
-    if(keyboard.pressed("J")){
-        animationController.changeAction('jump');
-        animationController.setUpdateTimeDivisor(.52);
-        playerMesh.translateY(0.3);
-        setTimeout(() => {
+    if(isJumping){
+        // https://discussions.unity.com/t/bouncing-ball-without-physics-gravity/9973
+        if(time < 1.0){
+            time += delta;
+            playerMesh.position.y = originalPlayerY + (jumpMaxY * Math.sin(time * Math.PI));
+        }else{
+            time = 0;
+            isJumping = false;
+            playerMesh.position.y = originalPlayerY;
             animationController.changeAction('moving');
-            playerMesh.translateY(-0.3);
-        }, 2000);
+        }
     }
     
     if(keyboard.pressed("A")){
@@ -228,17 +254,18 @@ function update(){
     }
     
     if(keyboard.pressed("W")){
-        if(animationController.currAction === '') animationController.changeAction('moving');
+        if(animationController.currAction === '' || animationController.currAction === 'idle') animationController.changeAction('moving');
         if(
             animationController.currAction === 'moving' || 
             animationController.currAction === 'jump' ||
             animationController.currAction === 'turnleft' ||
             animationController.currAction === 'turnright'
-        ) playerMesh.translateZ(0.3);
+        ) playerMesh.translateZ(0.2);
         if(animationController.currAction === 'braking') playerMesh.translateZ(0.1);
     }
     
-    if(animationController) animationController.update();
+    // https://discourse.threejs.org/t/animations-looks-different-and-wrong-when-i-play-them-on-three-js/55410/2
+    if(animationController) animationController.update(delta);
 }
 
 function animate(){
