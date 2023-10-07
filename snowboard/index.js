@@ -43,12 +43,15 @@ scene.add(spotLight);
 const planeGeometry = new THREE.PlaneGeometry(100, 300);
 const planeMaterial = new THREE.MeshLambertMaterial({color: 0xfffafa});
 const plane = new THREE.Mesh(planeGeometry, planeMaterial);
+plane.name = 'plane';
 plane.rotateX(-Math.PI / 2);
 plane.receiveShadow = true;
 plane.castShadow = true;
 scene.add(plane);
 
 const clock = new THREE.Clock();
+
+const raycaster = new THREE.Raycaster();
 
 const loadedModels = [];
 let animationController;
@@ -61,6 +64,8 @@ let boardMesh = null;
 let isJumping = false;
 let time = 0;
 let originalPlayerY = 0;
+let initialJumpHeight = 0; // y-pos of player when jump starts
+let currJumpHeight = 0;    // amount of jump height based on curr time and sin wave after jumping 
 const jumpMaxY = 2.0;
 
 function getModel(modelFilePath, side, name){
@@ -82,6 +87,7 @@ function getModel(modelFilePath, side, name){
                 gltf.scene.traverse((child) => {
                     if(child.type === "Mesh" || child.type === "SkinnedMesh"){
                         const obj = child;
+                        obj.name = name;
 
                         if(name === "obj"){
                             boardMesh = obj;
@@ -95,14 +101,6 @@ function getModel(modelFilePath, side, name){
                                 playerMesh = obj;
                                 playerMesh.castShadow = true;
                             }
-                            
-                            if(name === "bg"){
-                                obj.scale.x = child.scale.x * 10;
-                                obj.scale.y = child.scale.y * 10;
-                                obj.scale.z = child.scale.z * 10;
-                            }
-                            
-                            obj.name = name;
                             
                             resolve(obj); // this will return only one mesh. if you expect a scene to yield multiple meshes, this will fail.
                         }
@@ -127,11 +125,10 @@ function getModel(modelFilePath, side, name){
 loadedModels.push(getModel('snowboarder.gltf', 'player', 'p1'));
 loadedModels.push(getModel('snowboard.gltf', 'tool', 'obj'));
 loadedModels.push(getModel('pine-tree.gltf', 'obj', 'tree'));
+loadedModels.push(getModel('hill.gltf', 'obj', 'hill'));
 
 Promise.all(loadedModels).then(objects => {
     objects.forEach(mesh => {
-        //console.log(mesh);
-        
         if(mesh.name === 'p1'){
             mesh.translateY(1.75);
             mesh.rotateY(Math.PI);
@@ -143,8 +140,6 @@ Promise.all(loadedModels).then(objects => {
             animationController = new AnimationController(mesh, animationMixer, animationClips, clock);
             animationController.changeState('normal');
         }
-        
-        //mesh.rotateY(Math.PI / 2);
         
         if(mesh.name === 'tree'){
             const numTrees = 12;
@@ -158,6 +153,13 @@ Promise.all(loadedModels).then(objects => {
             }
         }
         
+        if(mesh.name === 'hill'){
+            mesh.position.set(-5, 0, -20);
+            mesh.scale.set(20, 20, 20);
+            mesh.material.wireframe = true;
+            scene.add(mesh);
+        }
+        
     });
     
     playerMesh.scale.set(0.5, 0.5, 0.5);
@@ -168,9 +170,6 @@ Promise.all(loadedModels).then(objects => {
     boardMesh.translateZ(-0.75);
     boardMesh.rotateX(-Math.PI / 20);
 });
-
-function moveBasedOnAction(controller, thePlayer, speed, reverse){
-}
 
 function keydown(evt){
     if(evt.keyCode === 32){
@@ -185,6 +184,8 @@ function keydown(evt){
             animationController.changeAction('jump');
             animationController.setUpdateTimeDivisor(.50);
             
+            initialJumpHeight = playerMesh.position.y;
+            
             // add a slight delay before jump so animation runs first
             setTimeout(() => {
                 isJumping = true;
@@ -196,16 +197,16 @@ function keydown(evt){
 function keyup(evt){
     if(evt.keyCode === 32){
         // spacebar
-        animationController.changeAction('moving');
+        animationController.changeAction('idle');
         animationController.setUpdateTimeDivisor(.52);
     }
     if(evt.keyCode === 65){
         // a
-        animationController.changeAction('moving');
+        animationController.changeAction('idle');
     }
     if(evt.keyCode === 68){
         // d
-        animationController.changeAction('moving');
+        animationController.changeAction('idle');
     }
     if(evt.keyCode === 87){
         // w
@@ -215,6 +216,69 @@ function keyup(evt){
 
 document.addEventListener("keydown", keydown);
 document.addEventListener("keyup", keyup);
+
+function getForwardVector(obj){
+    // https://github.com/mrdoob/three.js/issues/1606
+    const matrix = new THREE.Matrix4();
+    matrix.extractRotation(obj.matrix);
+    
+    const direction = new THREE.Vector3(0, 0, 1);
+    direction.applyMatrix4(matrix);
+    
+    return direction;
+}
+
+function doRaycast(playerMesh, raycaster){
+    if(isJumping) return;
+    
+    // aim ray downwards but above the player
+    const raycastStart = new THREE.Vector3(playerMesh.position.x, playerMesh.position.y + 20, playerMesh.position.z + 2.0);
+    raycaster.set(raycastStart, new THREE.Vector3(0, -1, 0));
+    
+    const intersects = raycaster.intersectObjects(scene.children, true);
+    
+    for(let i = 0; i < intersects.length; i++){
+        if(intersects[i].object.name === 'hill' || intersects[i].object.name === 'plane'){
+            const currPos = intersects[i].point; // point where the raycast hit
+            
+            if(currPos.y + originalPlayerY > originalPlayerY){
+                const nextY = originalPlayerY + currPos.y;
+                
+                const nextVec = new THREE.Vector3(currPos.x - playerMesh.position.x, nextY - playerMesh.position.y, currPos.z - playerMesh.position.z);
+                nextVec.normalize();
+                
+                const forward = new THREE.Vector3(0, 0, 1);
+                
+                const angleTo = forward.angleTo(nextVec);
+
+                /*
+                console.log("curr pos");
+                console.log(playerMesh.position);
+
+                console.log("next vector");
+                console.log(nextVec);
+                */
+                
+                const crossProductLength = forward.cross(nextVec);
+                
+                if(crossProductLength.x > 0){
+                    playerMesh.rotateX(angleTo);
+                    //console.log(`angleTo: ${180 * angleTo / Math.PI}`);
+                }else{
+                    playerMesh.rotateX(-angleTo);
+                    //console.log(`angleTo: ${180 * -angleTo / Math.PI}`);
+                }
+                
+                playerMesh.position.y = nextY;
+            }else{
+                playerMesh.position.y = originalPlayerY;
+            }
+            
+            break; // only handle hill or plane, whichever comes first based on raycast
+        }
+        
+    }
+}
 
 function update(){
     const delta = clock.getDelta();
@@ -228,19 +292,6 @@ function update(){
         camera.position.z = cameraOffset.z;
         
         camera.lookAt(playerMesh.position);
-    }
-    
-    if(isJumping){
-        // https://discussions.unity.com/t/bouncing-ball-without-physics-gravity/9973
-        if(time < 1.0){
-            time += delta;
-            playerMesh.position.y = originalPlayerY + (jumpMaxY * Math.sin(time * Math.PI));
-        }else{
-            time = 0;
-            isJumping = false;
-            playerMesh.position.y = originalPlayerY;
-            animationController.changeAction('moving');
-        }
     }
     
     if(keyboard.pressed("A")){
@@ -262,6 +313,36 @@ function update(){
             animationController.currAction === 'turnright'
         ) playerMesh.translateZ(0.2);
         if(animationController.currAction === 'braking') playerMesh.translateZ(0.1);
+    
+        doRaycast(playerMesh, raycaster);
+    }
+    
+    if(isJumping){
+        // https://discussions.unity.com/t/bouncing-ball-without-physics-gravity/9973
+        if(time < 1.0){
+            time += delta;
+            
+            currJumpHeight = jumpMaxY * Math.sin(time * Math.PI);
+            
+            /*
+            if(!keyboard.pressed("W")){
+                // handle jumping-in-place
+                playerMesh.position.y = originalPlayerY + currJumpHeight;
+            }*/
+            
+            playerMesh.position.y = initialJumpHeight + currJumpHeight;
+        }else{
+            time = 0;
+            isJumping = false;
+            /*
+            if(!keyboard.pressed("W")){
+                playerMesh.position.y = originalPlayerY;
+            }else{
+                currJumpHeight = 0;
+            }*/
+            playerMesh.position.y = originalPlayerY;
+            animationController.changeAction('moving');
+        }
     }
     
     // https://discourse.threejs.org/t/animations-looks-different-and-wrong-when-i-play-them-on-three-js/55410/2
