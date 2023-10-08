@@ -25,19 +25,13 @@ scene.background = new THREE.Color(0xeeeeee);
 scene.add(camera);
 
 const spotLight = new THREE.SpotLight(0xffffff);
-spotLight.position.set(0, 200, -8);
+spotLight.position.set(0, 300, 0);
 spotLight.castShadow = true;
 spotLight.shadow.mapSize.width = 1024;
 spotLight.shadow.mapSize.height = 1024;
 scene.add(spotLight);
 
-//const pointLight = new THREE.PointLight(0xffffff, 1, 0);
-//pointLight.position.set(2, 10, 2);
-//pointLight.castShadow = true;
-//scene.add(pointLight);
-
-//const hemiLight = new THREE.HemisphereLight(0xffffff);
-//hemiLight.position.set(0, 10, 0);
+//const hemiLight = new THREE.HemisphereLight(0xffffff, 0xcccccc, 0.08);
 //scene.add(hemiLight);
 
 const planeGeometry = new THREE.PlaneGeometry(100, 300);
@@ -152,6 +146,10 @@ Promise.all(loadedModels).then(objects => {
                 newTree.scale.set(1.5, 2.5, 1.5);
                 newTree.castShadow = true;
                 scene.add(newTree);
+                
+                const light = new THREE.PointLight(0xffffff, 10, 20);
+                newTree.add(light);
+                light.translateY(5);
             }
         }
         
