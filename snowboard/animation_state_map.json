@@ -1,0 +1,34 @@
+{
+	"states": {
+		"normal": {
+            "idle": {
+				"actionName": "idle",
+				"loop": "repeat"
+			},
+			"moving": {
+				"actionName": "moving1",
+				"loop": "repeat"
+			},
+			"jump": {
+				"actionName": "jump",
+				"loop": "once"
+			},
+            "braking": {
+				"actionName": "braking",
+				"loop": "repeat"
+			},
+            "turnleft": {
+				"actionName": "turnleft",
+				"loop": "repeat"
+			},
+            "turnright": {
+				"actionName": "turnright",
+				"loop": "repeat"
+			},
+            "grab": {
+				"actionName": "grab",
+				"loop": "repeat"
+			}
+		}
+	}
+}

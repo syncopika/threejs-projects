@@ -12,7 +12,6 @@ const container = document.getElementById("container");
 
 const WIDTH = container.clientWidth;
 const HEIGHT = container.clientHeight;
-const VIEW_ANGLE = 100;
 const ASPECT = WIDTH / HEIGHT;
 const NEAR = 1;
 const FAR = 1000;
