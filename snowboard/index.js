@@ -62,6 +62,7 @@ let playerMesh = null;
 let boardMesh = null;
 
 let isJumping = false;
+let isStillInAir = false;
 let time = 0;
 let originalPlayerY = 0;
 let initialJumpHeight = 0; // y-pos of player when jump starts
@@ -135,6 +136,7 @@ Promise.all(loadedModels).then(objects => {
             scene.add(mesh);
             
             originalPlayerY = mesh.position.y;
+            //console.log("originalPlayerY: " + originalPlayerY);
             
             animationMixer = new THREE.AnimationMixer(mesh);
             animationController = new AnimationController(mesh, animationMixer, animationClips, clock);
@@ -154,10 +156,22 @@ Promise.all(loadedModels).then(objects => {
         }
         
         if(mesh.name === 'hill'){
-            mesh.position.set(-5, 0, -20);
-            mesh.scale.set(20, 20, 20);
-            mesh.material.wireframe = true;
-            scene.add(mesh);
+            for(let i = 0; i < 2; i++){
+                const newHill = mesh.clone();
+                if(i === 0){
+                    newHill.position.set(-5, 0, -20);
+                    const newMat = newHill.material.clone();
+                    newMat.wireframe = true;
+                    newHill.material = newMat;
+                }
+
+                if(i == 1){
+                    newHill.position.set(5, 0, -80);
+                }
+
+                newHill.scale.set(20, 20, 20);
+                scene.add(newHill);
+            }
         }
         
     });
@@ -192,6 +206,12 @@ function keydown(evt){
             }, 200);
         }
     }
+    
+    if(evt.keyCode === 71){
+        if(isJumping || isStillInAir){
+            animationController.changeAction('grab');
+        }
+    }
 }
 
 function keyup(evt){
@@ -212,25 +232,17 @@ function keyup(evt){
         // w
         animationController.changeAction('idle');
     }
+    if(evt.keyCode === 71){
+        // g
+        animationController.changeAction('moving');
+    }
 }
 
 document.addEventListener("keydown", keydown);
 document.addEventListener("keyup", keyup);
 
-function getForwardVector(obj){
-    // https://github.com/mrdoob/three.js/issues/1606
-    const matrix = new THREE.Matrix4();
-    matrix.extractRotation(obj.matrix);
-    
-    const direction = new THREE.Vector3(0, 0, 1);
-    direction.applyMatrix4(matrix);
-    
-    return direction;
-}
 
 function doRaycast(playerMesh, raycaster){
-    if(isJumping) return;
-    
     // aim ray downwards but above the player
     const raycastStart = new THREE.Vector3(playerMesh.position.x, playerMesh.position.y + 20, playerMesh.position.z + 2.0);
     raycaster.set(raycastStart, new THREE.Vector3(0, -1, 0));
@@ -241,24 +253,36 @@ function doRaycast(playerMesh, raycaster){
         if(intersects[i].object.name === 'hill' || intersects[i].object.name === 'plane'){
             const currPos = intersects[i].point; // point where the raycast hit
             
-            if(currPos.y + originalPlayerY > originalPlayerY){
-                const nextY = originalPlayerY + currPos.y;
-                
+            // check if player is still in the air after jumping + making the full arc (like when jumping off the top of a big hill)
+            // if yes, we manually decrease their y position TODO: can we make this look nicer? like follow a more realistic curve
+            isStillInAir = isStillJumping(playerMesh, raycaster);
+            
+            let nextY;
+            if(isJumping){
+                nextY = initialJumpHeight + currJumpHeight + currPos.y;
+            }else if(isStillInAir){
+                nextY = playerMesh.position.y - 0.3;
+            }else{
+                nextY = originalPlayerY + currPos.y;
+            }
+
+            /*
+            console.log("curr pos");
+            console.log(playerMesh.position);
+
+            console.log("next vector");
+            console.log(nextVec);
+            */
+            
+            // only rotate if moving and not in flight
+            if(keyboard.pressed("W") && !isJumping && !isStillInAir){
                 const nextVec = new THREE.Vector3(currPos.x - playerMesh.position.x, nextY - playerMesh.position.y, currPos.z - playerMesh.position.z);
                 nextVec.normalize();
                 
                 const forward = new THREE.Vector3(0, 0, 1);
                 
                 const angleTo = forward.angleTo(nextVec);
-
-                /*
-                console.log("curr pos");
-                console.log(playerMesh.position);
-
-                console.log("next vector");
-                console.log(nextVec);
-                */
-                
+            
                 const crossProductLength = forward.cross(nextVec);
                 
                 if(crossProductLength.x > 0){
@@ -268,16 +292,32 @@ function doRaycast(playerMesh, raycaster){
                     playerMesh.rotateX(-angleTo);
                     //console.log(`angleTo: ${180 * -angleTo / Math.PI}`);
                 }
-                
-                playerMesh.position.y = nextY;
-            }else{
-                playerMesh.position.y = originalPlayerY;
             }
+            
+            playerMesh.position.y = nextY;
             
             break; // only handle hill or plane, whichever comes first based on raycast
         }
-        
     }
+}
+
+function isStillJumping(playerMesh, raycaster){
+    const raycastStart = new THREE.Vector3(playerMesh.position.x, playerMesh.position.y + 20, playerMesh.position.z);
+    raycaster.set(raycastStart, new THREE.Vector3(0, -1, 0));
+    
+    const intersects = raycaster.intersectObjects(scene.children, true);
+    
+    for(let i = 0; i < intersects.length; i++){
+        if(intersects[i].object.name === 'hill' || intersects[i].object.name === 'plane'){
+            const hitPos = intersects[i].point;
+            if(playerMesh.position.distanceTo(hitPos) > 3){
+                // TODO: 3 works well but not sure how to dynamically know?
+                return true;
+            }
+            break;
+        }
+    }
+    return false;
 }
 
 function update(){
@@ -306,42 +346,31 @@ function update(){
     
     if(keyboard.pressed("W")){
         if(animationController.currAction === '' || animationController.currAction === 'idle') animationController.changeAction('moving');
+        
         if(
             animationController.currAction === 'moving' || 
             animationController.currAction === 'jump' ||
             animationController.currAction === 'turnleft' ||
-            animationController.currAction === 'turnright'
+            animationController.currAction === 'turnright' ||
+            animationController.currAction === 'grab'
         ) playerMesh.translateZ(0.2);
+        
         if(animationController.currAction === 'braking') playerMesh.translateZ(0.1);
-    
-        doRaycast(playerMesh, raycaster);
     }
+    
+    if(playerMesh) doRaycast(playerMesh, raycaster);
     
     if(isJumping){
         // https://discussions.unity.com/t/bouncing-ball-without-physics-gravity/9973
         if(time < 1.0){
             time += delta;
-            
             currJumpHeight = jumpMaxY * Math.sin(time * Math.PI);
-            
-            /*
-            if(!keyboard.pressed("W")){
-                // handle jumping-in-place
-                playerMesh.position.y = originalPlayerY + currJumpHeight;
-            }*/
-            
-            playerMesh.position.y = initialJumpHeight + currJumpHeight;
         }else{
             time = 0;
-            isJumping = false;
-            /*
-            if(!keyboard.pressed("W")){
-                playerMesh.position.y = originalPlayerY;
-            }else{
-                currJumpHeight = 0;
-            }*/
-            playerMesh.position.y = originalPlayerY;
             animationController.changeAction('moving');
+            console.log("jump ended");
+            
+            isJumping = false;
         }
     }
     

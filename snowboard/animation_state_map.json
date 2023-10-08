@@ -24,6 +24,10 @@
             "turnright": {
 				"actionName": "turnright",
 				"loop": "repeat"
+			},
+            "grab": {
+				"actionName": "grab",
+				"loop": "repeat"
 			}
 		}
 	}
