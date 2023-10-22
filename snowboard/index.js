@@ -116,7 +116,6 @@ function getModel(modelFilePath, side, name){
     });
 }
 
-//loadedModels.push(getModel('../shared_assets/oceanfloor.glb', 'none', 'bg'));
 loadedModels.push(getModel('snowboarder.gltf', 'player', 'p1'));
 loadedModels.push(getModel('snowboard.gltf', 'tool', 'obj'));
 loadedModels.push(getModel('pine-tree.gltf', 'obj', 'tree'));
@@ -167,6 +166,9 @@ Promise.all(loadedModels).then(objects => {
                     newHill.position.set(5, 0, -80);
                 }
 
+                // make the hills a sandy color
+                //newHill.material.color.setHex(0xe7ca50);
+
                 newHill.scale.set(20, 20, 20);
                 scene.add(newHill);
             }
@@ -184,14 +186,12 @@ Promise.all(loadedModels).then(objects => {
 });
 
 function keydown(evt){
-    if(evt.keyCode === 32){
-        // spacebar
+    if(evt.code === 'Space'){
         animationController.changeAction('braking');
         animationController.setUpdateTimeDivisor(.52);
     }
     
-    if(evt.keyCode === 74){
-        // j
+    if(evt.code === 'KeyJ'){
         if(!isJumping){
             animationController.changeAction('jump');
             animationController.setUpdateTimeDivisor(.50);
@@ -205,7 +205,7 @@ function keydown(evt){
         }
     }
     
-    if(evt.keyCode === 71){
+    if(evt.code === 'KeyG'){
         if(isJumping || isStillInAir){
             animationController.changeAction('grab');
         }
@@ -213,25 +213,20 @@ function keydown(evt){
 }
 
 function keyup(evt){
-    if(evt.keyCode === 32){
-        // spacebar
+    if(evt.code === 'Space'){
         animationController.changeAction('idle');
         animationController.setUpdateTimeDivisor(.52);
     }
-    if(evt.keyCode === 65){
-        // a
+    if(evt.code === 'KeyA'){
         animationController.changeAction('idle');
     }
-    if(evt.keyCode === 68){
-        // d
+    if(evt.code === 'KeyD'){
         animationController.changeAction('idle');
     }
-    if(evt.keyCode === 87){
-        // w
+    if(evt.code === 'KeyW'){
         animationController.changeAction('idle');
     }
-    if(evt.keyCode === 71){
-        // g
+    if(evt.code === 'KeyG'){
         animationController.changeAction('moving');
     }
 }
@@ -285,10 +280,8 @@ function doRaycast(playerMesh, raycaster){
                 
                 if(crossProductLength.x > 0){
                     playerMesh.rotateX(angleTo);
-                    //console.log(`angleTo: ${180 * angleTo / Math.PI}`);
                 }else{
                     playerMesh.rotateX(-angleTo);
-                    //console.log(`angleTo: ${180 * -angleTo / Math.PI}`);
                 }
             }
             
@@ -321,14 +314,23 @@ function isStillJumping(playerMesh, raycaster){
 function update(){
     const delta = clock.getDelta();
     
-    if(playerMesh){
-        const relCameraOffset = new THREE.Vector3(0, 2, -10); 
+    if(playerMesh && !keyboard.pressed("shift")){
+        const relCameraOffset = new THREE.Vector3(0, 2, -10);
 
         const cameraOffset = relCameraOffset.applyMatrix4(playerMesh.matrixWorld);
         camera.position.x = cameraOffset.x;
         camera.position.y = cameraOffset.y;
         camera.position.z = cameraOffset.z;
-        
+
+        camera.lookAt(playerMesh.position);
+    }else if(keyboard.pressed("shift")){
+        const relCameraOffset = new THREE.Vector3(0, 2, 10);
+
+        const cameraOffset = relCameraOffset.applyMatrix4(playerMesh.matrixWorld);
+        camera.position.x = cameraOffset.x;
+        camera.position.y = cameraOffset.y;
+        camera.position.z = cameraOffset.z;
+
         camera.lookAt(playerMesh.position);
     }
     
