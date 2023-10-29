@@ -21,7 +21,7 @@ renderer.setSize(container.clientWidth, container.clientHeight);
 container.appendChild(renderer.domElement);
 
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0xeeeeee);
+scene.background = new THREE.Color(0xcccccc);
 scene.add(camera);
 
 const spotLight = new THREE.SpotLight(0xffffff);
@@ -120,6 +120,10 @@ loadedModels.push(getModel('snowboarder.gltf', 'player', 'p1'));
 loadedModels.push(getModel('snowboard.gltf', 'tool', 'obj'));
 loadedModels.push(getModel('pine-tree.gltf', 'obj', 'tree'));
 loadedModels.push(getModel('hill.gltf', 'obj', 'hill'));
+loadedModels.push(getModel('rock.gltf', 'obj', 'rock'));
+loadedModels.push(getModel('cloud.gltf', 'obj', 'cloud'));
+
+const clouds = [];
 
 Promise.all(loadedModels).then(objects => {
     objects.forEach(mesh => {
@@ -149,6 +153,42 @@ Promise.all(loadedModels).then(objects => {
                 const light = new THREE.PointLight(0xffffff, 10, 20);
                 newTree.add(light);
                 light.translateY(5);
+            }
+        }
+        
+        if(mesh.name === 'cloud'){
+            const numClouds = 5;
+            for(let i = 0; i < numClouds; i++){
+                const newCloud = mesh.clone();
+                
+                // emissive will make the cloud completely white
+                newCloud.material = new THREE.MeshLambertMaterial({color: 0xffffff, emissive: 0xffffff});
+                
+                const sign = Math.random() > .5 ? -1 : 1;
+                newCloud.position.set(Math.random() * 100 * sign, 70, sign * 180 * Math.random());
+                newCloud.scale.set(0.6, 0.6, 0.6);
+                newCloud.rotateY(Math.random() * sign);
+                newCloud.castShadow = true;
+                scene.add(newCloud);
+                
+                clouds.push(newCloud);
+            }
+        }
+        
+        if(mesh.name === 'rock'){
+            const numRocks = 12;
+            for(let i = 0; i < numRocks; i++){
+                const newRock = mesh.clone();
+                newRock.material = new THREE.MeshLambertMaterial({color: 0xecdabe});
+                
+                const sign = Math.random() > .5 ? -1 : 1;
+                newRock.position.set(Math.random() * 35 * sign, -0.7, Math.random() * -90);
+                newRock.rotateY(Math.random() * sign);
+                
+                newRock.scale.set(1 + Math.random(), 2 + Math.random(), 1.5);
+                
+                newRock.castShadow = true;
+                scene.add(newRock);
             }
         }
         
@@ -243,7 +283,7 @@ function doRaycast(playerMesh, raycaster){
     const intersects = raycaster.intersectObjects(scene.children, true);
     
     for(let i = 0; i < intersects.length; i++){
-        if(intersects[i].object.name === 'hill' || intersects[i].object.name === 'plane'){
+        if(intersects[i].object.name === 'hill' || intersects[i].object.name === 'plane' || intersects[i].object.name === 'rock'){
             const currPos = intersects[i].point; // point where the raycast hit
             
             // check if player is still in the air after jumping + making the full arc (like when jumping off the top of a big hill)
@@ -376,6 +416,32 @@ function update(){
     
     // https://discourse.threejs.org/t/animations-looks-different-and-wrong-when-i-play-them-on-three-js/55410/2
     if(animationController) animationController.update(delta);
+    
+    // move clouds
+    clouds.forEach(c => {
+        if(c.position.x < -100){
+            c.position.x = 100;
+        }
+        
+        if(c.position.z < -100){
+            c.position.z = 100;
+        }
+        
+        if(c.position.x > 100){
+            c.position.x = -100;
+        }
+        
+        if(c.position.z > 100){
+            c.position.z = -100;
+        }
+        
+        // TODO: add some shader to make the vertices constantly shift around like real clouds?
+        // allow them to morph shape
+        
+        const fwd = getForward(c);
+        fwd.multiplyScalar(0.03);
+        c.position.add(fwd);
+    });
 }
 
 function animate(){

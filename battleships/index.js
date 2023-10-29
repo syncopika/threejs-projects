@@ -74,7 +74,7 @@ renderer.domElement.addEventListener('mousedown', (evt) => {
             
             if(!selected) return;
             
-            if(selected.object.name === 'player'){
+            if(selected.object.name === 'player' && !currentPlayerUnit.isMoving){
                 // toggle select area visibility
                 togglePlayerSelectArea(selected.object, scene);
             }else if(selected.object.name === 'selectArea'){
@@ -270,8 +270,9 @@ function getForwardVector(obj){
 function move(object, targetPos, directionVec, setIntervalName){
     // stop movement if reach target
     if(inRange(object.position, targetPos, 0.1)){
+        object.isMoving = false;
         clearInterval(setIntervalName);
-        wakeParts.forEach((part) => {
+        wakeParts.forEach(part => {
             // clear out particles
             part.status = false;
             part.update();
@@ -309,7 +310,7 @@ function rotate(object, angle, targetVec, setIntervalName, resolve){
     if(angleBetween >= -limit && angleBetween <= limit){
         console.log("finished rotating");
         clearInterval(setIntervalName);
-        wakeParts.forEach((part) => {
+        wakeParts.forEach(part => {
             // clear out particles
             part.status = false;
             part.update();
@@ -345,6 +346,8 @@ function moveObj(objToMove, targetPos){
     const crossProductLength = currDirectionVector.cross(vec);
     //console.log(`cross product: ${crossProductLength.x}, ${crossProductLength.y}, ${crossProductLength.z}`);
     
+    obj.isMoving = true;
+    
     const rotatePromise = new Promise((resolve, reject) => {
         if(crossProductLength.y > 0){ // why y? I believe it's because from the orthographic camera POV, it's an XZ plane and Y is going in/out of the screen.
             // clockwise
@@ -370,9 +373,7 @@ function moveObj(objToMove, targetPos){
         vec.normalize();
         const moveFunc = setInterval(
             function(){
-                obj.isMoving = true;
                 move(obj, v, vec, moveFunc);
-                obj.isMoving = false;
             }, 30
         );
     });
@@ -381,11 +382,12 @@ function moveObj(objToMove, targetPos){
 function explosionEffect(mesh, scene, numParticles){
     //console.log('explosion');
     const position = mesh.position;
-    const geometry = new THREE.SphereGeometry(0.5, 12, 12);
-    const material = new THREE.MeshBasicMaterial({color: 0xffc0cb});//0x848884});
-    material.wireframe = true;
     
     for(let i = 0; i < numParticles; i++){
+        const geometry = new THREE.SphereGeometry(Math.min(0.6, Math.random()), 12, 12);
+        const material = new THREE.MeshBasicMaterial({color: 0xffc0cb});//0x848884});
+        material.wireframe = true;
+    
         const particle = new THREE.Mesh(geometry, material);
         particle.position.x = position.x + 3.3 * getRandomSign();
         particle.position.y = position.y + 2.5 * getRandomSign();
@@ -435,17 +437,15 @@ function airstrike(plane, target, scene){
 }
 
 function wakeAnimation(obj){
-    const geometryVertices = [];
-    const wakeDirs = [];
-    //let distance = 0.5;
-    
     // https://github.com/mrdoob/three.js/issues/1606
     const forward = new THREE.Vector3(0,0,1).applyQuaternion(obj.quaternion);
     forward.normalize();
     
     // TODO: create a color gradient?
     const colors = ['0xefeff9', '0xffffff', '0xe0e2f7', '0xe4e5f1', '0xf1f2fb'];
-    const color = colors[Math.floor(Math.random() * (colors.length))];
+    const color = colors[Math.floor(Math.random() * colors.length)];
+    
+    const particles = new THREE.Group();
 
     for(let i = 0; i < totalWakeObjects; i++){ 
         // a wake will form a triangular shape 
@@ -467,49 +467,48 @@ function wakeAnimation(obj){
         rightVector.multiplyScalar(5);
         reverseVec.multiplyScalar(7);
         
-        leftVector.y = 1.7;
-        rightVector.y = 1.7;
-        reverseVec.y = 1.7;
-        
-        //console.log(`leftVector: x:${leftVector.x}, y:${leftVector.y}, z:${leftVector.z}`);
-        //console.log(`rightVector: x:${rightVector.x}, y:${rightVector.y}, z:${rightVector.z}`);
-        //console.log(`reverseVec: x:${reverseVec.x}, y:${reverseVec.y}, z:${reverseVec.z}`);
+        leftVector.y = 2.7;
+        rightVector.y = 2.7;
+        reverseVec.y = 2.7;
         
         const leftVertex = new THREE.Vector3(obj.position.x, obj.position.y, obj.position.z);
         const rightVertex = new THREE.Vector3(obj.position.x, obj.position.y, obj.position.z);
         const rearVertex = new THREE.Vector3(obj.position.x, obj.position.y, obj.position.z);
-    
+        
         leftVertex.add(leftVector);
         rightVertex.add(rightVector);
         rearVertex.add(reverseVec);
         
-        //console.log(`leftVertex: x:${leftVertex.x}, y:${leftVertex.y}, z:${leftVertex.z}`);
-        //console.log(`rightVertex: x:${rightVertex.x}, y:${rightVertex.y}, z:${rightVertex.z}`);
-        //console.log(`rearVertex: x:${rearVertex.x}, y:${rearVertex.y}, z:${rearVertex.z}`);
+        const newGeom = new THREE.PlaneGeometry(Math.random(), Math.random(), 1, 1);
+        const newMat = new THREE.MeshBasicMaterial({color: parseInt(color, 16), opacity: 0.6});
+        const wakeParticle = new THREE.Mesh(newGeom, newMat);
+        wakeParticle.rotateX(Math.PI / 2);
         
-        geometryVertices.push(leftVertex.x + Math.random());
-        geometryVertices.push(leftVertex.y);
-        geometryVertices.push(leftVertex.z - Math.random());
-        wakeDirs.push({x: leftVertex.x, y: leftVertex.y});
-
-        geometryVertices.push(rightVertex.x + Math.random());
-        geometryVertices.push(rightVertex.y);
-        geometryVertices.push(rightVertex.z - Math.random());
-        wakeDirs.push({x: rightVertex.x, y: rightVertex.y});
+        const wakeParticleLeft = wakeParticle.clone();
+        wakeParticleLeft.position.set(
+            leftVertex.x + Math.random(),
+            leftVertex.y,
+            leftVertex.z - Math.random()
+        );
         
-        geometryVertices.push(rearVertex.x + Math.random());
-        geometryVertices.push(rearVertex.y);
-        geometryVertices.push(rearVertex.z - Math.random());
-        wakeDirs.push({x: rearVertex.x, y: rearVertex.y});
+        const wakeParticleRight = wakeParticle.clone();
+        wakeParticleRight.position.set(
+            rightVertex.x + Math.random(),
+            rightVertex.y,
+            rightVertex.z - Math.random()
+        );
+        
+        const wakeParticleCenter = wakeParticle.clone();
+        wakeParticleCenter.position.set(
+            rearVertex.x + Math.random(),
+            rearVertex.y,
+            rearVertex.z - Math.random()
+        );
+        
+        particles.add(wakeParticleLeft);
+        particles.add(wakeParticleRight);
+        particles.add(wakeParticleCenter);
       }
-      
-      const geometry = new THREE.BufferGeometry();
-      geometry.setAttribute('position', new THREE.Float32BufferAttribute(geometryVertices, 3));
-      const material = new THREE.PointsMaterial({size: 8, color: parseInt(color, 16)});
-      const particles = new THREE.Points(geometry, material);
-      
-      //console.log(geometry);
-      //console.log(particles);
       
       this.object = particles;
       this.status = true;
@@ -517,22 +516,11 @@ function wakeAnimation(obj){
       scene.add(this.object);
       
       this.update = function(){
-        if(this.status === true){
-            /*
-            let pCount = this.verticeVectors.length;
-            while(pCount--){
-                const particle = this.verticeVectors.length[pCount];
-                particle.x = wakeDirs[pCount].x;
-                particle.y = wakeDirs[pCount].y;
-            }
-            this.object.geometry.verticesNeedUpdate = true;
-            */
-        }else{
-            // remove vertices
-            //console.log("removing particles");
+        if(this.status !== true){
+            // remove particles
             scene.remove(this.object);
         }
-    }
+      }
 }
 
 function convert2dCoordsTo3d(camera, containerWidth, containerHeight){
@@ -549,7 +537,7 @@ function togglePlayerSelectArea(playerMesh, scene){
         playerMesh.selectAreaOn = false;
         scene.remove(playerMesh.selectArea);
     }else{
-        // a delta of 1.0 from the current y pos of playerMesh seems good (although not sure why if setting it to a lower y it doesn't appear in the orthographic camera but things look fine in the perspective camera :/)
+        // a delta of 1.7 from the current y pos of playerMesh seems good (although not sure why if setting it to a lower y it doesn't appear in the orthographic camera but things look fine in the perspective camera :/)
         playerMesh.selectArea.position.set(playerMesh.position.x, playerMesh.position.y + 1.7, playerMesh.position.z);
         scene.add(playerMesh.selectArea);
         playerMesh.selectAreaOn = true;
@@ -576,11 +564,13 @@ function placeObstacles(obj){
     if(obj){
         const v = convert2dCoordsTo3d(orthoCamera, WIDTH, HEIGHT);
         
-        // TODO: rotate about Z randomly
         obj.scale.x *= 0.15;
         obj.scale.y *= 0.15;
         obj.scale.z *= 0.15;
         obj.position.set(v.x, 0, v.y);
+        
+        obj.rotateY(Math.random());
+        
         scene.add(obj);
     }
 }
@@ -647,7 +637,7 @@ function getModel(modelFilePath, side, name){
                         if(name === 'player'){
                             // add select area to player mesh
                             const geometry = new THREE.CircleGeometry(17, 32);
-                            const material = new THREE.MeshBasicMaterial({color: 0xffff00, opacity: 0.5, transparent: true, side: THREE.DoubleSide});
+                            const material = new THREE.MeshBasicMaterial({color: 0xffff00, opacity: 0.4, transparent: true, side: THREE.DoubleSide});
                             const circle = new THREE.Mesh(geometry, material);
                             circle.name = "selectArea";
                             circle.rotateX(Math.PI / 2);
