@@ -72,6 +72,36 @@ const valveToNoteComboMap = {
     '3': 'a',
 };
 
+const pitches = {
+    261.63: "c4",
+    277.18: "cs4",
+    293.66: "d4",
+    311.13: "ds4",
+    329.63: "e4",
+    349.23: "f4",
+    369.99: "fs4",
+    392.00: "g4",
+    415.30: "gs4",
+    440.00: "a4",
+    466.16: "bb4",
+    493.88: "b4",
+    523.25: "c5",
+    554.37: "cs5",
+    587.33: "d5",
+    622.25: "ds5",
+    659.25: "e5",
+    698.46: "f5",
+    739.99: "fs5",
+    783.99: "g5",
+    830.61: "gs5",
+    880.00: "a5",
+    932.33: "as5",
+    987.77: "b5",
+    1046.50: "c6",
+};
+
+const possibleNotes = ["c", "cs", "d", "ds", "e", "f", "fs", "g", "gs", "a", "as", "b"];
+
 function setValves(note){
     const valveCombo = noteToValveComboMap[note];
     if(!valveCombo) return;
@@ -118,6 +148,8 @@ function loadInNotes(){
         "gs5",
         "a5",
         "b5",
+        "bb5",
+        "c6",
     ];
     let totalNotes = notesToLoad.length;
     notesToLoad.forEach(note => {
@@ -615,7 +647,46 @@ function autoCorrelate(buf, sampleRate){
 }
 
 function noteFromPitch(frequency){
+    //console.log(`frequency: ${frequency}`);
     const noteNum = 12 * (Math.log(frequency / 440)/Math.log(2));
+    
+    audioContext.resume().then(() => {
+        const note = possibleNotes[(Math.round(noteNum) + 69)%12]; // e.g. c, cs, a, etc.
+        const freqs = Object.keys(pitches);
+        let closestMatch = null;
+        let smallestDelta = 3.0; // smallest delta allowed for a match
+        freqs.forEach(f => {
+            // we only want to compare same notes, e.g. if note is c, we only
+            // want to check against c4, c5, c6. we want to find the closest octave of the note
+            // given the frequency.
+            if(pitches[f].substring(0, note.length) !== note){
+                return;
+            }
+            
+            const diff = Math.abs(frequency - f);
+            if(diff <= smallestDelta){
+                closestMatch = pitches[f];
+            }
+        });
+        
+        // only play pitches for notes we have a match for
+        //console.log(`closest match: ${closestMatch}`);
+        if(closestMatch && noteBufferMap[closestMatch]){
+            const newBufNode = audioContext.createBufferSource();
+            newBufNode.buffer = noteBufferMap[closestMatch].buffer;
+            newBufNode.connect(gainNode);
+            
+            // schedule note (use seconds for start time)
+            const start = audioContext.currentTime;
+            const end = start + 0.2;
+            gainNode.gain.setTargetAtTime(1.2, start, 0.0045);
+            gainNode.gain.setTargetAtTime(0.0, (end - .0025), 0.0070);
+            
+            newBufNode.start(start);
+            newBufNode.stop(end);
+        }
+    });
+    
     return Math.round(noteNum) + 69;
 }
 
@@ -626,9 +697,10 @@ function syncTrumpetToAudio(){
         const freq = result;
         
         // Bb trumpet is a transposing instrument! it's a step lower than concert pitch
-        // so valve combos need to be adjusted to match the actual pitch
-        const note = ["c", "cs", "d", "ds", "e", "f", "fs", "g", "gs", "a", "as", "b"][(noteFromPitch(freq)+2)%12];
+        // so valve combos need to be adjusted to match the actual pitch (hence the +2)
+        const note = possibleNotes[(noteFromPitch(freq)+2)%12];
         document.getElementById('currentNote').textContent = "curr note (Bb concert pitch): " + note.replace('s', '#');
+        
         setValves(note);
     }
     animationFrameReqId = window.requestAnimationFrame(syncTrumpetToAudio)
