@@ -250,6 +250,12 @@ function keydown(evt){
             animationController.changeAction('grab');
         }
     }
+    
+    if(evt.code === 'KeyT'){
+        if(isJumping || isStillInAir){
+            animationController.changeAction('tailgrab');
+        }
+    }
 }
 
 function keyup(evt){
@@ -266,7 +272,7 @@ function keyup(evt){
     if(evt.code === 'KeyW'){
         animationController.changeAction('idle');
     }
-    if(evt.code === 'KeyG'){
+    if(evt.code === 'KeyG' || evt.code === 'KeyT'){
         animationController.changeAction('moving');
     }
 }
@@ -392,7 +398,7 @@ function update(){
             animationController.currAction === 'jump' ||
             animationController.currAction === 'turnleft' ||
             animationController.currAction === 'turnright' ||
-            animationController.currAction === 'grab'
+            animationController.currAction.includes('grab')
         ) playerMesh.translateZ(0.2);
         
         if(animationController.currAction === 'braking') playerMesh.translateZ(0.1);
