@@ -1,6 +1,5 @@
 // lava lamp
 // borrowed some code from https://threejs.org/examples/webgl_marchingcubes.html
-
 import { MarchingCubes } from '../libs/MarchingCubes.js';
 
 const container = document.getElementById("container");
@@ -8,10 +7,7 @@ const container = document.getElementById("container");
 
 const fov = 60;
 const camera = new THREE.PerspectiveCamera(fov, container.clientWidth / container.clientHeight, 0.01, 1000);
-camera.position.set(0, 4, 10);
-
-//const raycaster = new THREE.Raycaster();
-const mouse = new THREE.Vector2();
+camera.position.set(0, 5, 8);
 
 const loadingManager = new THREE.LoadingManager();
 setupLoadingManager(loadingManager);
@@ -25,20 +21,20 @@ renderer.setSize(container.clientWidth, container.clientHeight);
 container.appendChild(renderer.domElement);
 
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0xeeeeee);
+scene.background = new THREE.Color(0xbbbbbb);
 scene.add(camera);
 
+const controls = new THREE.TrackballControls(camera, renderer.domElement);
+controls.rotateSpeed = 1.2;
+controls.zoomSpeed = 1.2;
+controls.panSpeed = 0.8;
+
 const spotLight = new THREE.SpotLight(0xffffff);
-spotLight.position.set(0, 30, -5);
+spotLight.position.set(20, 100, 80);
 spotLight.castShadow = true;
 spotLight.shadow.mapSize.width = 1024;
 spotLight.shadow.mapSize.height = 1024;
 scene.add(spotLight);
-
-//const pointLight = new THREE.PointLight(0xffffff, 1, 0);
-//pointLight.position.set(2, 10, 2);
-//pointLight.castShadow = true;
-//scene.add(pointLight);
 
 //const hemiLight = new THREE.HemisphereLight(0xffffff);
 //hemiLight.position.set(0, 10, 0);
@@ -47,35 +43,12 @@ scene.add(spotLight);
 const clock = new THREE.Clock();
 let time = 0;
 
-// add a plane and a sphere
-const planeGeometry = new THREE.PlaneGeometry(25, 25);
-const planeMaterial = new THREE.MeshLambertMaterial({color: 0x055C9D});
-const plane = new THREE.Mesh(planeGeometry, planeMaterial);
-plane.rotateX(-Math.PI / 2);
-plane.receiveShadow = true;
-plane.castShadow = true;
-scene.add(plane);
-
-const sphereGeometry = new THREE.SphereGeometry(0.9, 32, 16);
-const sphereMaterial = new THREE.MeshPhongMaterial();
-const sphere = new THREE.Mesh(sphereGeometry, sphereMaterial);
-sphere.receiveShadow = true;
-sphere.castShadow = true;
-sphere.position.x = 0;
-sphere.position.y = 4;
-sphere.position.z = 0;
-//scene.add(sphere);
+const material = new THREE.MeshPhongMaterial();
+//material.wireframe = true;
 
 // marching cubes stuff
-const resolution = 28;
-const effect = new MarchingCubes(resolution, sphereMaterial, true, true, 100000);
-effect.position.set(0, 5, -5);
-effect.scale.set(3, 3, 3);
-
-effect.enableUvs = false;
-effect.enableColors = false;
-
-scene.add(effect);
+const resolution = 28; // how smooth do you want the blobs
+let effect = null;
 
 let lampModel = null;
 
@@ -84,14 +57,7 @@ function getModel(modelFilePath, name){
         loader.load(
             modelFilePath,
             function(gltf){
-                gltf.scene.traverse(child => {
-                    if(child.type === "Mesh"){
-                        const obj = child;
-                        obj.name = name;
-                        resolve(obj);
-                    }
-                });
-                
+                resolve(gltf.scene);
             },
             // called while loading is progressing
             function(xhr){
@@ -106,12 +72,35 @@ function getModel(modelFilePath, name){
     });
 }
 getModel("lava-lamp.gltf", "lavalamp").then(obj => {
-  lampModel = obj;
-  lampModel.castShadow = true;
-  console.log(lampModel);
-  scene.add(lampModel);
-  lampModel.position.set(0, 2, -5);
-  lampModel.scale.set(1.5, 1.5, 1.5);
+    lampModel = obj;
+    lampModel.castShadow = true;
+    scene.add(lampModel);
+    lampModel.position.set(0, -4, 0);
+    lampModel.scale.set(1.5, 1.5, 1.5);
+    
+    // add the lamp light
+    const pointLight = new THREE.PointLight(0x39FF14, 1.7, 0);
+    pointLight.position.set(lampModel.position.x, lampModel.position.y + 3.8, lampModel.position.z);
+    scene.add(pointLight);
+    
+    spotLight.target = lampModel;
+    
+    // add the lava
+    effect = new MarchingCubes(resolution, material, true, true, 100000);
+    lampModel.add(effect);
+    effect.translateY(2.9);
+    effect.scale.set(0.54, 1.2, 0.54);
+    effect.enableUvs = false;
+    effect.enableColors = false;
+    
+    const planeGeometry = new THREE.CircleGeometry(0.7, 32);
+    const planeMaterial = new THREE.MeshLambertMaterial({color: 0xffffff});
+    const plane = new THREE.Mesh(planeGeometry, planeMaterial);
+    lampModel.add(plane);
+    plane.translateY(1.95);
+    plane.rotateX(-Math.PI / 2);
+
+    lampModel.rotateX(-Math.PI / 8);
 });
 
 // this controls content of marching cubes voxel field
@@ -130,12 +119,12 @@ function updateCubes(object, time, numblobs, floor){ //, wallx, wallz){
     ];
     
     const subtract = 12;
-    const strength = 1.2 / ((Math.sqrt(numblobs) - 1) / 4 + 1);
+    const strength = 1.8 / ((Math.sqrt(numblobs) - 1) / 4 + 1);
 
     for(let i = 0; i < numblobs; i ++ ){
         const ballx = Math.sin(i + 1.26 * time * (1.03 + 0.5 * Math.cos(0.21 * i))) * 0.27 + 0.5;
         const bally = Math.abs(Math.cos( i + 1.12 * time * Math.cos(1.22 + 0.1424 * i))) * 0.77; // dip into the floor
-        const ballz = 0;//Math.cos(i + 1.32 * time * 0.1 * Math.sin((0.92 + 0.53 * i))) * 0.27 + 0.5;
+        const ballz = Math.cos(i + 1.32 * time * 0.1 * Math.sin((0.92 + 0.53 * i))) * 0.27 + 0.5;
 
         /*
         if(current_material === 'multiColors'){
@@ -146,9 +135,7 @@ function updateCubes(object, time, numblobs, floor){ //, wallx, wallz){
         object.addBall(ballx, bally, ballz, strength, subtract);
     }
 
-    if(floor) object.addPlaneY(2, 12);
-    //if (wallz) object.addPlaneZ( 2, 12 );
-    //if (wallx) object.addPlaneX( 2, 12 );
+    if(floor) object.addPlaneY(1, 6);
 
     object.update();
 }
@@ -159,7 +146,12 @@ function update(){
 			time += delta * 1.0 * 0.5;
 
 			// marching cubes
-			updateCubes(effect, time, 5, true);
+			if(effect) updateCubes(effect, time, 7, true);
+      
+      if(lampModel) lampModel.rotateY(delta / 5);
+      
+      // update trackball
+      controls.update();
 }
 
 function keydown(evt){
