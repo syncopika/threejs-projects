@@ -21,7 +21,7 @@ renderer.setSize(container.clientWidth, container.clientHeight);
 container.appendChild(renderer.domElement);
 
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0xbbbbbb);
+scene.background = new THREE.Color(0xbbbbaa);
 scene.add(camera);
 
 const controls = new THREE.TrackballControls(camera, renderer.domElement);
@@ -30,15 +30,11 @@ controls.zoomSpeed = 1.2;
 controls.panSpeed = 0.8;
 
 const spotLight = new THREE.SpotLight(0xffffff);
-spotLight.position.set(20, 100, 80);
+spotLight.position.set(30, 50, -30);
 spotLight.castShadow = true;
 spotLight.shadow.mapSize.width = 1024;
 spotLight.shadow.mapSize.height = 1024;
 scene.add(spotLight);
-
-//const hemiLight = new THREE.HemisphereLight(0xffffff);
-//hemiLight.position.set(0, 10, 0);
-//scene.add(hemiLight);
 
 const clock = new THREE.Clock();
 let time = 0;
@@ -79,8 +75,8 @@ getModel("lava-lamp.gltf", "lavalamp").then(obj => {
     lampModel.scale.set(1.5, 1.5, 1.5);
     
     // add the lamp light
-    const pointLight = new THREE.PointLight(0x39FF14, 1.7, 0);
-    pointLight.position.set(lampModel.position.x, lampModel.position.y + 3.8, lampModel.position.z);
+    const pointLight = new THREE.PointLight(0x39ff14, 1.5);
+    pointLight.position.set(lampModel.position.x, lampModel.position.y + 3.6, lampModel.position.z);
     scene.add(pointLight);
     
     spotLight.target = lampModel;
