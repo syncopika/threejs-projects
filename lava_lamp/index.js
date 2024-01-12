@@ -17,6 +17,8 @@ const loader = new THREE.GLTFLoader(loadingManager);
 const renderer = new THREE.WebGLRenderer({antialias: true});
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.toneMapping = THREE.LinearToneMapping;
+renderer.toneMappingExposure = 0.8;
 renderer.setSize(container.clientWidth, container.clientHeight);    
 container.appendChild(renderer.domElement);
 
@@ -30,16 +32,25 @@ controls.zoomSpeed = 1.2;
 controls.panSpeed = 0.8;
 
 const spotLight = new THREE.SpotLight(0xffffff);
-spotLight.position.set(30, 50, -30);
+spotLight.position.set(0, 50, -10);
 spotLight.castShadow = true;
 spotLight.shadow.mapSize.width = 1024;
 spotLight.shadow.mapSize.height = 1024;
 scene.add(spotLight);
 
+
+const spotLight2 = new THREE.SpotLight(0xffffff, 0.6);
+spotLight2.position.set(8, -1, 10);
+spotLight2.castShadow = true;
+spotLight2.shadow.mapSize.width = 512;
+spotLight2.shadow.mapSize.height = 512;
+scene.add(spotLight2);
+
+
 const clock = new THREE.Clock();
 let time = 0;
 
-const material = new THREE.MeshPhongMaterial();
+const material = new THREE.MeshPhongMaterial({color: 0x39ff14});
 //material.wireframe = true;
 
 // marching cubes stuff
@@ -70,16 +81,19 @@ function getModel(modelFilePath, name){
 getModel("lava-lamp.gltf", "lavalamp").then(obj => {
     lampModel = obj;
     lampModel.castShadow = true;
+    
+    const lampStructure = lampModel.children[0];
+    //lampStructure.material.wireframe = true;
+    lampStructure.material.metalness = .3;
+    
     scene.add(lampModel);
     lampModel.position.set(0, -4, 0);
     lampModel.scale.set(1.5, 1.5, 1.5);
     
-    // add the lamp light
-    const pointLight = new THREE.PointLight(0x39ff14, 1.5);
-    pointLight.position.set(lampModel.position.x, lampModel.position.y + 3.6, lampModel.position.z);
-    scene.add(pointLight);
-    
-    spotLight.target = lampModel;
+    // add the lamp lightbulb
+    const lightbulb = new THREE.PointLight(0xffffff, 1.6);
+    lightbulb.position.set(lampModel.position.x, lampModel.position.y + 6.7, lampModel.position.z);
+    lampModel.add(lightbulb);
     
     // add the lava
     effect = new MarchingCubes(resolution, material, true, true, 100000);
@@ -89,21 +103,33 @@ getModel("lava-lamp.gltf", "lavalamp").then(obj => {
     effect.enableUvs = false;
     effect.enableColors = false;
     
+    // add circular plane for the base of the blobs
     const planeGeometry = new THREE.CircleGeometry(0.7, 32);
-    const planeMaterial = new THREE.MeshLambertMaterial({color: 0xffffff});
+    const planeMaterial = new THREE.MeshPhongMaterial({color: 0x39ff14});
     const plane = new THREE.Mesh(planeGeometry, planeMaterial);
     lampModel.add(plane);
     plane.translateY(1.95);
     plane.rotateX(-Math.PI / 2);
 
     lampModel.rotateX(-Math.PI / 8);
+    
+    // add a table
+    const cubeGeometry = new THREE.BoxGeometry(1, 1, 1);
+    const cubeMaterial = new THREE.MeshPhongMaterial({color: 0xcccccc});
+    const cube = new THREE.Mesh(cubeGeometry, cubeMaterial);
+    cube.rotation.set(lampModel.rotation.x, lampModel.rotation.y, lampModel.rotation.z);
+    cube.position.set(lampModel.position.x, lampModel.position.y - 1.72, lampModel.position.z + 1);
+    cube.scale.set(4, 4, 4);
+    cube.receiveShadow = true;
+    scene.add(cube);
+    
 });
 
 // this controls content of marching cubes voxel field
 function updateCubes(object, time, numblobs, floor){ //, wallx, wallz){
     object.reset();
 
-    // fill the field with some metaballs
+    /* fill the field with some metaballs
     const rainbow = [
         new THREE.Color(0xff0000),
         new THREE.Color(0xffbb00),
@@ -112,7 +138,7 @@ function updateCubes(object, time, numblobs, floor){ //, wallx, wallz){
         new THREE.Color(0x0000ff),
         new THREE.Color(0x9400bd),
         new THREE.Color(0xc800eb)
-    ];
+    ];*/
     
     const subtract = 12;
     const strength = 1.8 / ((Math.sqrt(numblobs) - 1) / 4 + 1);
@@ -128,7 +154,7 @@ function updateCubes(object, time, numblobs, floor){ //, wallx, wallz){
         }else{
             object.addBall(ballx, bally, ballz, strength, subtract);
         }*/
-        object.addBall(ballx, bally, ballz, strength, subtract);
+        object.addBall(ballx, bally, ballz, strength, subtract, new THREE.Color(0x39ff14));
     }
 
     if(floor) object.addPlaneY(1, 6);
