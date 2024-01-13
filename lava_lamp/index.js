@@ -138,23 +138,12 @@ getModel("lava-lamp.gltf", "lavalamp").then(obj => {
     wall.receiveShadow = true;
     scene.add(wall);
     
-    console.log(lampModel);
+    //console.log(lampModel);
 });
 
 // this controls content of marching cubes voxel field
-function updateCubes(object, time, numblobs, floor){ //, wallx, wallz){
+function updateCubes(object, time, numblobs, floor){
     object.reset();
-
-    /* fill the field with some metaballs
-    const rainbow = [
-        new THREE.Color(0xff0000),
-        new THREE.Color(0xffbb00),
-        new THREE.Color(0xffff00),
-        new THREE.Color(0x00ff00),
-        new THREE.Color(0x0000ff),
-        new THREE.Color(0x9400bd),
-        new THREE.Color(0xc800eb)
-    ];*/
     
     const subtract = 12;
     const strength = 1.8 / ((Math.sqrt(numblobs) - 1) / 4 + 1);
@@ -163,15 +152,7 @@ function updateCubes(object, time, numblobs, floor){ //, wallx, wallz){
         const ballx = Math.sin(i + 1.26 * time * (1.03 + 0.5 * Math.cos(0.21 * i))) * 0.27 + 0.5;
         const bally = Math.abs(Math.cos( i + 1.12 * time * Math.cos(1.22 + 0.1424 * i))) * 0.77; // dip into the floor
         const ballz = Math.cos(i + 1.32 * time * 0.1 * Math.sin((0.92 + 0.53 * i))) * 0.27 + 0.5;
-
-        /*
-        if(current_material === 'multiColors'){
-            object.addBall(ballx, bally, ballz, strength, subtract, rainbow[i % 7]);
-        }else{
-            object.addBall(ballx, bally, ballz, strength, subtract);
-        }*/
-        
-        object.addBall(ballx, bally, ballz, strength, subtract, new THREE.Color(lavaColor));
+        object.addBall(ballx, bally, ballz, strength, subtract);
     }
 
     if(floor) object.addPlaneY(1, 6);

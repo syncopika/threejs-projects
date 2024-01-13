@@ -1,5 +1,5 @@
 # lava_lamp 
     
-Talk about your new project.    
+a 3D lava lamp implementation using metaballs (adapted from https://webglsamples.org/blob/blob.html) for the lava and a lamp I made in Blender.    
     
-![show a gif or screenshot here!]()    
+![lava lamp screenshot](screenshot.png)    
