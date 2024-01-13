@@ -21,6 +21,12 @@
                 text-align: center;
                 margin: 0 auto;
             }
+            
+            #colorPicked {
+                width: 200px;
+                display: block;
+                margin: 0 auto;
+            }
         </style>
     </head>
 
@@ -31,6 +37,14 @@
         </div>
         
         <p> with metaballs! </p>
+        
+        <label>toggle wall</label><input type='checkbox' id='toggleWall' />
+        <label>toggle stand</label><input type='checkbox' id='toggleStand' />
+        <br />
+        <br />
+        <label>lava color</label>
+        <div id='colorWheelContainer'></div>
+        <div id='colorPicked'></div>
 
     </body>
 

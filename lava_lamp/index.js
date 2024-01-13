@@ -18,7 +18,7 @@ const renderer = new THREE.WebGLRenderer({antialias: true});
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 renderer.toneMapping = THREE.LinearToneMapping;
-renderer.toneMappingExposure = 0.8;
+renderer.toneMappingExposure = 0.7;
 renderer.setSize(container.clientWidth, container.clientHeight);    
 container.appendChild(renderer.domElement);
 
@@ -38,26 +38,26 @@ spotLight.shadow.mapSize.width = 1024;
 spotLight.shadow.mapSize.height = 1024;
 scene.add(spotLight);
 
-
 const spotLight2 = new THREE.SpotLight(0xffffff, 0.6);
-spotLight2.position.set(8, -1, 10);
+spotLight2.position.set(15, -1, 20);
 spotLight2.castShadow = true;
-spotLight2.shadow.mapSize.width = 512;
-spotLight2.shadow.mapSize.height = 512;
+spotLight2.shadow.mapSize.width = 1024;
+spotLight2.shadow.mapSize.height = 1024;
 scene.add(spotLight2);
-
 
 const clock = new THREE.Clock();
 let time = 0;
 
-const material = new THREE.MeshPhongMaterial({color: 0x39ff14});
-//material.wireframe = true;
-
 // marching cubes stuff
 const resolution = 28; // how smooth do you want the blobs
 let effect = null;
-
+let wall = null;
+let stand = null;
 let lampModel = null;
+let lavaColor = 0x39ff14;
+
+const material = new THREE.MeshPhongMaterial({color: lavaColor});
+//material.wireframe = true;
 
 function getModel(modelFilePath, name){
     return new Promise((resolve, reject) => {
@@ -80,11 +80,12 @@ function getModel(modelFilePath, name){
 }
 getModel("lava-lamp.gltf", "lavalamp").then(obj => {
     lampModel = obj;
-    lampModel.castShadow = true;
     
+    lampModel.children[1].castShadow = true;
     const lampStructure = lampModel.children[0];
+    lampStructure.castShadow = true;
     //lampStructure.material.wireframe = true;
-    lampStructure.material.metalness = .3;
+    lampStructure.material.metalness = 0.3;
     
     scene.add(lampModel);
     lampModel.position.set(0, -4, 0);
@@ -92,8 +93,9 @@ getModel("lava-lamp.gltf", "lavalamp").then(obj => {
     
     // add the lamp lightbulb
     const lightbulb = new THREE.PointLight(0xffffff, 1.6);
-    lightbulb.position.set(lampModel.position.x, lampModel.position.y + 6.7, lampModel.position.z);
     lampModel.add(lightbulb);
+    lightbulb.translateY(3);
+    lightbulb.distance = 7.0;
     
     // add the lava
     effect = new MarchingCubes(resolution, material, true, true, 100000);
@@ -105,8 +107,9 @@ getModel("lava-lamp.gltf", "lavalamp").then(obj => {
     
     // add circular plane for the base of the blobs
     const planeGeometry = new THREE.CircleGeometry(0.7, 32);
-    const planeMaterial = new THREE.MeshPhongMaterial({color: 0x39ff14});
+    const planeMaterial = new THREE.MeshPhongMaterial({color: lavaColor});
     const plane = new THREE.Mesh(planeGeometry, planeMaterial);
+    plane.name = 'blobBase';
     lampModel.add(plane);
     plane.translateY(1.95);
     plane.rotateX(-Math.PI / 2);
@@ -118,11 +121,24 @@ getModel("lava-lamp.gltf", "lavalamp").then(obj => {
     const cubeMaterial = new THREE.MeshPhongMaterial({color: 0xcccccc});
     const cube = new THREE.Mesh(cubeGeometry, cubeMaterial);
     cube.rotation.set(lampModel.rotation.x, lampModel.rotation.y, lampModel.rotation.z);
-    cube.position.set(lampModel.position.x, lampModel.position.y - 1.72, lampModel.position.z + 1);
+    cube.position.set(lampModel.position.x, lampModel.position.y - 1.74, lampModel.position.z + 0.8);
     cube.scale.set(4, 4, 4);
     cube.receiveShadow = true;
+    stand = cube;
     scene.add(cube);
     
+    // add a wall
+    const wallGeometry = new THREE.BoxGeometry(4, 4, 0.05);
+    const wallMaterial = new THREE.MeshPhongMaterial({color: 0xdddddd});
+    wall = new THREE.Mesh(wallGeometry, wallMaterial);
+    wall.rotation.set(lampModel.rotation.x, lampModel.rotation.y, lampModel.rotation.z);
+    wall.rotateY(Math.PI / 6);
+    wall.position.set(lampModel.position.x - 12, lampModel.position.y + 3, lampModel.position.z - 16);
+    wall.scale.set(4, 6, 4);
+    wall.receiveShadow = true;
+    scene.add(wall);
+    
+    console.log(lampModel);
 });
 
 // this controls content of marching cubes voxel field
@@ -154,7 +170,8 @@ function updateCubes(object, time, numblobs, floor){ //, wallx, wallz){
         }else{
             object.addBall(ballx, bally, ballz, strength, subtract);
         }*/
-        object.addBall(ballx, bally, ballz, strength, subtract, new THREE.Color(0x39ff14));
+        
+        object.addBall(ballx, bally, ballz, strength, subtract, new THREE.Color(lavaColor));
     }
 
     if(floor) object.addPlaneY(1, 6);
@@ -189,6 +206,93 @@ function keydown(evt){
 }
 document.addEventListener("keydown", keydown);
 
+document.getElementById('toggleWall').addEventListener('change', () => {
+    wall.visible = !wall.visible;
+});
+
+document.getElementById('toggleStand').addEventListener('change', () => {
+    stand.visible = !stand.visible;
+});
+
+function makeColorWheel(elementId, size){
+    const location = document.getElementById(elementId);
+    if(location === undefined){
+        console.log(`could not find element with id ${elementId}!`);
+        return null;
+    }
+    
+    const colorWheel = document.createElement('canvas');
+    colorWheel.id = "colorWheel";
+    colorWheel.setAttribute('width', size);
+    colorWheel.setAttribute('height', size);
+    
+    const colorWheelContext = colorWheel.getContext('2d', {willReadFrequently: true});
+    const x = colorWheel.width / 2;
+    const y = colorWheel.height / 2;
+    const radius = 60;
+    
+    for(let angle = 0; angle <= 5600; angle++) {
+        const startAngle = (angle - 1) * Math.PI / 180; //convert angles to radians
+        const endAngle = angle * Math.PI / 180;
+        colorWheelContext.beginPath();
+        colorWheelContext.moveTo(x, y);
+        //.arc(x, y, radius, startAngle, endAngle, anticlockwise)
+        colorWheelContext.arc(x, y, radius, startAngle, endAngle, false);
+        colorWheelContext.closePath();
+        //use .createRadialGradient to get a different color for each angle
+        //createRadialGradient(x0, y0, r0, x1, y1, r1)
+        const gradient = colorWheelContext.createRadialGradient(x, y, 0, startAngle, endAngle, radius);
+        gradient.addColorStop(0, 'hsla(' + angle + ', 100%, 100%, 1)');
+        gradient.addColorStop(1, 'hsla(' + angle + ', 100%, 50%, 1)');
+        colorWheelContext.fillStyle = gradient;
+        colorWheelContext.fill();
+    }
+    
+    // make black a pickable color 
+    colorWheelContext.fillStyle = "rgba(0,0,0,1)";
+    colorWheelContext.beginPath();
+    colorWheelContext.arc(10, 10, 8, 0, 2*Math.PI);
+    colorWheelContext.fill();
+    
+    // make white pickable too (and add a black outline)
+    colorWheelContext.beginPath();
+    colorWheelContext.arc(30, 10, 8, 0, 2*Math.PI); // border around the white
+    colorWheelContext.stroke();
+    
+    // make sure circle is filled with #fff
+    colorWheelContext.fillStyle = "rgba(255,255,255,1)";
+    colorWheelContext.arc(30, 10, 8, 0, 2*Math.PI);
+    colorWheelContext.fill();
+    
+    location.appendChild(colorWheel);
+    
+    colorWheel.addEventListener('pointerdown', (evt) => {
+        const x = evt.offsetX;
+        const y = evt.offsetY;
+        
+        const colorPicked = colorWheel.getContext('2d').getImageData(x, y, 1, 1).data;
+        
+        //correct the font color if the color is really dark
+        const colorPickedText = document.getElementById('colorPicked');
+        if(colorPicked[0] > 10 && colorPicked[1] > 200){
+            colorPickedText.style.color = "#000";
+        }else{
+            colorPickedText.style.color = "#fff";
+        }
+        
+        colorPickedText.textContent = `rgba(${colorPicked[0]},${colorPicked[1]},${colorPicked[2]},${colorPicked[3]}0)`;
+        colorPickedText.style.backgroundColor = colorPickedText.textContent;
+        
+        // update lava lamp
+        const color = `rgb(${colorPicked[0]},${colorPicked[1]},${colorPicked[2]})`;
+        material.color = new THREE.Color(color);
+        lampModel.children.filter(child => child.name === 'blobBase')[0].material.color = new THREE.Color(color);
+    });
+    
+    return colorWheel;
+}
+
+makeColorWheel('colorWheelContainer', 170);
 
 function animate(){
     requestAnimationFrame(animate);
