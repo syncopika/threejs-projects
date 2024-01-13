@@ -1,0 +1,20 @@
+metaball notes 1/8/24
+
+idea: lava lamp implementation in 3d?
+
+vocab:
+- marching cubes
+- metaballs
+
+https://www.reddit.com/r/unrealengine/comments/7wxqth/lava_lamp_ideas_anyone/
+https://polycoding.net/marching-cubes/part-1/
+https://webglsamples.org/blob/blob.html
+https://threejs.org/examples/webgl_marchingcubes.html
+https://www.geisswerks.com/ryan/BLOBS/blobs.html
+https://www.cs.carleton.edu/cs_comps/0405/shape/marching_cubes.html#:~:text=The%20Marching%20cubes%20algorithm%20can,an%20arbitrary%20number%20of%20cubes.
+
+
+more ideas:
+- interpolate colors over time?
+- different blob shapes?
+- blob shaders?

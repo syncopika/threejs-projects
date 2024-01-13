@@ -1,0 +1,54 @@
+<!doctype html>
+<html>
+    <head>
+        <title> 3D lava lamp </title>
+        
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r120/three.min.js" integrity="sha512-kgjZw3xjgSUDy9lTU085y+UCVPz3lhxAtdOVkcO4O2dKl2VSBcNsQ9uMg/sXIM4SoOmCiYfyFO/n1/3GSXZtSg==" crossorigin="anonymous"></script>
+        <script src="../libs/utils.js"></script>
+        <script src="../libs/GLTFLoader.js"></script>
+        <script src='../libs/TrackballControls.js'></script>
+        <script src="../libs/threex.keyboardstate.js"></script>
+
+        <style>
+            body {
+                text-align: center;
+                font-family: monospace;
+            }
+            
+            #container{
+                width: 1200px;
+                height: 800px;
+                text-align: center;
+                margin: 0 auto;
+            }
+            
+            #colorPicked {
+                width: 200px;
+                display: block;
+                margin: 0 auto;
+            }
+        </style>
+    </head>
+
+    <body>
+        <h3> lava lamp </h3>
+
+        <div id='container'>
+        </div>
+        
+        <p> with metaballs! </p>
+        
+        <label>toggle wall</label><input type='checkbox' id='toggleWall' />
+        <label>toggle stand</label><input type='checkbox' id='toggleStand' />
+        <br />
+        <br />
+        <label>lava color</label>
+        <div id='colorWheelContainer'></div>
+        <div id='colorPicked'></div>
+
+    </body>
+
+    <script type="module" src="index.js">
+    </script>
+
+</html>
