@@ -44,6 +44,7 @@ plane.castShadow = true;
 scene.add(plane);
 
 const clock = new THREE.Clock();
+const moveClock = new THREE.Clock(); // this clock is specifically for non-vertical movement control
 
 const raycaster = new THREE.Raycaster();
 
@@ -55,6 +56,7 @@ let animationClips = null;
 let playerMesh = null;
 let boardMesh = null;
 
+let isMoving = false;
 let isJumping = false;
 let isStillInAir = false;
 let time = 0;
@@ -359,6 +361,7 @@ function isStillJumping(playerMesh, raycaster){
 
 function update(){
     const delta = clock.getDelta();
+    moveClock.getDelta(); // start moveClock
     
     if(playerMesh && !keyboard.pressed("shift")){
         const relCameraOffset = new THREE.Vector3(0, 2, -10);
@@ -393,15 +396,22 @@ function update(){
     if(keyboard.pressed("W")){
         if(animationController.currAction === '' || animationController.currAction === 'idle') animationController.changeAction('moving');
         
-        if(
-            animationController.currAction === 'moving' || 
-            animationController.currAction === 'jump' ||
-            animationController.currAction === 'turnleft' ||
-            animationController.currAction === 'turnright' ||
-            animationController.currAction.includes('grab')
-        ) playerMesh.translateZ(0.2);
+        if(!isMoving){
+          moveClock.start();
+          isMoving = true;
+        }
         
-        if(animationController.currAction === 'braking') playerMesh.translateZ(0.1);
+        if(isMoving){
+          if(Math.sin(moveClock.elapsedTime) > 0.9){
+            moveClock.stop();
+          }
+          
+          if(animationController.currAction === 'braking'){
+            playerMesh.translateZ(0.1);
+          }else{
+            playerMesh.translateZ(Math.sin(moveClock.elapsedTime) / 5);
+          }
+        }
     }
     
     if(playerMesh) doRaycast(playerMesh, raycaster);
@@ -448,6 +458,13 @@ function update(){
         fwd.multiplyScalar(0.03);
         c.position.add(fwd);
     });
+    
+    // when user stops pressing w, reset clock
+    // so player will incrementally speed up again on next w press
+    if(isMoving && !keyboard.pressed("W")){
+        moveClock.stop(); // reset
+        isMoving = false;
+    }
 }
 
 function animate(){
