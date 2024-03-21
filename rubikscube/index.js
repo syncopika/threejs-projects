@@ -64,11 +64,12 @@ const hemiLight = new THREE.HemisphereLight(0xffffff);
 hemiLight.position.set(0, 10, 0);
 scene.add(hemiLight);
 
-// helpful for debugging
+/* helpful for debugging
 const sphereGeometry = new THREE.SphereGeometry(1.2, 32, 16);
 const sphereMaterial = new THREE.MeshPhongMaterial({color: new THREE.Color(0x00ffff)});
 const sphere = new THREE.Mesh(sphereGeometry, sphereMaterial);
-//scene.add(sphere);
+scene.add(sphere);
+*/
 
 // set up trackball control
 const controls = new THREE.TrackballControls(camera, renderer.domElement);
@@ -84,7 +85,8 @@ const rotatingGroup = new THREE.Group();
 rotatingGroup.name = 'rotatingGroup';
 scene.attach(rotatingGroup);
 
-let rotatingDirection = undefined;
+let rotatingDirection; // rotate vertically or horizontally
+let direction; // positive 90 deg or negative 90 deg rotation
 let pause = false;
 
 function getModel(modelFilePath){
@@ -184,29 +186,27 @@ function rotateGroup(){
     if(rotatingDirection === 'horz'){
         // horizontal
         const targetQuaternion = new THREE.Quaternion();
-        targetQuaternion.setFromEuler(new THREE.Euler(0, Math.PI/2, 0, 'XYZ')); // 90 deg rotation
+        targetQuaternion.setFromEuler(new THREE.Euler(0, direction * Math.PI/2, 0, 'XYZ')); // 90 deg rotation
         
         if(!rotatingGroup.quaternion.equals(targetQuaternion)){
-            const step = 0.7 * delta;
+            const step = 0.8 * delta;
             rotatingGroup.quaternion.rotateTowards(targetQuaternion, step);
         }else{
             // put all the rotatingGroup children back into cubeScene so that they're children of cubeScene again
             moveGroupChildrenToCubeScene();
-            return;
         }
     }else{
-        // TODO: we can rotate vertically about x or z axis
+        // TODO: we should be able to rotate vertically about x or z axis
         // vertical
         const targetQuaternion = new THREE.Quaternion();
-        targetQuaternion.setFromEuler(new THREE.Euler(0, 0, Math.PI/2, 'XYZ')); // 90 deg rotation
+        targetQuaternion.setFromEuler(new THREE.Euler(0, 0, direction * Math.PI/2, 'XYZ')); // 90 deg rotation
         
         if(!rotatingGroup.quaternion.equals(targetQuaternion)){
-            const step = 0.7 * delta;
+            const step = 0.8 * delta;
             rotatingGroup.quaternion.rotateTowards(targetQuaternion, step);
         }else{
             // put all the rotatingGroup children back into cubeScene so that they're children of cubeScene again
             moveGroupChildrenToCubeScene();
-            return;
         }
     }
 }
@@ -220,14 +220,13 @@ function selectCubeGroup(){
         const selectedCube = cubes[Math.floor(Math.random() * cubes.length)];
         //selectedCube.add(axesHelper);
         
-        const direction = Math.random() > 0.5 ? 'vert' : 'horz';
-        //console.log(direction);
+        const layerDirection = Math.random() > 0.5 ? 'vert' : 'horz';
+        direction = Math.random() > 0.5 ? 1 : -1;
         
         const cubeGroup = {};
         cubeGroup[selectedCube.name] = selectedCube;
         
-        // TODO: how about rotating the opposite direction?
-        if(direction === 'horz'){
+        if(layerDirection === 'horz'){
             // check x-axis
             collectCubes(selectedCube, new THREE.Vector3(1, 0, 0), cubeGroup);
             
@@ -237,8 +236,10 @@ function selectCubeGroup(){
             // collect rest of cubes in layer
             Object.keys(cubeGroup).forEach(name => {
                 if(name !== selectedCube.name){
-                    //console.log(name);
+                    // go over x and z axis again. also note I have no central core cube in my current model so
+                    // that affects things :D :(
                     collectCubes(cubeGroup[name], new THREE.Vector3(1, 0, 0), cubeGroup);
+                    collectCubes(cubeGroup[name], new THREE.Vector3(0, 0, 1), cubeGroup);
                 }
             });
         }else{
@@ -252,6 +253,7 @@ function selectCubeGroup(){
             Object.keys(cubeGroup).forEach(name => {
                 if(name !== selectedCube.name){
                     collectCubes(cubeGroup[name], new THREE.Vector3(1, 0, 0), cubeGroup);
+                    collectCubes(cubeGroup[name], new THREE.Vector3(0, 1, 0), cubeGroup);
                 }
             });
         }
@@ -262,7 +264,19 @@ function selectCubeGroup(){
             rotatingGroup.attach(c);
             //c.material.wireframe = true;
         });
-        rotatingDirection = direction;
+        
+        //console.log(`rotatingGroup size: ${rotatingGroup.children.length}`);
+        
+        if(rotatingGroup.children.length < 8){
+            console.log(rotatingGroup);
+            console.log(selectedCube);
+            console.log(`layer rotation direction: ${layerDirection}`);
+            //sphere.position.copy(selectedCube.position);
+            pause = true;
+            throw new Error('rotating group too small!');
+        }
+        
+        rotatingDirection = layerDirection;
     }
 }
 
@@ -278,20 +292,6 @@ function update(){
         rotateGroup();
     }
 }
-
-function keydown(evt){
-    if(evt.keyCode === 32){
-        // spacebar
-    }else if(evt.keyCode === 49){
-        //1 key
-    }else if(evt.keyCode === 50){
-        //2 key
-    }else if(evt.keyCode === 82){
-        // r key
-    }
-}
-document.addEventListener("keydown", keydown);
-
 
 function animate(){
     requestAnimationFrame(animate);
