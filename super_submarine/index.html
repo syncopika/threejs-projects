@@ -19,7 +19,7 @@
 		}
     
 		#container {
-			width: 60vw;
+			width: 65vw;
 			height: 800px;
 			text-align: center;
 			margin: 0 auto;
@@ -33,12 +33,6 @@
     #input {
       display: none;
     }
-    
-    @media (max-width: 600px) {
-      #container {
-        width: 100vw;
-      }
-    }
 	</style>
 	
 	<body>
@@ -46,9 +40,13 @@
 		</div>
 		<div id='instructions'>
 			<h3> controls: </h3>
-			<p> w,a,s,d to move forward, left, backwards and right. q,e to roll left/right. up and down arrow to move up and down. shift to change camera view. x to turn on a spotlight. </p> 
+			<p> w,a,s,d to move forward, left, backwards and right. </p>
+      <p> q,e to roll left/right. </p>
+      <p> up and down arrow to move up and down. </p>
+      <p> shift to change camera view. </p>
+      <p> x to turn on a spotlight. </p> 
 		</div>
-    <input id='input' />
+    <input id='input' type='text'/>
 	</body>
 	
 	<script src="index.js">
