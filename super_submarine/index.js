@@ -104,8 +104,9 @@ renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 renderer.setSize(container.clientWidth, container.clientHeight);
 
-renderer.domElement.addEventListener('click', () => {
+container.addEventListener('pointerdown', () => {
     document.getElementById('input').focus();
+    console.log('hi');
 });
 
 container.appendChild(renderer.domElement);
