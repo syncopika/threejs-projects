@@ -15,21 +15,29 @@
             display: block;
             border: 1px solid #000;
         }
+        
         #container{
-            width: 1200px;
+            width: 60vw;
             height: 800px;
             text-align: center;
             margin: 0 auto;
             background-image: linear-gradient(lightblue, white);
         }
-        h3, p, li{
+        
+        #instructions, p {
             font-family: monospace;
             text-align: center;
         }
+        
         ul {
             text-align: center;
         }
         
+        @media (max-width: 600px) {
+          #container {
+            width: 100vw;
+          }
+        }
     </style>
     
     <body>

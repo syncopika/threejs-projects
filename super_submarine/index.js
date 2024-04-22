@@ -103,6 +103,11 @@ const renderer = new THREE.WebGLRenderer({antialias: true});
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 renderer.setSize(container.clientWidth, container.clientHeight);
+
+renderer.domElement.addEventListener('click', () => {
+    document.getElementById('input').focus();
+});
+
 container.appendChild(renderer.domElement);
 
 // for disarming the dangerous capsule

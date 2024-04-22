@@ -13,20 +13,32 @@
 	</head>
 	
 	<style>
-		canvas{
+		canvas {
 			display: block;
 			border: 1px solid #000;
 		}
-		#container{
-			width: 1200px;
+    
+		#container {
+			width: 60vw;
 			height: 800px;
 			text-align: center;
 			margin: 0 auto;
 		}
-		#instructions{
+    
+		#instructions {
 			font-family: monospace;
 			text-align: center;
 		}
+    
+    #input {
+      display: none;
+    }
+    
+    @media (max-width: 600px) {
+      #container {
+        width: 100vw;
+      }
+    }
 	</style>
 	
 	<body>
@@ -36,6 +48,7 @@
 			<h3> controls: </h3>
 			<p> w,a,s,d to move forward, left, backwards and right. q,e to roll left/right. up and down arrow to move up and down. shift to change camera view. x to turn on a spotlight. </p> 
 		</div>
+    <input id='input' />
 	</body>
 	
 	<script src="index.js">
