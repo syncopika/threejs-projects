@@ -4,17 +4,14 @@
 
 <head>
     <title> nick's 3d projects with three.js </title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
     <style>
         body {
-            font-family: FreeMono, monospace;
-            margin-left: 2%;
-        }
-        
-        img {
+            font-family: Arial;
         }
         
         .project {
-            width: 600px;
+            width: 30vw;
         }
         
         .row {
@@ -30,13 +27,20 @@
             justify-content: center;
             flex-wrap: wrap;
         }
+        
+        @media (max-width: 600px) {
+            .project {
+                width: 100vw;
+                text-align: center;
+            }
+        }
 
     </style>
 </head>
 
 <body>
     <h1> 3d projects with three.js <a href='https://github.com/syncopika/threejs-projects'>source</a> </h1>
-    <p> with assets created with Blender! <b>note:</b> these projects might not work great on mobile devices, sorry. </p>
+    <p> using assets created with Blender! <b>note:</b> these projects might not work great on mobile devices, sorry. </p>
     <p><b> and please remember to enable hardware acceleration! otherwise nothing will work well :( </b></p>
     <br />
     
