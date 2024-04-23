@@ -172,10 +172,10 @@ function getModel(modelFilePath, type, name){
     });
 }
 
-loadedModels.push(getModel('../shared_assets/f-18.glb', 'player', 'f18'));
-loadedModels.push(getModel('../shared_assets/f-16.gltf', 'player', 'f16'));
-loadedModels.push(getModel('models/f-35.gltf', 'player', 'f35'));
-loadedModels.push(getModel('models/airbase.gltf', 'airbase', 'bg'));
+loadedModels.push(getModel('../models/f-18.glb', 'player', 'f18'));
+loadedModels.push(getModel('../models/f-16.gltf', 'player', 'f16'));
+loadedModels.push(getModel('../models/f-35.gltf', 'player', 'f35'));
+loadedModels.push(getModel('../models/airbase.gltf', 'airbase', 'bg'));
 
 function processMesh(mesh){
     if(mesh.type === "player"){

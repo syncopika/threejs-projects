@@ -103,10 +103,10 @@ function getModel(modelFilePath, side, name){
     });
 }
 
-loadedModels.push(getModel('models/hand-edit.gltf', '', 'rightHand'));
-loadedModels.push(getModel('models/hand-edit.gltf', '', 'leftHand'));
-loadedModels.push(getModel('models/plate.gltf', '', 'plate'));
-loadedModels.push(getModel('models/sponge.gltf', '', 'sponge'));
+loadedModels.push(getModel('../models/hand-edit.gltf', '', 'rightHand'));
+loadedModels.push(getModel('../models/hand-edit.gltf', '', 'leftHand'));
+loadedModels.push(getModel('../models/plate.gltf', '', 'plate'));
+loadedModels.push(getModel('../models/sponge.gltf', '', 'sponge'));
 
 Promise.all(loadedModels).then((objects) => {
     objects.forEach((mesh) => {

@@ -91,7 +91,7 @@ function getModel(modelFilePath, name){
 
 function addPlane(scene){
     const planeGeometry = new THREE.PlaneGeometry(400, 400);
-    const texture = new THREE.TextureLoader().load('models/grass2.jpg');
+    const texture = new THREE.TextureLoader().load('grass2.jpg');
     const material = new THREE.MeshBasicMaterial({map: texture}); 
     const plane = new THREE.Mesh(planeGeometry, material); 
     plane.position.set(-100, -1.5, 0);
@@ -101,8 +101,8 @@ function addPlane(scene){
 }
 
 // load in models
-loadedModels.push(getModel('../shared_assets/porsche.gltf', 'car'));
-loadedModels.push(getModel('models/racetrack.gltf', 'racetrack'));
+loadedModels.push(getModel('../models/porsche.gltf', 'car'));
+loadedModels.push(getModel('../models/racetrack.gltf', 'racetrack'));
 
 let thePlayer = null;
 let terrain = null;

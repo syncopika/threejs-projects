@@ -208,7 +208,7 @@ let t = 0;
 let pause = false;
 
 // add the object that will follow the curve
-getModel("f5tiger.gltf").then((modelData) => {
+getModel("../models/f5tiger.gltf").then((modelData) => {
     //modelData.scale.x *= 1;
     //modelData.scale.y *= 1;
     //modelData.scale.z *= 1;

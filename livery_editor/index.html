@@ -2,59 +2,60 @@
 <html>
     <head>
         <title>livery customizer demo</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
         <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r120/three.min.js" integrity="sha512-kgjZw3xjgSUDy9lTU085y+UCVPz3lhxAtdOVkcO4O2dKl2VSBcNsQ9uMg/sXIM4SoOmCiYfyFO/n1/3GSXZtSg==" crossorigin="anonymous"></script>
         <script src='../libs/GLTFLoader.js'></script>
         <script src='../libs/TrackballControls.js'></script>
     </head>
     
     <style>
-        #header{
+        #header {
             font-family: monospace;
             text-align: center;
             position: relative;
             display: block;
         }
         
-        .flex{
+        .flex {
             display: flex;
             flex-wrap: wrap;
         }
         
-        #display{
-            width: 800px;
+        #display {
+            width: 65vw;
             height: 600px;
             margin: 0 auto;
         }
         
-        #editArea{
+        #editArea {
             padding: 1%;
             text-align: center;
             margin: 0 auto;
         }
         
-        #liveryDisplay{
+        #liveryDisplay {
             position: relative;
             margin: 0px auto;
             overflow: hidden; /* this makes sure that the visible canvas content is only within the bounds of #canvasArea */
         }
         
-        #liveryCanvas{
+        #liveryCanvas {
             border: 1px solid #000;
         }
         
-        #liveryCanvas:hover{
+        #liveryCanvas:hover {
             cursor: crosshair;
         }
         
-        button{
+        button {
             margin: 3px;
         }
         
-        li{
+        li {
             display: inline-block;
         }
         
-        canvas{
+        canvas {
             touch-action: none;
         }
     </style>
