@@ -81,6 +81,7 @@ const loadingManager = new THREE.LoadingManager();
 stats.showPanel(0);
 document.body.appendChild(stats.dom); */
 
+// set up mobile keyboard
 document.getElementById('showKeyboard').addEventListener('click', () => {
   new JSKeyboard(document.getElementById('mobileKeyboard'));
 });

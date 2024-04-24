@@ -14,6 +14,11 @@ const loadingManager = new THREE.LoadingManager();
 stats.showPanel(0);
 document.body.appendChild(stats.dom); */
 
+// set up mobile keyboard
+document.getElementById('showKeyboard').addEventListener('click', () => {
+  new JSKeyboard(document.getElementById('mobileKeyboard'));
+});
+
 setupLoadingManager(loadingManager);
 const loader = new THREE.GLTFLoader(loadingManager);
 const renderer = new THREE.WebGLRenderer({alpha: true, antialias: true});

@@ -365,6 +365,11 @@ const raycaster = new THREE.Raycaster();
 const loadingManager = new THREE.LoadingManager();
 const loader = new THREE.GLTFLoader(loadingManager);
 
+// set up mobile keyboard
+document.getElementById('showKeyboard').addEventListener('click', () => {
+  new JSKeyboard(document.getElementById('mobileKeyboard'));
+});
+
 const renderer = new THREE.WebGLRenderer({antialias: true});
 renderer.shadowMap.enabled = true;
 renderer.setSize(container.clientWidth, container.clientHeight);

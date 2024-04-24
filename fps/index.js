@@ -15,6 +15,11 @@ renderer.setSize(container.clientWidth, container.clientHeight);
 renderer.domElement.id = "theCanvas";  
 container.appendChild(renderer.domElement);
 
+// set up mobile keyboard
+document.getElementById('showKeyboard').addEventListener('click', () => {
+  new JSKeyboard(document.getElementById('mobileKeyboard'));
+});
+
 // overlay canvas for displaying crosshairs
 const crosshairCanvas = document.createElement('canvas');
 crosshairCanvas.style.position = 'absolute';

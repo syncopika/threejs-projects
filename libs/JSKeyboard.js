@@ -15,13 +15,8 @@ class JSKeyboard {
     keyboard.style.display = 'flex';
     keyboard.style.flexDirection = 'row';
     keyboard.style.flexWrap = 'wrap';
-    keyboard.style.position = 'absolute';
-    keyboard.style.height = '5vh';
-    keyboard.style.bottom = '0';
-    keyboard.style.left = '0';
-    keyboard.style.right = '0';
-    keyboard.style.borderTop = '1px solid #000';
     keyboard.style.backgroundColor = '#fff';
+    keyboard.style.justifyContent = 'center';
     
     const keys = {
       'W': 87,
@@ -32,6 +27,9 @@ class JSKeyboard {
       'E': 69,
       'G': 71,
       'J': 74,
+      '↑': 38,
+      '↓': 40,
+      'space': 32,
     };
     
     Object.keys(keys).forEach(key => {
