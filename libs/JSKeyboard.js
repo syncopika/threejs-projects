@@ -43,6 +43,7 @@ class JSKeyboard {
       newKey.style.padding = '10px';
       newKey.style.backgroundColor = '#ccc';
       newKey.style.margin = '2px';
+      newKey.style.userSelect = 'none';
       newKey.textContent = key;
       
       newKey.oncontextmenu = (evt) => {
@@ -51,7 +52,9 @@ class JSKeyboard {
         return false;
       }
       
-      newKey.addEventListener('pointerdown', () => {
+      newKey.addEventListener('pointerdown', (evt) => {
+        newKey.style.backgroundColor = '#fff';
+        evt.preventDefault();
         document.dispatchEvent(new KeyboardEvent('keydown', {
           'key': key.toLowerCase(), 
           'code': `Key${key}`,
@@ -61,7 +64,9 @@ class JSKeyboard {
         }));
       });
       
-      newKey.addEventListener('pointerup', () => {
+      newKey.addEventListener('pointerup', (evt) => {
+        newKey.style.backgroundColor = '#ccc';
+        evt.preventDefault();
         document.dispatchEvent(new KeyboardEvent('keyup', {
           'key': key.toLowerCase(), 
           'code': `Key${key}`,
@@ -69,14 +74,6 @@ class JSKeyboard {
           'cancelable': true,
           'bubbles': true,
         }));
-      });
-      
-      newKey.addEventListener('mouseover', () => {
-        newKey.style.backgroundColor = '#fff';
-      });
-      
-      newKey.addEventListener('mouseout', () => {
-        newKey.style.backgroundColor = '#ccc';
       });
       
       keyboard.appendChild(newKey);
