@@ -29,7 +29,10 @@ class JSKeyboard {
       'J': 74,
       '↑': 38,
       '↓': 40,
-      'space': 32,
+      '1': 49,
+      '2': 50,
+      'CapsLock': 20,
+      'Space': 32,
     };
     
     Object.keys(keys).forEach(key => {
@@ -42,13 +45,17 @@ class JSKeyboard {
       newKey.style.margin = '2px';
       newKey.textContent = key;
       
+      newKey.oncontextmenu = (evt) => {
+        evt.preventDefault();
+        evt.stopPropagation();
+        return false;
+      }
+      
       newKey.addEventListener('pointerdown', () => {
         document.dispatchEvent(new KeyboardEvent('keydown', {
           'key': key.toLowerCase(), 
           'code': `Key${key}`,
           'keyCode': keys[key],
-          'cancelable': true,
-          'bubbles': true,
         }));
       });
       
@@ -57,8 +64,6 @@ class JSKeyboard {
           'key': key.toLowerCase(), 
           'code': `Key${key}`,
           'keyCode': keys[key],
-          'cancelable': true,
-          'bubbles': true,
         }));
       });
       

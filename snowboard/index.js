@@ -20,6 +20,11 @@ renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 renderer.setSize(container.clientWidth, container.clientHeight);    
 container.appendChild(renderer.domElement);
 
+// set up mobile keyboard
+document.getElementById('showKeyboard').addEventListener('click', () => {
+  new JSKeyboard(document.getElementById('mobileKeyboard'));
+});
+
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0xcccccc);
 scene.add(camera);
