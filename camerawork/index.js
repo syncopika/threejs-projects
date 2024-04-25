@@ -309,7 +309,7 @@ function setupSceneLights(scene){
 }
 
 function setupTerrain(scene){
-    const texture = new THREE.TextureLoader().load('../car_demo/models/grass2.jpg');
+    const texture = new THREE.TextureLoader().load('../car_demo/grass2.jpg');
     const terrainMat = new THREE.MeshBasicMaterial({map: texture});
     const terrain = new THREE.PlaneGeometry(200, 200, 1);
     const plane = new THREE.Mesh(terrain, terrainMat);
@@ -364,6 +364,11 @@ const keyboard = new THREEx.KeyboardState();
 const raycaster = new THREE.Raycaster();
 const loadingManager = new THREE.LoadingManager();
 const loader = new THREE.GLTFLoader(loadingManager);
+
+// set up mobile keyboard
+document.getElementById('showKeyboard').addEventListener('click', () => {
+  new JSKeyboard(document.getElementById('mobileKeyboard'));
+});
 
 const renderer = new THREE.WebGLRenderer({antialias: true});
 renderer.shadowMap.enabled = true;

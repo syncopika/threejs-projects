@@ -275,7 +275,7 @@ function setVendingMachine(obj){
     obj.scale.z *= 5;
 }
 
-getModel('vending-machine.gltf').then(data => {
+getModel('../models/vending-machine.gltf').then(data => {
     vendingMachineNoColor = data.scene;
     animationHandlerNoColor = new AnimationHandler(vendingMachineNoColor, data.animations);
     animationHandler = animationHandlerNoColor;
@@ -295,7 +295,7 @@ getModel('vending-machine.gltf').then(data => {
         // load in the regular vending machine
         // wish I could just change the texture of the neon one but
         // kinda complicated atm since the machine is in parts
-        getModel('vending-machine-color.gltf').then(data => {
+        getModel('../models/vending-machine-color.gltf').then(data => {
             const obj = data.scene;
             
             vendingMachineColor = obj;

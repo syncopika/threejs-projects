@@ -1,56 +1,54 @@
 <!doctype html>
 <html>
-    <head>
-        <title> curves </title>
-        
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r120/three.min.js" integrity="sha512-kgjZw3xjgSUDy9lTU085y+UCVPz3lhxAtdOVkcO4O2dKl2VSBcNsQ9uMg/sXIM4SoOmCiYfyFO/n1/3GSXZtSg==" crossorigin="anonymous"></script>
-        <script src="../libs/utils.js"></script>
-        <script src="../libs/GLTFLoader.js"></script>
-        <script src="../libs/threex.keyboardstate.js"></script>
+  <head>
+    <title> curves </title>
+    <meta name="viewport" content="width=device-width, initial-scale=0.6, minimum-scale=0.6" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r120/three.min.js" integrity="sha512-kgjZw3xjgSUDy9lTU085y+UCVPz3lhxAtdOVkcO4O2dKl2VSBcNsQ9uMg/sXIM4SoOmCiYfyFO/n1/3GSXZtSg==" crossorigin="anonymous"></script>
+    <script src="../libs/utils.js"></script>
+    <script src="../libs/GLTFLoader.js"></script>
+    <script src="../libs/threex.keyboardstate.js"></script>
 
-        <style>
-            body {
-                text-align: center;
-                font-family: monospace;
-            }
-            
-            #container{
-                width: 1200px;
-                height: 800px;
-                text-align: center;
-                margin: 0 auto;
-            }
-        </style>
-    </head>
+    <style>
+      body {
+        text-align: center;
+        font-family: monospace;
+      }
+      
+      #container {
+        width: 65vw;
+        height: 800px;
+        text-align: center;
+        margin: 0 auto;
+      }
+    </style>
+  </head>
 
-    <body>
-        <h3> playing with curves </h3>
+  <body>
+    <h3> playing with curves </h3>
 
-        <div id='container'>
-        </div>
-        
-        <br />
-        
-        <button id='pause'> pause </button>
-        <button id='toggleCurve'> hide curve </button>
-        <select id='selectCurve'>
-            <option> curved lateral loop </option>
-            <option> aileron roll </option>
-            <option> barrel roll </option>
-            <option> vertical loop </option>
-            <option> Immelmann Turn </option>
-        </select>
-        
-        <label for='speedSlider'>speed:</label>
-        <input id='speedSlider' type='range' step="0.0001" min="0.001" max="0.0025" value="0.0018">
-        
-        <br />
-        
-        <p> press keys 1-5 to change camera view. </p>
+    <div id='container'>
+    </div>
+    
+    <br />
+    
+    <button id='pause'> pause </button>
+    <button id='toggleCurve'> hide curve </button>
+    <select id='selectCurve'>
+      <option> curved lateral loop </option>
+      <option> aileron roll </option>
+      <option> barrel roll </option>
+      <option> vertical loop </option>
+      <option> Immelmann Turn </option>
+    </select>
+    
+    <label for='speedSlider'>speed:</label>
+    <input id='speedSlider' type='range' step="0.0001" min="0.001" max="0.0025" value="0.0018">
+    
+    <br />
+    
+    <p> press keys 1-5 to change camera view. </p>
+  </body>
 
-    </body>
-
-    <script type="module" src="index.js">
-    </script>
-
+  <script type="module" src="index.js">
+  </script>
 </html>

@@ -1,69 +1,65 @@
 <!doctype html>
 <html>
-    <head>
-        <title> Bb trumpet </title>
-        
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r120/three.min.js" integrity="sha512-kgjZw3xjgSUDy9lTU085y+UCVPz3lhxAtdOVkcO4O2dKl2VSBcNsQ9uMg/sXIM4SoOmCiYfyFO/n1/3GSXZtSg==" crossorigin="anonymous"></script>
-        <script src="../libs/utils.js"></script>
-        <script src="../libs/GLTFLoader.js"></script>
-        <script src="../libs/threex.keyboardstate.js"></script>
+  <head>
+    <title> Bb trumpet </title>
+    <meta name="viewport" content="width=device-width, initial-scale=0.6, minimum-scale=0.6" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r120/three.min.js" integrity="sha512-kgjZw3xjgSUDy9lTU085y+UCVPz3lhxAtdOVkcO4O2dKl2VSBcNsQ9uMg/sXIM4SoOmCiYfyFO/n1/3GSXZtSg==" crossorigin="anonymous"></script>
+    <script src="../libs/utils.js"></script>
+    <script src="../libs/GLTFLoader.js"></script>
+    <script src="../libs/threex.keyboardstate.js"></script>
 
-        <style>
-            body {
-                text-align: center;
-                font-family: monospace;
-            }
-            
-            #container{
-                width: 1200px;
-                height: 800px;
-                text-align: center;
-                margin: 0 auto;
-            }
-        </style>
-    </head>
+    <style>
+      body {
+        text-align: center;
+        font-family: monospace;
+      }
+      
+      #container {
+        width: 65vw;
+        height: 800px;
+        text-align: center;
+        margin: 0 auto;
+      }
+    </style>
+  </head>
 
-    <body>
-        <h3> a Bb trumpet </h3>
+  <body>
+    <header>
+      <h3> a Bb trumpet </h3>
+      <p> use keys 1, 2 and 3 on the keyboard to move the valves of the trumpet! then press 'shift' to play a note that corresponds with the current fingering.  </p>
+      <p> in this demo I'm using shape keys/morph targets to make the valves 'move'. </p>
+    </header>
 
-        <div id='container'>
-        </div>
-        
-        <p id='status'></p>
-        
-        <label for="octave">octave: </label>
-        <select id='octave'>
-            <option selected>4</option>
-            <option>5</option>
-        </select>
-        
-        <br />
-        <br />
-        
-        <select id='selectExamplePiece'>
-            <option value='examplePiece1'>example piece 1</option>
-            <option value='examplePiece2'>example piece 2</option>
-            <option value='nostalgia-excerpt'>'nostalgia' (fats navarro) excerpt</option>
-        </select>
-        <button id='playExample'>play</button>
-        
-        <br /><br />
-        
-        <label> import audio and sync the trumpet with it: </label>
-        <button id='importAudio'> import </button>
-        <button id='play'>play</button>
-        <button id='stop'>stop</button>
-        <p id='currentNote'></p>
-        
-        <hr />
-        
-        <p> instructions: </p>
-        <p> use keys 1, 2 and 3 on the keyboard to move the valves of the trumpet! then press 'shift' to play a note that corresponds with the current fingering.  </p>
-        <p> in this demo I'm using shape keys/morph targets to make the valves 'move'. </p>
+    <div id='container'>
+    </div>
+    
+    <p id='status'></p>
+    
+    <label for="octave">octave: </label>
+    <select id='octave'>
+      <option selected>4</option>
+      <option>5</option>
+    </select>
+    
+    <br />
+    <br />
+    
+    <select id='selectExamplePiece'>
+      <option value='examplePiece1'>example piece 1</option>
+      <option value='examplePiece2'>example piece 2</option>
+      <option value='nostalgia-excerpt'>'nostalgia' (fats navarro) excerpt</option>
+    </select>
+    <button id='playExample'>play</button>
+    
+    <br /><br />
+    
+    <label> import audio and sync the trumpet with it: </label>
+    <button id='importAudio'> import </button>
+    <button id='play'>play</button>
+    <button id='stop'>stop</button>
+    <p id='currentNote'></p>
+  </body>
 
-    </body>
-
-    <script type="module" src="index.js">
-    </script>
-
+  <script type="module" src="index.js">
+  </script>
 </html>

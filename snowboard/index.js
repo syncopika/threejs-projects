@@ -20,6 +20,11 @@ renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 renderer.setSize(container.clientWidth, container.clientHeight);    
 container.appendChild(renderer.domElement);
 
+// set up mobile keyboard
+document.getElementById('showKeyboard').addEventListener('click', () => {
+  new JSKeyboard(document.getElementById('mobileKeyboard'));
+});
+
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0xcccccc);
 scene.add(camera);
@@ -118,12 +123,12 @@ function getModel(modelFilePath, side, name){
     });
 }
 
-loadedModels.push(getModel('snowboarder.gltf', 'player', 'p1'));
-loadedModels.push(getModel('snowboard.gltf', 'tool', 'obj'));
-loadedModels.push(getModel('pine-tree.gltf', 'obj', 'tree'));
-loadedModels.push(getModel('hill.gltf', 'obj', 'hill'));
-loadedModels.push(getModel('rock.gltf', 'obj', 'rock'));
-loadedModels.push(getModel('cloud.gltf', 'obj', 'cloud'));
+loadedModels.push(getModel('../models/snowboarder.gltf', 'player', 'p1'));
+loadedModels.push(getModel('../models/snowboard.gltf', 'tool', 'obj'));
+loadedModels.push(getModel('../models/pine-tree.gltf', 'obj', 'tree'));
+loadedModels.push(getModel('../models/hill.gltf', 'obj', 'hill'));
+loadedModels.push(getModel('../models/rock.gltf', 'obj', 'rock'));
+loadedModels.push(getModel('../models/cloud.gltf', 'obj', 'cloud'));
 
 const clouds = [];
 

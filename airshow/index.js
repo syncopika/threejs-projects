@@ -14,6 +14,11 @@ const loadingManager = new THREE.LoadingManager();
 stats.showPanel(0);
 document.body.appendChild(stats.dom); */
 
+// set up mobile keyboard
+document.getElementById('showKeyboard').addEventListener('click', () => {
+  new JSKeyboard(document.getElementById('mobileKeyboard'));
+});
+
 setupLoadingManager(loadingManager);
 const loader = new THREE.GLTFLoader(loadingManager);
 const renderer = new THREE.WebGLRenderer({alpha: true, antialias: true});
@@ -172,10 +177,10 @@ function getModel(modelFilePath, type, name){
     });
 }
 
-loadedModels.push(getModel('../shared_assets/f-18.glb', 'player', 'f18'));
-loadedModels.push(getModel('../shared_assets/f-16.gltf', 'player', 'f16'));
-loadedModels.push(getModel('models/f-35.gltf', 'player', 'f35'));
-loadedModels.push(getModel('models/airbase.gltf', 'airbase', 'bg'));
+loadedModels.push(getModel('../models/f-18.glb', 'player', 'f18'));
+loadedModels.push(getModel('../models/f-16.gltf', 'player', 'f16'));
+loadedModels.push(getModel('../models/f-35.gltf', 'player', 'f35'));
+loadedModels.push(getModel('../models/airbase.gltf', 'airbase', 'bg'));
 
 function processMesh(mesh){
     if(mesh.type === "player"){

@@ -697,5 +697,5 @@ function animate(){
     update();
 }
 
-getModel("trumpet.gltf", "trumpet");
+getModel("../models/trumpet.gltf", "trumpet");
 animate();

@@ -37,7 +37,7 @@ controls.panSpeed = 0.8;
 //controls.staticMoving = true;
 //controls.dynamicDampingFactor = 0.3;
 
-getModel('../shared_assets/f-16.gltf', 'f16');
+getModel('../models/f-16.gltf', 'f16');
 update();
 
 function getModel(modelFilePath, name){
@@ -126,7 +126,7 @@ function update(){
 document.getElementById('selectModel').addEventListener('change', (evt) => {
     //console.log(evt.target.value);
     scene.remove(scene.getObjectByName(currModel.name));
-    getModel(`../shared_assets/${evt.target.value}.gltf`, evt.target.value);
+    getModel(`../models/${evt.target.value}.gltf`, evt.target.value);
 });
 
 

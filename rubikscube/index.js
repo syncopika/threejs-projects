@@ -300,7 +300,7 @@ function animate(){
     update();
 }
 
-getModel("rubikscube.gltf");
+getModel("../models/rubikscube.gltf");
 animate();
 
 document.getElementById('pause').addEventListener('click', () => {

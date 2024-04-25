@@ -600,10 +600,10 @@ document.getElementById('toggleWakeAnimation').addEventListener('change', () => 
 });
 
 const loadedModels = [];
-loadedModels.push(getModel('battleship-edit2.gltf', 'player', 'player'));
-loadedModels.push(getModel('battleship2.glb', 'enemy', 'enemy'));
-loadedModels.push(getModel('spiky-thing.gltf', 'none', 'obstacle'));
-loadedModels.push(getModel('f14.gltf', 'none', 'plane'));
+loadedModels.push(getModel('../models/battleship-edit2.gltf', 'player', 'player'));
+loadedModels.push(getModel('../models/battleship2.glb', 'enemy', 'enemy'));
+loadedModels.push(getModel('../models/spiky-thing.gltf', 'none', 'obstacle'));
+loadedModels.push(getModel('../models/f14.gltf', 'none', 'plane'));
 
 function getModel(modelFilePath, side, name){
     return new Promise((resolve, reject) => {

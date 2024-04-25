@@ -1,48 +1,62 @@
 <!doctype html>
 <html>
-    <head>
-        <title>car demo</title>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r120/three.min.js" integrity="sha512-kgjZw3xjgSUDy9lTU085y+UCVPz3lhxAtdOVkcO4O2dKl2VSBcNsQ9uMg/sXIM4SoOmCiYfyFO/n1/3GSXZtSg==" crossorigin="anonymous"></script>
-        <script src='../libs/utils.js'></script>
-        <script src="../libs/stats.js"></script>
-        <script src='../libs/GLTFLoader.js'></script>
-        <script src="../libs/threex.keyboardstate.js"></script>
-    </head>
+  <head>
+    <title>car demo</title>
+    <meta name="viewport" content="width=device-width, initial-scale=0.5, minimum-scale=0.5" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r120/three.min.js" integrity="sha512-kgjZw3xjgSUDy9lTU085y+UCVPz3lhxAtdOVkcO4O2dKl2VSBcNsQ9uMg/sXIM4SoOmCiYfyFO/n1/3GSXZtSg==" crossorigin="anonymous"></script>
+    <script src='../libs/utils.js'></script>
+    <script src="../libs/stats.js"></script>
+    <script src='../libs/GLTFLoader.js'></script>
+    <script src="../libs/JSKeyboard.js"></script>
+    <script src="../libs/threex.keyboardstate.js"></script>
+  </head>
+  
+  <style>
+    canvas {
+      display: block;
+      border: 1px solid #000;
+    }
     
-    <style>
-        canvas{
-            display: block;
-            border: 1px solid #000;
-        }
-        #container{
-            width: 1200px;
-            height: 800px;
-            text-align: center;
-            margin: 0 auto;
-        }
-        #instructions, #info{
-            font-family: monospace;
-            text-align: center;
-        }
-    </style>
+    #container {
+      width: 65vw;
+      height: 800px;
+      text-align: center;
+      margin: 0 auto;
+    }
     
-    <body>
-        <div id='container'>
-        </div>
-        
-        <div id='info'>
-            <p> still a work-in-progress. </p>
-        </div>
-        
-        <div id='instructions'>
-            <h3> controls: </h3>
-            <p> keys 1-4 control different camera views. z for changing to opposite camera view for front and side views. </p>
-            <p>    w,s for forwards/backwards. a,d for turning left, right. p to toggle car body visibility. t to toggle racetrack visibility. </p>
-            <p> x for toggling racetrack wireframe. c for debug mode. </p> 
-        </div>
-    </body>
+    #instructions, #info {
+      font-family: monospace;
+      text-align: center;
+    }
     
-    <script type="module" src="index.js">
-    </script>
-
+    #showKeyboard {
+      display: block;
+      margin: 0 auto;
+    }
+  </style>
+  
+  <body>
+    <div id='container'>
+    </div>
+    
+    <div id='mobileKeyboard'></div>
+    
+    <div id='info'>
+      <p> still a work-in-progress. </p>
+    </div>
+    
+    <div id='instructions'>
+      <h3> controls: </h3>
+      <p> keys 1-4 control different camera views. z for changing to opposite camera view for front and side views. </p>
+      <p>    w,s for forwards/backwards. a,d for turning left, right. p to toggle car body visibility. t to toggle racetrack visibility. </p>
+      <p> x for toggling racetrack wireframe. c for debug mode. </p> 
+    </div>
+    
+    <br />
+    
+    <button id='showKeyboard'>show keyboard (if mobile)</button>
+  </body>
+  
+  <script type="module" src="index.js">
+  </script>
 </html>

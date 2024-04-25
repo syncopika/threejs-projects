@@ -78,7 +78,7 @@ function getModel(modelFilePath, name){
         );
     });
 }
-getModel("lava-lamp.gltf", "lavalamp").then(obj => {
+getModel("../models/lava-lamp.gltf", "lavalamp").then(obj => {
     lampModel = obj;
     
     lampModel.children[1].castShadow = true;

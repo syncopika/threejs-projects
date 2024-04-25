@@ -22,6 +22,11 @@ renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 renderer.setSize(container.clientWidth, container.clientHeight);    
 container.appendChild(renderer.domElement);
 
+// set up mobile keyboard
+document.getElementById('showKeyboard').addEventListener('click', () => {
+  new JSKeyboard(document.getElementById('mobileKeyboard'));
+});
+
 const camera = defaultCamera;
 camera.position.set(0,5,20);
 
@@ -132,9 +137,9 @@ function getModel(modelFilePath, side, name){
 }
 
 // https://threejs.org/docs/#api/en/textures/Texture
-loadedModels.push(getModel('../shared_assets/oceanfloor.glb', 'none', 'bg'));
-loadedModels.push(getModel('models/humanoid-rig-with-gun.gltf', 'player', 'p1'));
-loadedModels.push(getModel('models/m4carbine-final.gltf', 'tool', 'obj'));
+loadedModels.push(getModel('../models/oceanfloor.glb', 'none', 'bg'));
+loadedModels.push(getModel('../models/humanoid-rig-with-gun.gltf', 'player', 'p1'));
+loadedModels.push(getModel('../models/m4carbine-final.gltf', 'tool', 'obj'));
 
 let thePlayer = null;
 let tool = null;

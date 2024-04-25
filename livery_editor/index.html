@@ -1,100 +1,100 @@
 <!doctype html>
 <html>
-    <head>
-        <title>livery customizer demo</title>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r120/three.min.js" integrity="sha512-kgjZw3xjgSUDy9lTU085y+UCVPz3lhxAtdOVkcO4O2dKl2VSBcNsQ9uMg/sXIM4SoOmCiYfyFO/n1/3GSXZtSg==" crossorigin="anonymous"></script>
-        <script src='../libs/GLTFLoader.js'></script>
-        <script src='../libs/TrackballControls.js'></script>
-    </head>
+  <head>
+    <title>livery customizer demo</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r120/three.min.js" integrity="sha512-kgjZw3xjgSUDy9lTU085y+UCVPz3lhxAtdOVkcO4O2dKl2VSBcNsQ9uMg/sXIM4SoOmCiYfyFO/n1/3GSXZtSg==" crossorigin="anonymous"></script>
+    <script src='../libs/GLTFLoader.js'></script>
+    <script src='../libs/TrackballControls.js'></script>
+  </head>
+  
+  <style>
+    #header {
+      font-family: monospace;
+      text-align: center;
+      position: relative;
+      display: block;
+    }
     
-    <style>
-        #header{
-            font-family: monospace;
-            text-align: center;
-            position: relative;
-            display: block;
-        }
-        
-        .flex{
-            display: flex;
-            flex-wrap: wrap;
-        }
-        
-        #display{
-            width: 800px;
-            height: 600px;
-            margin: 0 auto;
-        }
-        
-        #editArea{
-            padding: 1%;
-            text-align: center;
-            margin: 0 auto;
-        }
-        
-        #liveryDisplay{
-            position: relative;
-            margin: 0px auto;
-            overflow: hidden; /* this makes sure that the visible canvas content is only within the bounds of #canvasArea */
-        }
-        
-        #liveryCanvas{
-            border: 1px solid #000;
-        }
-        
-        #liveryCanvas:hover{
-            cursor: crosshair;
-        }
-        
-        button{
-            margin: 3px;
-        }
-        
-        li{
-            display: inline-block;
-        }
-        
-        canvas{
-            touch-action: none;
-        }
-    </style>
+    .flex {
+      display: flex;
+      flex-wrap: wrap;
+    }
     
-    <body>
-        <div id='header'>
-            <h3> livery customizer demo </h3>
-            <p> instructions: use a mouse to draw on the canvas below containing the texture of the model! then click the 'update model' button. you can also rotate the model by clicking on the canvas of the model and moving your mouse (it has trackball controls). </p>
-            <p> <strong> currently kinda buggy </strong> but you can also paste in an image via ctrl+v and drag it into place, as well as resize it after pressing the 's' key and moving the mouse around or rotate it after pressing the 'r' key and using the mouse wheel. </p>
-        </div>
-        <div class='flex'>
-            <div id='display'>
-            </div>
-            <div id='editArea'>
-                <ul id='toolbar'>
-                    <li>
-                        <label for='colorInput'>pen color: </label>
-                        <input id='colorInput' type="text" value="rgba(0,0,0,255)"/>
-                    </li>
-                    <li><button id='invertColor'>invert color</button></li>
-                    <li><button id='mosaic'>mosaic filter</button></li>
-                    <li><button id='importTexture'>import texture</button></li>
-                    <li><button id='exportTexture'>export texture</button></li>
-                    <li><button id='updateModel'>update model</button></li>
-                    <li>
-                        <select id='selectModel'>
-                            <option value="f-16" selected>jet</option>
-                            <option value="porsche">car</option>
-                        </select>
-                    </li>
-                </ul>
-                   <div id='liveryDisplay'>
-                    <canvas id='liveryCanvas'>
-                    </canvas>
-                </div>
-            </div>
-        </div>
-    </body>
+    #display {
+      width: 65vw;
+      height: 600px;
+      margin: 0 auto;
+    }
     
-    <script src='index.js'></script>
-    <script src='pasteImageUtils.js'></script>
-
+    #editArea {
+      padding: 1%;
+      text-align: center;
+      margin: 0 auto;
+    }
+    
+    #liveryDisplay {
+      position: relative;
+      margin: 0px auto;
+      overflow: hidden; /* this makes sure that the visible canvas content is only within the bounds of #canvasArea */
+    }
+    
+    #liveryCanvas {
+      border: 1px solid #000;
+    }
+    
+    #liveryCanvas:hover {
+      cursor: crosshair;
+    }
+    
+    button {
+      margin: 3px;
+    }
+    
+    li {
+      display: inline-block;
+    }
+    
+    canvas {
+      touch-action: none;
+    }
+  </style>
+  
+  <body>
+    <div id='header'>
+      <h3> livery customizer demo </h3>
+      <p> instructions: use a mouse to draw on the canvas below containing the texture of the model! then click the 'update model' button. you can also rotate the model by clicking on the canvas of the model and moving your mouse (it has trackball controls). </p>
+      <p> <strong> currently kinda buggy </strong> but you can also paste in an image via ctrl+v and drag it into place, as well as resize it after pressing the 's' key and moving the mouse around or rotate it after pressing the 'r' key and using the mouse wheel. </p>
+    </div>
+    <div class='flex'>
+      <div id='display'>
+      </div>
+      <div id='editArea'>
+          <ul id='toolbar'>
+              <li>
+                  <label for='colorInput'>pen color: </label>
+                  <input id='colorInput' type="text" value="rgba(0,0,0,255)"/>
+              </li>
+              <li><button id='invertColor'>invert color</button></li>
+              <li><button id='mosaic'>mosaic filter</button></li>
+              <li><button id='importTexture'>import texture</button></li>
+              <li><button id='exportTexture'>export texture</button></li>
+              <li><button id='updateModel'>update model</button></li>
+              <li>
+                  <select id='selectModel'>
+                      <option value="f-16" selected>jet</option>
+                      <option value="porsche">car</option>
+                  </select>
+              </li>
+          </ul>
+             <div id='liveryDisplay'>
+              <canvas id='liveryCanvas'>
+              </canvas>
+          </div>
+      </div>
+    </div>
+  </body>
+  
+  <script src='index.js'></script>
+  <script src='pasteImageUtils.js'></script>
 </html>

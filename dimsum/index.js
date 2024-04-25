@@ -92,9 +92,9 @@ function getModel(modelFilePath, pos){
     });
 }
 
-loadedModelPromises.push(getModel('./siu-mai-ha-gao.gltf', new THREE.Vector3(0, 0, 15)));
-loadedModelPromises.push(getModel('./cha-siu-bao.gltf', new THREE.Vector3(25, 0, -22)));
-loadedModelPromises.push(getModel('./dan-tat.gltf', new THREE.Vector3(-25, 0, -22)));
+loadedModelPromises.push(getModel('../models/siu-mai-ha-gao.gltf', new THREE.Vector3(0, 0, 15)));
+loadedModelPromises.push(getModel('../models/cha-siu-bao.gltf', new THREE.Vector3(25, 0, -22)));
+loadedModelPromises.push(getModel('../models/dan-tat.gltf', new THREE.Vector3(-25, 0, -22)));
 
 Promise.all(loadedModelPromises).then((objects) => {
     objects.forEach((mesh, index) => {

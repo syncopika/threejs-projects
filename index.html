@@ -1,218 +1,223 @@
 <!doctype html>
 
 <html>
-
-<head>
+  <head>
     <title> nick's 3d projects with three.js </title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
     <style>
-        body {
-            font-family: FreeMono, monospace;
-            margin-left: 2%;
-        }
-        
-        img {
-        }
-        
+      body {
+        font-family: Arial;
+      }
+      
+      .project {
+        width: 30vw;
+      }
+      
+      .row {
+        display: flex;
+      }
+      
+      .prjSectionDisplay {
+        display: block;
+      }
+      
+      #grid {
+        display: flex;
+        justify-content: center;
+        flex-wrap: wrap;
+      }
+      
+      header {
+        padding-left: 1%;
+      }
+      
+      @media (max-width: 600px) {
         .project {
-            width: 600px;
+          width: 100vw;
+          text-align: center;
         }
-        
-        .row {
-            display: flex;
-        }
-        
-        .prjSectionDisplay {
-            display: block;
-        }
-        
-        #grid {
-            display: flex;
-            justify-content: center;
-            flex-wrap: wrap;
-        }
-
+      }
     </style>
-</head>
+  </head>
 
-<body>
-    <h1> 3d projects with three.js <a href='https://github.com/syncopika/threejs-projects'>source</a> </h1>
-    <p> with assets created with Blender! <b>note:</b> these projects might not work great on mobile devices, sorry. </p>
-    <p><b> and please remember to enable hardware acceleration! otherwise nothing will work well :( </b></p>
-    <br />
+  <body>
+    <header>
+      <h1> 3d projects with three.js <a href='https://github.com/syncopika/threejs-projects'>source</a> </h1>
+      <p> using assets created with Blender! </p>
+      <p> <b>note:</b> these projects might not work great on mobile devices, sorry. </p>
+      <p><b> and please remember to enable hardware acceleration! otherwise nothing will work well :( </b></p>
+    </header>
     
     <div id='grid'>
-        <div class='project'>
-            <h2><a href='super_submarine/index.html'>super submarine </a></h2>
-            <div id="displayProjectSubmarine" class="prjSectionDisplay">
-                <h3> be a submarine and find stuff! </h3>
-                </h3>
-                <img id='submarine' src='super_submarine/pictures/submarine_demo.webp' width='80%' height='11%' />
-            </div>
+      <div class='project'>
+        <h2><a href='super_submarine/index.html'>super submarine </a></h2>
+        <div id="displayProjectSubmarine" class="prjSectionDisplay">
+          <h3> be a submarine and find stuff! </h3>
+          </h3>
+          <img id='submarine' src='super_submarine/pictures/submarine_demo.webp' width='80%' height='11%' />
         </div>
-        
-        <div class='project'>
-            <h2><a href='airshow/index.html'>airshow </a></h2>
-            <div id="displayProjectAirshow" class="prjSectionDisplay">
-                <h3> fly a jet! </h3>
-                <img id='airshow' src='airshow/pictures/airshow_demo.webp' width='80%' height='11%' />
-            </div>
+      </div>
+      
+      <div class='project'>
+        <h2><a href='airshow/index.html'>airshow </a></h2>
+        <div id="displayProjectAirshow" class="prjSectionDisplay">
+          <h3> fly a jet! </h3>
+          <img id='airshow' src='airshow/pictures/airshow_demo.webp' width='80%' height='11%' />
         </div>
+      </div>
 
-        <div class='project'>
-            <h2><a href='character_demo/index.html'>character movement </a></h2>
-            <div id="displayProjectCharacterMvmt" class="prjSectionDisplay">
-                <h3> move a low poly humanoid around </h3>
-                <img id='character' src='character_demo/pictures/character_demo.gif' width='80%' height='11%' />
-            </div>
+      <div class='project'>
+        <h2><a href='character_demo/index.html'>character movement </a></h2>
+        <div id="displayProjectCharacterMvmt" class="prjSectionDisplay">
+          <h3> move a low poly humanoid around </h3>
+          <img id='character' src='character_demo/pictures/character_demo.gif' width='80%' height='11%' />
         </div>
-        
-        <div class='project'>
-            <h2><a href='car_demo/index.html'>car demo </a></h2>
-            <div id="displayProjectCar" class="prjSectionDisplay">
-                <h3> drive a car around on a track! </h3>
-                <img id='car' src='car_demo/pictures/car_demo.webp' width='80%' height='11%' />
-            </div>
+      </div>
+      
+      <div class='project'>
+        <h2><a href='car_demo/index.html'>car demo </a></h2>
+        <div id="displayProjectCar" class="prjSectionDisplay">
+          <h3> drive a car around on a track! </h3>
+          <img id='car' src='car_demo/pictures/car_demo.webp' width='80%' height='11%' />
         </div>
-        
-        <div class='project'>
-            <h2><a href='camerawork/index.html'>camerawork </a></h2>
-            <div id="displayProjectCamerawork" class="prjSectionDisplay">
-                <h3> a quick idea for creating a path for a camera to move along (might be useful for cinematography?) </h3>
-                <img id='camerawork' src='camerawork/28-08-2021_102033.webp' width='80%' height='11%' />
-            </div>
+      </div>
+      
+      <div class='project'>
+        <h2><a href='camerawork/index.html'>camerawork </a></h2>
+        <div id="displayProjectCamerawork" class="prjSectionDisplay">
+          <h3> a quick idea for creating a path for a camera to move along (might be useful for cinematography?) </h3>
+          <img id='camerawork' src='camerawork/28-08-2021_102033.webp' width='80%' height='11%' />
         </div>
-        
-        <div class='project'>
-            <h2><a href='livery_editor/index.html'> livery editor </a></h2>
-            <div id="displayProjectLivery" class="prjSectionDisplay">
-                <h3> a quick proof-of-concept for customizing the texture of a vehicle </h3>
-                <img id='livery' src='livery_editor/04-06-2021_142020.gif' width='80%' height='11%' />
-            </div>
+      </div>
+      
+      <div class='project'>
+        <h2><a href='livery_editor/index.html'> livery editor </a></h2>
+        <div id="displayProjectLivery" class="prjSectionDisplay">
+          <h3> a quick proof-of-concept for customizing the texture of a vehicle </h3>
+          <img id='livery' src='livery_editor/04-06-2021_142020.gif' width='80%' height='11%' />
         </div>
-        
-        <div class='project'>
-            <h2><a href='shaders/index.html'> shaders </a></h2>
-            <div id="displayProjectShaders" class="prjSectionDisplay">
-                <h3> playing with shaders! </h3>
-                <img id='shaders' src='shaders/27-06-2021_184151.webp' width='80%' height='11%' />
-            </div>
+      </div>
+      
+      <div class='project'>
+        <h2><a href='shaders/index.html'> shaders </a></h2>
+        <div id="displayProjectShaders" class="prjSectionDisplay">
+          <h3> playing with shaders! </h3>
+          <img id='shaders' src='shaders/27-06-2021_184151.webp' width='80%' height='11%' />
         </div>
-        
-        <div class='project'>
-            <h2><a href='vending_machine/index.html'> vending machine </a></h2>
-            <div id="displayProjectVendingMachine" class="prjSectionDisplay">
-                <h3> a vending machine </h3>
-                <img id='vendingmachine' src='vending_machine/29-08-2021_103845.gif' width='65%' height='11%' />
-            </div>
+      </div>
+      
+      <div class='project'>
+        <h2><a href='vending_machine/index.html'> vending machine </a></h2>
+        <div id="displayProjectVendingMachine" class="prjSectionDisplay">
+          <h3> a vending machine </h3>
+          <img id='vendingmachine' src='vending_machine/29-08-2021_103845.gif' width='65%' height='11%' />
         </div>
-        
-       <div class='project'>
-            <h2><a href='dishwashing/index.html'> dishwashing </a></h2>
-            <div id="displayProjectDishwashing" class="prjSectionDisplay">
-                <h3> washing the dishes </h3>
-                <img id='dishwashing' src='dishwashing/08-03-2022_141113.gif' width='80%' height='11%' />
-            </div>
+      </div>
+      
+     <div class='project'>
+        <h2><a href='dishwashing/index.html'> dishwashing </a></h2>
+        <div id="displayProjectDishwashing" class="prjSectionDisplay">
+          <h3> washing the dishes </h3>
+          <img id='dishwashing' src='dishwashing/08-03-2022_141113.gif' width='80%' height='11%' />
         </div>
-        
-        <div class='project'>
-            <h2><a href='basketball/index.html'> basketball </a></h2>
-            <div id="displayProjectBasketball" class="prjSectionDisplay">
-                <h3> trying out some physics with Cannon.js </h3>
-                <img id='basketball' src='basketball/12-05-2022_191525.gif' width='80%' height='11%' />
-            </div>
+      </div>
+      
+      <div class='project'>
+        <h2><a href='basketball/index.html'> basketball </a></h2>
+        <div id="displayProjectBasketball" class="prjSectionDisplay">
+          <h3> trying out some physics with Cannon.js </h3>
+          <img id='basketball' src='basketball/12-05-2022_191525.gif' width='80%' height='11%' />
         </div>
-        
-        <div class='project'>
-            <h2><a href='audio_visualization/index.html'> audio visualization </a></h2>
-            <div id="displayProjectAudioViz" class="prjSectionDisplay">
-                <h3> audio visualizations with Web Audio API </h3>
-                <img id='audioViz' src='audio_visualization/27-05-2022_153744.webp' width='80%' height='11%' />
-            </div>
+      </div>
+      
+      <div class='project'>
+        <h2><a href='audio_visualization/index.html'> audio visualization </a></h2>
+        <div id="displayProjectAudioViz" class="prjSectionDisplay">
+          <h3> audio visualizations with Web Audio API </h3>
+          <img id='audioViz' src='audio_visualization/27-05-2022_153744.webp' width='80%' height='11%' />
         </div>
-        
-        <div class='project'>
-            <h2><a href='curves/index.html'> curves </a></h2>
-            <div id="displayProjectCurves" class="prjSectionDisplay">
-                <h3> playing with curves </h3>
-                <img id='curves' src='curves/demo.gif' width='80%' height='11%' />
-            </div>
+      </div>
+      
+      <div class='project'>
+        <h2><a href='curves/index.html'> curves </a></h2>
+        <div id="displayProjectCurves" class="prjSectionDisplay">
+          <h3> playing with curves </h3>
+          <img id='curves' src='curves/demo.gif' width='80%' height='11%' />
         </div>
-        
-        <div class='project'>
-            <h2><a href='trumpet/index.html'> trumpet </a></h2>
-            <div id="displayProjectTrumpet" class="prjSectionDisplay">
-                <h3> a Bb trumpet </h3>
-                <img id='trumpet' src='trumpet/demo.gif' width='80%' height='11%' />
-            </div>
+      </div>
+      
+      <div class='project'>
+        <h2><a href='trumpet/index.html'> trumpet </a></h2>
+        <div id="displayProjectTrumpet" class="prjSectionDisplay">
+          <h3> a Bb trumpet </h3>
+          <img id='trumpet' src='trumpet/demo.gif' width='80%' height='11%' />
         </div>
-        
-        <div class='project'>
-            <h2><a href='dimsum/index.html'> dim sum </a></h2>
-            <div id="displayProjectDimsum" class="prjSectionDisplay">
-                <h3> 😋 </h3>
-                <img id='dimsum' src='dimsum/screenshot.png' width='80%' height='11%' />
-            </div>
+      </div>
+      
+      <div class='project'>
+        <h2><a href='dimsum/index.html'> dim sum </a></h2>
+        <div id="displayProjectDimsum" class="prjSectionDisplay">
+          <h3> 😋 </h3>
+          <img id='dimsum' src='dimsum/screenshot.png' width='80%' height='11%' />
         </div>
-        
-        <div class='project'>
-            <h2><a href='fps/index.html'> fps </a></h2>
-            <div id="displayProjectFps" class="prjSectionDisplay">
-                <h3> fps demo 🐄</h3>
-                <img id='fps' src='fps/03-09-2023_221142.gif' width='80%' height='11%' />
-            </div>
+      </div>
+      
+      <div class='project'>
+        <h2><a href='fps/index.html'> fps </a></h2>
+        <div id="displayProjectFps" class="prjSectionDisplay">
+          <h3> fps demo 🐄</h3>
+          <img id='fps' src='fps/03-09-2023_221142.gif' width='80%' height='11%' />
         </div>
-        
-        <div class='project'>
-            <h2><a href='battleships/index.html'> battleships </a></h2>
-            <div id="displayProjectBattleships" class="prjSectionDisplay">
-                <h3> battleships </h3>
-                <img id='fps' src='battleships/25-09-2023_202551.gif' width='80%' height='11%' />
-            </div>
+      </div>
+      
+      <div class='project'>
+        <h2><a href='battleships/index.html'> battleships </a></h2>
+        <div id="displayProjectBattleships" class="prjSectionDisplay">
+          <h3> battleships </h3>
+          <img id='fps' src='battleships/25-09-2023_202551.gif' width='80%' height='11%' />
         </div>
-        
-        <div class='project'>
-            <h2><a href='snowboard/index.html'> snowboarding </a></h2>
-            <div id="displayProjectSnowboard" class="prjSectionDisplay">
-                <h3> snowboarding </h3>
-                <img id='snowboard' src='snowboard/08-10-2023_103831.gif' width='80%' height='11%' />
-            </div>
+      </div>
+      
+      <div class='project'>
+        <h2><a href='snowboard/index.html'> snowboarding </a></h2>
+        <div id="displayProjectSnowboard" class="prjSectionDisplay">
+          <h3> snowboarding </h3>
+          <img id='snowboard' src='snowboard/08-10-2023_103831.gif' width='80%' height='11%' />
         </div>
-        
-        <div class='project'>
-            <h2><a href='lava_lamp/index.html'> lava lamp </a></h2>
-            <div id="displayProjectLavaLamp" class="prjSectionDisplay">
-                <h3> i love (lava)lamp </h3>
-                <img id='lavaLamp' src='lava_lamp/screenshot.png' width='80%' height='11%' />
-            </div>
+      </div>
+      
+      <div class='project'>
+        <h2><a href='lava_lamp/index.html'> lava lamp </a></h2>
+        <div id="displayProjectLavaLamp" class="prjSectionDisplay">
+          <h3> i love (lava)lamp </h3>
+          <img id='lavaLamp' src='lava_lamp/screenshot.png' width='80%' height='11%' />
         </div>
-        
-        <div class='project'>
-            <h2><a href='rubikscube/index.html'> Rubik's Cube </a></h2>
-            <div id="displayProjectRubiksCube" class="prjSectionDisplay">
-                <h3> cubes </h3>
-                <img id='rubiksCube' src='rubikscube/19-03-2024_192544.gif' width='80%' height='11%' />
-            </div>
+      </div>
+      
+      <div class='project'>
+        <h2><a href='rubikscube/index.html'> Rubik's Cube </a></h2>
+        <div id="displayProjectRubiksCube" class="prjSectionDisplay">
+          <h3> cubes </h3>
+          <img id='rubiksCube' src='rubikscube/19-03-2024_192544.gif' width='80%' height='11%' />
         </div>
+      </div>
     </div>
+  </body>
 
-</body>
-
-<script>
-/*
-    Array.from(document.getElementsByClassName("caret")).forEach((caret) => {
-        caret.addEventListener("click", (evt) => {
-            const targetInfoToToggle = document.getElementById("displayProject" + caret.id);
-            if(targetInfoToToggle.style.display === "block"){
-                caret.innerHTML = "&#9656; ";
-                targetInfoToToggle.style.display = "none";
-            }else{
-                caret.innerHTML = "&#9662; ";
-                targetInfoToToggle.style.display = "block";
-            }
-        });
-    });
-    */
-</script>
-
-
+  <script>
+  /*
+      Array.from(document.getElementsByClassName("caret")).forEach((caret) => {
+          caret.addEventListener("click", (evt) => {
+              const targetInfoToToggle = document.getElementById("displayProject" + caret.id);
+              if(targetInfoToToggle.style.display === "block"){
+                  caret.innerHTML = "&#9656; ";
+                  targetInfoToToggle.style.display = "none";
+              }else{
+                  caret.innerHTML = "&#9662; ";
+                  targetInfoToToggle.style.display = "block";
+              }
+          });
+      });
+      */
+  </script>
 </html>

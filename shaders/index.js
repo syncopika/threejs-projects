@@ -36,7 +36,7 @@ controls.rotateSpeed = 1.2;
 controls.zoomSpeed = 1.2;
 controls.panSpeed = 0.8;
 
-getModel('../shared_assets/f-16.gltf', 'f-16');
+getModel('../models/f-16.gltf', 'f-16');
 
 function getModel(modelFilePath, name){
     return new Promise((resolve, reject) => {
@@ -122,7 +122,7 @@ document.getElementById('selectModel').addEventListener('change', (evt) => {
     currModelTexture = null;
     
     if(["whale-shark-camo", "f-18"].indexOf(evt.target.value) > -1){
-        getModel(`../shared_assets/${evt.target.value}.glb`, evt.target.value);
+        getModel(`../models/${evt.target.value}.glb`, evt.target.value);
         camera.position.z = cameraZPos;
     }else if(evt.target.value === "scene1"){
         // this one changes the camera's z-position a bit
@@ -138,7 +138,7 @@ document.getElementById('selectModel').addEventListener('change', (evt) => {
         currModel.rotation.x = -Math.PI / 2;
         camera.position.z = cameraZPos;
     }else{
-        getModel(`../shared_assets/${evt.target.value}.gltf`, evt.target.value);
+        getModel(`../models/${evt.target.value}.gltf`, evt.target.value);
         camera.position.z = cameraZPos;
     }
 });

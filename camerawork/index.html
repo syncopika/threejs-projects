@@ -1,63 +1,81 @@
 <!doctype html>
 <html>
-    <head>
-        <title>camerawork</title>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r120/three.min.js" integrity="sha512-kgjZw3xjgSUDy9lTU085y+UCVPz3lhxAtdOVkcO4O2dKl2VSBcNsQ9uMg/sXIM4SoOmCiYfyFO/n1/3GSXZtSg==" crossorigin="anonymous"></script>
-        <script src='../libs/GLTFLoader.js'></script>
-        <script src="../libs/threex.keyboardstate.js"></script>
-    </head>
+  <head>
+    <title>camerawork</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r120/three.min.js" integrity="sha512-kgjZw3xjgSUDy9lTU085y+UCVPz3lhxAtdOVkcO4O2dKl2VSBcNsQ9uMg/sXIM4SoOmCiYfyFO/n1/3GSXZtSg==" crossorigin="anonymous"></script>
+    <script src='../libs/GLTFLoader.js'></script>
+    <script src="../libs/JSKeyboard.js"></script>
+    <script src="../libs/threex.keyboardstate.js"></script>
+  </head>
+  
+  <style>
+    canvas {
+      display: block;
+    }
     
-    <style>
-        canvas{
-            display: block;
-        }
-        #container{
-            width: 1200px;
-            height: 800px;
-            text-align: center;
-            margin: 0 auto;
-            border: 1px solid #000;
-        }
-        #instructions, #info{
-            font-family: monospace;
-            text-align: center;
-        }
-        #addMarker{
-            border: 3px solid green;
-        }
-    </style>
+    #container {
+      width: 65vw;
+      height: 800px;
+      text-align: center;
+      margin: 0 auto;
+      border: 1px solid #000;
+    }
     
-    <body>
-        <div id='container'>
-        </div>
-        
-        <div id='info'>
-            <p id='height'></p>
-        </div>
-        
-        <div id='instructions'>
-            <h3> controls: </h3>
-            <button id='addMarker'> add marker </button>
-            <button id='removeMarker'> remove marker </button>
-            <button id='selectMarker'> select marker </button>
-            <button id="createPath"> create path </button>
-            <button id="ridePath"> ride path </button>
-            <button id="setTarget"> unset target </button>
-            
-            <br>
-            <br>
-            <button id="toggleMarkerVisibility">toggle marker visibility</button>
-            <button id="togglePathVisibility">toggle path visibility</button>
-            <br>
-            
-            <p> w,s to move forward and backward. a,d to rotate left and right. q,e to roll left and right. up and down arrows to rotate up and down. </p>
-            <p> click on the canvas to add a new marker while the 'add marker' button is active. </p>
-            <p> click on any marker when the 'select marker' button is active. (they should change to red when clicked)</p>
-            <p> after markers have been selected, press the 'create path' button to connect the markers. </p>
-            <p> the 'ride path' button will move the camera along the created path. note that currently there is a 5 second duration for each created path. </p>
-        </div>
-    </body>
+    #instructions, #info {
+      font-family: monospace;
+      text-align: center;
+    }
     
-    <script type="module" src="index.js">
-    </script>
+    #addMarker {
+      border: 3px solid green;
+    }
+    
+    #showKeyboard {
+      display: block;
+      margin: 0 auto;
+    }
+  </style>
+  
+  <body>
+    <div id='container'>
+    </div>
+    
+    <div id='info'>
+      <p id='height'></p>
+    </div>
+    
+    <div id='instructions'>
+      <h3> controls: </h3>
+      <button id='addMarker'> add marker </button>
+      <button id='removeMarker'> remove marker </button>
+      <button id='selectMarker'> select marker </button>
+      <button id="createPath"> create path </button>
+      <button id="ridePath"> ride path </button>
+      <button id="setTarget"> unset target </button>
+      
+      <br />
+      <br />
+      
+      <button id="toggleMarkerVisibility">toggle marker visibility</button>
+      <button id="togglePathVisibility">toggle path visibility</button>
+      
+      <br />
+      
+      <div id='mobileKeyboard'></div>
+      
+      <p> w,s to move forward and backward. a,d to rotate left and right. q,e to roll left and right. up and down arrows to rotate up and down. </p>
+      <p> click on the canvas to add a new marker while the 'add marker' button is active. </p>
+      <p> click on any marker when the 'select marker' button is active. (they should change to red when clicked)</p>
+      <p> after markers have been selected, press the 'create path' button to connect the markers. </p>
+      <p> the 'ride path' button will move the camera along the created path. note that currently there is a 5 second duration for each created path. </p>
+      
+      <br />
+      
+      <button id='showKeyboard'>show keyboard (if mobile)</button>
+    </div>
+  </body>
+  
+  <script type="module" src="index.js">
+  </script>
 </html>

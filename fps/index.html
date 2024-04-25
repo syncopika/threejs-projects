@@ -1,54 +1,70 @@
 <!doctype html>
 <html>
-    <head>
-        <title>fps test</title>
-        
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r120/three.min.js" integrity="sha512-kgjZw3xjgSUDy9lTU085y+UCVPz3lhxAtdOVkcO4O2dKl2VSBcNsQ9uMg/sXIM4SoOmCiYfyFO/n1/3GSXZtSg==" crossorigin="anonymous"></script>
-        <script src='../libs/utils.js'></script>
-        <script src='../libs/stats.js'></script>
-        <script src='../libs/cannon.js'></script>
-        <script src='../libs/GLTFLoader.js'></script>
-        <script src="../libs/threex.keyboardstate.js"></script>
-        <script src="../basketball/CannonDebugRenderer.js"></script>
-    </head>
+  <head>
+    <title>fps test</title>
+    <meta name="viewport" content="width=device-width, initial-scale=0.6, minimum-scale=0.6" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r120/three.min.js" integrity="sha512-kgjZw3xjgSUDy9lTU085y+UCVPz3lhxAtdOVkcO4O2dKl2VSBcNsQ9uMg/sXIM4SoOmCiYfyFO/n1/3GSXZtSg==" crossorigin="anonymous"></script>
+    <script src='../libs/utils.js'></script>
+    <script src='../libs/stats.js'></script>
+    <script src='../libs/cannon.js'></script>
+    <script src='../libs/GLTFLoader.js'></script>
+    <script src="../libs/JSKeyboard.js"></script>
+    <script src="../libs/threex.keyboardstate.js"></script>
+    <script src="../basketball/CannonDebugRenderer.js"></script>
+  </head>
+  
+  <style>
+    canvas {
+      display: block;
+      border: 1px solid #000;
+      touch-action: manipulation;
+    }
     
-    <style>
-        canvas{
-            display: block;
-            border: 1px solid #000;
-        }
-        #container{
-            position: relative;
-            width: 1200px;
-            height: 800px;
-            text-align: center;
-            margin: 0 auto;
-        }
-        #instructions, #info, #impulse, #cowProjectile{
-            font-family: monospace;
-            text-align: center;
-        }
-    </style>
+    #container {
+      position: relative;
+      width: 65vw;
+      height: 800px;
+      text-align: center;
+      margin: 0 auto;
+    }
     
-    <body>
-        <div id='container'>
-        </div>
-        
-        <div id='instructions'>
-            <h3> controls: </h3>
-            <p> w, s to move forward/backward. a, d to turn left/right. hold shift to run. g to toggle weapon equip. 1 to toggle first-person view. when weapon is equipped, click on the canvas to fire a projectile. </p>
-        </div>
-        
-        <div id='impulse'>
-            <label for='impulseSlider'>impulse:</label><input type='range' id='impulseSlider' min='5' max='30' step='1' value='20' /><label id='impulseVal'>20</label>
-        </div>
-        
-        <div id='cowProjectile'>
-            <label for='useCowProjectile'>cow projectile</label><input type='checkbox' id='useCowProjectile' />
-        </div>
-    </body>
+    #instructions, #info, #impulse, #cowProjectile {
+      font-family: monospace;
+      text-align: center;
+    }
     
-    <script type="module" src="index.js">
-    </script>
-
+    #showKeyboard {
+      display: block;
+      margin: 0 auto;
+    }
+  </style>
+  
+  <body>
+    <div id='container'>
+    </div>
+    
+    <br />
+    
+    <div id='mobileKeyboard'></div>
+    
+    <div id='instructions'>
+      <h3> controls: </h3>
+      <p> w, s to move forward/backward. a, d to turn left/right. hold shift to run. g to toggle weapon equip. 1 to toggle first-person view. when weapon is equipped, click on the canvas to fire a projectile. </p>
+    </div>
+    
+    <div id='impulse'>
+      <label for='impulseSlider'>impulse:</label><input type='range' id='impulseSlider' min='5' max='30' step='1' value='20' /><label id='impulseVal'>20</label>
+    </div>
+    
+    <div id='cowProjectile'>
+      <label for='useCowProjectile'>cow projectile</label><input type='checkbox' id='useCowProjectile' />
+    </div>
+    
+    <br />
+    
+    <button id='showKeyboard'>show keyboard (if mobile)</button>
+  </body>
+  
+  <script type="module" src="index.js">
+  </script>
 </html>

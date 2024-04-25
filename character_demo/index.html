@@ -1,49 +1,63 @@
 <!doctype html>
 <html>
-    <head>
-        <title>character animation test</title>
-        <script src="https://code.jquery.com/jquery-3.4.1.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script>
-        <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js" integrity="sha256-VazP97ZCwtekAsvgPBSUwPFKdrwD3unUfSGVYrahUqU=" crossorigin="anonymous"></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r120/three.min.js" integrity="sha512-kgjZw3xjgSUDy9lTU085y+UCVPz3lhxAtdOVkcO4O2dKl2VSBcNsQ9uMg/sXIM4SoOmCiYfyFO/n1/3GSXZtSg==" crossorigin="anonymous"></script>
-        <script src='../libs/utils.js'></script>
-        <script src='../libs/stats.js'></script>
-        <script src='../libs/GLTFLoader.js'></script>
-        <script src="../libs/threex.keyboardstate.js"></script>
-    </head>
+  <head>
+    <title>character animation test</title>
+    <meta name="viewport" content="width=device-width, initial-scale=0.75, minimum-scale=0.75" />
+    <script src="https://code.jquery.com/jquery-3.4.1.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script>
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js" integrity="sha256-VazP97ZCwtekAsvgPBSUwPFKdrwD3unUfSGVYrahUqU=" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r120/three.min.js" integrity="sha512-kgjZw3xjgSUDy9lTU085y+UCVPz3lhxAtdOVkcO4O2dKl2VSBcNsQ9uMg/sXIM4SoOmCiYfyFO/n1/3GSXZtSg==" crossorigin="anonymous"></script>
+    <script src='../libs/utils.js'></script>
+    <script src='../libs/stats.js'></script>
+    <script src='../libs/GLTFLoader.js'></script>
+    <script src="../libs/JSKeyboard.js"></script>
+    <script src="../libs/threex.keyboardstate.js"></script>
+  </head>
+  
+  <style>
+    canvas {
+      display: block;
+      border: 1px solid #000;
+    }
     
-    <style>
-        canvas{
-            display: block;
-            border: 1px solid #000;
-        }
-        #container{
-            width: 1200px;
-            height: 800px;
-            text-align: center;
-            margin: 0 auto;
-        }
-        #instructions, #info{
-            font-family: monospace;
-            text-align: center;
-        }
-    </style>
+    #container {
+      width: 65vw;
+      height: 800px;
+      text-align: center;
+      margin: 0 auto;
+    }
     
-    <body>
-        <div id='container'>
-        </div>
-        
-        <div id='info'>
-            <p id='height'></p>
-        </div>
-        
-        <div id='instructions'>
-            <h3> controls: </h3>
-            <p> w, s to move forward/backward. a, d to turn left/right. hold shift to run. g to toggle weapon equip. 1 to toggle first-person view. </p>
-            <p> note: the green cube in the location of the character's head serves as a starting point for the raycaster to use when adjusting the vertical position on uneven terrain. </p>
-        </div>
-    </body>
+    #instructions, #info {
+      font-family: monospace;
+      text-align: center;
+    }
     
-    <script type="module" src="index.js">
-    </script>
-
+    #showKeyboard {
+      display: block;
+      margin: 0 auto;
+    }
+  </style>
+  
+  <body>
+    <div id='container'>
+    </div>
+    
+    <div id='info'>
+      <p id='height'></p>
+    </div>
+    
+    <div id='mobileKeyboard'></div>
+    
+    <div id='instructions'>
+      <h3> controls: </h3>
+      <p> w, s to move forward/backward. a, d to turn left/right. hold shift to run. g to toggle weapon equip. 1 to toggle first-person view. </p>
+      <p> note: the green cube in the location of the character's head serves as a starting point for the raycaster to use when adjusting the vertical position on uneven terrain. </p>
+    </div>
+    
+    <br />
+    
+    <button id='showKeyboard'>show keyboard (if mobile)</button>
+  </body>
+  
+  <script type="module" src="index.js">
+  </script>
 </html>

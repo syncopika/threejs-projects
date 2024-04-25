@@ -15,6 +15,11 @@ renderer.setSize(container.clientWidth, container.clientHeight);
 renderer.domElement.id = "theCanvas";  
 container.appendChild(renderer.domElement);
 
+// set up mobile keyboard
+document.getElementById('showKeyboard').addEventListener('click', () => {
+  new JSKeyboard(document.getElementById('mobileKeyboard'));
+});
+
 // overlay canvas for displaying crosshairs
 const crosshairCanvas = document.createElement('canvas');
 crosshairCanvas.style.position = 'absolute';
@@ -88,7 +93,7 @@ world.gravity.set(0, -9.82, 0);
 const cannonDebugRenderer = new THREE.CannonDebugRenderer(scene, world);
 
 // add ground
-const texture = new THREE.TextureLoader().load('../car_demo/models/grass2.jpg');
+const texture = new THREE.TextureLoader().load('../car_demo/grass2.jpg');
 const terrainMat = new THREE.MeshPhongMaterial({map: texture, side: THREE.DoubleSide});
 const terrainGeometry = new THREE.PlaneGeometry(200, 200);
 const plane = new THREE.Mesh(terrainGeometry, terrainMat);
@@ -267,14 +272,14 @@ function getModel(modelFilePath, name){
     });
 }
 
-loadedModels.push(getModel('../character_demo/models/humanoid-rig-with-gun.gltf', 'player'));
-loadedModels.push(getModel('../character_demo/models/m4carbine-final.gltf', 'obj'));
-loadedModels.push(getModel('./target.gltf', 'target'));
-loadedModels.push(getModel('./box.gltf', 'box'));
-loadedModels.push(getModel('./box.gltf', 'box2'));
-loadedModels.push(getModel('./barrel.gltf', 'barrel'));
+loadedModels.push(getModel('../models/humanoid-rig-with-gun.gltf', 'player'));
+loadedModels.push(getModel('../models/m4carbine-final.gltf', 'obj'));
+loadedModels.push(getModel('../models/target.gltf', 'target'));
+loadedModels.push(getModel('../models/box.gltf', 'box'));
+loadedModels.push(getModel('../models/box.gltf', 'box2'));
+loadedModels.push(getModel('../models/barrel.gltf', 'barrel'));
 
-getModel('./cow.gltf', 'cow').then(model => {
+getModel('../models/cow.gltf', 'cow').then(model => {
     cowProjectileMesh = model;
 });
 

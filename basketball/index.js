@@ -4,6 +4,11 @@
 const container = document.getElementById("container");
 //const keyboard = new THREEx.KeyboardState();
 
+// set up mobile keyboard
+document.getElementById('showKeyboard').addEventListener('click', () => {
+  new JSKeyboard(document.getElementById('mobileKeyboard'));
+});
+
 const fov = 60;
 const camera = new THREE.PerspectiveCamera(fov, container.clientWidth / container.clientHeight, 0.01, 1000);
 camera.position.set(0, 4, 10);
@@ -35,15 +40,6 @@ spotLight.castShadow = true;
 spotLight.shadow.mapSize.width = 1024;
 spotLight.shadow.mapSize.height = 1024;
 scene.add(spotLight);
-
-//const pointLight = new THREE.PointLight(0xffffff, 1, 0);
-//pointLight.position.set(2, 10, 2);
-//pointLight.castShadow = true;
-//scene.add(pointLight);
-
-//const hemiLight = new THREE.HemisphereLight(0xffffff);
-//hemiLight.position.set(0, 10, 0);
-//scene.add(hemiLight);
 
 const world = new CANNON.World();
 world.gravity.set(0, -9.82, 0);

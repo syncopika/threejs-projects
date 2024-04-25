@@ -1,40 +1,40 @@
 <!doctype html>
 <html>
-    <head>
-        <title> Rubik's Cube </title>
-        
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r124/three.min.js" integrity="sha512-jeYvJdyAYkpQCY/omvCYQo89qA5YxDW4JBT7COPsHT2sOAanwxkZRFeP9gc69b5reSDpZIoyCqZQZcWZkbB5Gw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-        <script src="../libs/utils.js"></script>
-        <script src="../libs/GLTFLoader.js"></script>
-        <script src="../libs/threex.keyboardstate.js"></script>
-        <script src="../libs/TrackballControls.js"></script>
+  <head>
+    <title> Rubik's Cube </title>
+    <meta name="viewport" content="width=device-width, initial-scale=0.6, minimum-scale=0.6" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r124/three.min.js" integrity="sha512-jeYvJdyAYkpQCY/omvCYQo89qA5YxDW4JBT7COPsHT2sOAanwxkZRFeP9gc69b5reSDpZIoyCqZQZcWZkbB5Gw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="../libs/utils.js"></script>
+    <script src="../libs/GLTFLoader.js"></script>
+    <script src="../libs/threex.keyboardstate.js"></script>
+    <script src="../libs/TrackballControls.js"></script>
 
-        <style>
-            body {
-                text-align: center;
-                font-family: monospace;
-            }
-            
-            #container{
-                width: 1200px;
-                height: 800px;
-                text-align: center;
-                margin: 0 auto;
-            }
-        </style>
-    </head>
+    <style>
+      body {
+        text-align: center;
+        font-family: monospace;
+      }
+      
+      #container {
+        width: 65vw;
+        height: 800px;
+        text-align: center;
+        margin: 0 auto;
+      }
+    </style>
+  </head>
 
-    <body>
-        <h3> Rubik's Cube </h3>
+  <body>
+    <h3> Rubik's Cube </h3>
 
-        <div id='container'>
-        </div>
-        
-        <button id='pause'>pause</button>
+    <div id='container'>
+    </div>
+    
+    <br />
+    
+    <button id='pause'>pause</button>
+  </body>
 
-    </body>
-
-    <script type="module" src="index.js">
-    </script>
-
+  <script type="module" src="index.js">
+  </script>
 </html>

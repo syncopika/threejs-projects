@@ -1,47 +1,49 @@
 <!doctype html>
 <html>
-    <head>
-        <title>dishwashing</title>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r120/three.min.js" integrity="sha512-kgjZw3xjgSUDy9lTU085y+UCVPz3lhxAtdOVkcO4O2dKl2VSBcNsQ9uMg/sXIM4SoOmCiYfyFO/n1/3GSXZtSg==" crossorigin="anonymous"></script>
-        <script src='../libs/utils.js'></script>
-        <script src='../libs/GLTFLoader.js'></script>
-    </head>
+  <head>
+    <title>dishwashing</title>
+    <meta name="viewport" content="width=device-width, initial-scale=0.3, minimum-scale=0.3" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r120/three.min.js" integrity="sha512-kgjZw3xjgSUDy9lTU085y+UCVPz3lhxAtdOVkcO4O2dKl2VSBcNsQ9uMg/sXIM4SoOmCiYfyFO/n1/3GSXZtSg==" crossorigin="anonymous"></script>
+    <script src='../libs/utils.js'></script>
+    <script src='../libs/GLTFLoader.js'></script>
+  </head>
+  
+  <style>
+    canvas {
+      display: block;
+      border: 1px solid #000;
+    }
     
-    <style>
-        canvas{
-            display: block;
-            border: 1px solid #000;
-        }
-        #container{
-            width: 1200px;
-            height: 800px;
-            text-align: center;
-            margin: 0 auto;
-        }
-        #instructions, #info, h3{
-            font-family: monospace;
-            text-align: center;
-        }
-    </style>
+    #container {
+      width: 65vw;
+      height: 800px;
+      text-align: center;
+      margin: 0 auto;
+    }
     
-    <body>
-        <h3> dishwashing </h3>
-    
-        <div id='container'>
-        </div>
-        
-        <div id='info'>
-            <p id='height'></p>
-        </div>
-        
-        <div id='instructions'>
-            <h3> controls: </h3>
-            <p> click on the plate and sponge (or press 'G' and 'S') to hold them. </p>
-            <p> use your mouse to clean the plate with the sponge :) </p>
-        </div>
-    </body>
-    
-    <script type="module" src="index.js">
-    </script>
+    #instructions, #info, h3 {
+      font-family: monospace;
+      text-align: center;
+    }
+  </style>
+  
+  <body>
+    <h3> dishwashing </h3>
 
+    <div id='container'>
+    </div>
+    
+    <div id='info'>
+      <p id='height'></p>
+    </div>
+    
+    <div id='instructions'>
+      <h3> controls: </h3>
+      <p> click on the plate and sponge (or press 'G' and 'S') to hold them. </p>
+      <p> use your mouse to clean the plate with the sponge :) </p>
+    </div>
+  </body>
+  
+  <script type="module" src="index.js">
+  </script>
 </html>
