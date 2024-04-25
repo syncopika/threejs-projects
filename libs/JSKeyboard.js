@@ -56,6 +56,8 @@ class JSKeyboard {
           'key': key.toLowerCase(), 
           'code': `Key${key}`,
           'keyCode': keys[key],
+          'cancelable': true,
+          'bubbles': true,
         }));
       });
       
@@ -64,6 +66,8 @@ class JSKeyboard {
           'key': key.toLowerCase(), 
           'code': `Key${key}`,
           'keyCode': keys[key],
+          'cancelable': true,
+          'bubbles': true,
         }));
       });
       
