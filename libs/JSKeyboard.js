@@ -20,8 +20,8 @@ class JSKeyboard {
     
     const keys = {
       'W': 87,
-      'A': 65,
       'S': 83,
+      'A': 65,
       'D': 68,
       'Q': 81,
       'E': 69,
@@ -42,7 +42,7 @@ class JSKeyboard {
       newKey.style.borderRadius = '10px';
       newKey.style.padding = '10px';
       newKey.style.backgroundColor = '#ccc';
-      newKey.style.margin = '2px';
+      newKey.style.margin = '3px';
       newKey.style.userSelect = 'none';
       newKey.textContent = key;
       
@@ -82,6 +82,10 @@ class JSKeyboard {
     const hideKeyboard = document.createElement('button');
     hideKeyboard.className = 'keyboard-key';
     hideKeyboard.textContent = 'hide';
+    hideKeyboard.style.margin = '3px';
+    hideKeyboard.style.userSelect = 'none';
+    hideKeyboard.style.border = '1px solid #000';
+    hideKeyboard.style.borderRadius = '10px';
     hideKeyboard.addEventListener('click', () => {
       keyboard.parentNode.removeChild(keyboard);
     });
