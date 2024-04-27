@@ -3,7 +3,6 @@
 // https://github.com/syncopika/jsProjects/blob/master/audio_visualizer/audioVisualiser.html
 
 const container = document.getElementById("container");
-//const keyboard = new THREEx.KeyboardState();
 
 const fov = 60;
 const camera = new THREE.PerspectiveCamera(fov, container.clientWidth / container.clientHeight, 0.01, 1000);
@@ -39,9 +38,10 @@ pointLight.position.set(0, 15, 10);
 //pointLight.castShadow = true;
 scene.add(pointLight);
 
-//const hemiLight = new THREE.HemisphereLight(0xffffff);
-//hemiLight.position.set(0, 10, 0);
-//scene.add(hemiLight);
+const controls = new THREE.TrackballControls(camera, renderer.domElement);
+controls.rotateSpeed = 1.2;
+controls.zoomSpeed = 1.2;
+controls.panSpeed = 0.8;
 
 const clock = new THREE.Clock();
 
@@ -245,6 +245,9 @@ function update(){
     freqAnalyser.getByteFrequencyData(freqBuffer);
     updateFreqDomainVisualization(freqBuffer);
   }
+  
+  // update trackball
+  controls.update();
 }
 
 function animate(){
