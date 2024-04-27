@@ -4,12 +4,16 @@
   "description": "small projects using three.js    \r https://syncopika.github.io/threejs-projects/",
   "main": "server.js",
   "dependencies": {
+    "@html-eslint/eslint-plugin": "^0.24.1",
+    "@html-eslint/parser": "^0.24.1",
+    "eslint": "^9.1.1",
     "express": "^4.17.1"
   },
-  "devDependencies": {},
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node server.js"
+    "start": "node server.js",
+    "lint": "eslint",
+    "lint:fix": "eslint --fix"
   },
   "repository": {
     "type": "git",

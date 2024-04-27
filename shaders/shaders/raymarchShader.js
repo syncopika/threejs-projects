@@ -7,7 +7,7 @@
 // and of course Inigo Quilez's sdf primitives demo (but pretty complicated and hard to break down into easy-to-understand parts): https://www.shadertoy.com/view/Xds3zN
 
 const raymarchShader = {
-    vertexShader: `
+  vertexShader: `
         out vec2 vUv;
         void main() {
             vUv = uv;
@@ -15,7 +15,7 @@ const raymarchShader = {
         }
     `,
     
-    fragShader: `
+  fragShader: `
         #define pi 3.141592653
         
         uniform float u_time;

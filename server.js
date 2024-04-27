@@ -1,6 +1,6 @@
 const express = require('express');
 const app = express();
-const path = require('path')
+const path = require('path');
 const port = 3000;
 
 // ah, it expects the dfault file to serve to be called index.html. if named otherwise you'll get cannot GET
