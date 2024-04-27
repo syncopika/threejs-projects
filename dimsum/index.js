@@ -54,42 +54,42 @@ scene2.add(ptlight2);
 
 //const clock = new THREE.Clock();
 
-let loadedModelPromises = [];
-let loadedModels = [];
-let startPositions = [];
-let destinationPositions = []; // end positions when moving models
+const loadedModelPromises = [];
+const loadedModels = [];
+const startPositions = [];
+const destinationPositions = []; // end positions when moving models
 let currDishIdx = 0;
 let isMoving = false;
 let itemSelected = false;
 const position = new THREE.Vector3(0, 0, 15); // position for current dish
 
 function getModel(modelFilePath, pos){
-    return new Promise((resolve, reject) => {
-        loader.load(
-            modelFilePath,
-            function(gltf){
-                gltf.scene.traverse((child) => {
-                    if(child.type === "Mesh"){
-                        // clone material because some meshes seem to share the same material otherwise
-                        child.material = child.material.clone();
-                    }
-                });
+  return new Promise((resolve, reject) => {
+    loader.load(
+      modelFilePath,
+      function(gltf){
+        gltf.scene.traverse((child) => {
+          if(child.type === "Mesh"){
+            // clone material because some meshes seem to share the same material otherwise
+            child.material = child.material.clone();
+          }
+        });
                 
-                gltf.scene.position.set(pos.x, pos.y, pos.z);
-                gltf.scene.name = modelFilePath;
-                resolve(gltf.scene);
-            },
-            // called while loading is progressing
-            function(xhr){
-                //console.log( (xhr.loaded / xhr.total * 100) + '% loaded' );
-            },
-            // called when loading has errors
-            function(error){
-                console.log('An error happened');
-                console.log(error);
-            }
-        );
-    });
+        gltf.scene.position.set(pos.x, pos.y, pos.z);
+        gltf.scene.name = modelFilePath;
+        resolve(gltf.scene);
+      },
+      // called while loading is progressing
+      function(xhr){
+        //console.log( (xhr.loaded / xhr.total * 100) + '% loaded' );
+      },
+      // called when loading has errors
+      function(error){
+        console.log('An error happened');
+        console.log(error);
+      }
+    );
+  });
 }
 
 loadedModelPromises.push(getModel('../models/siu-mai-ha-gao.gltf', new THREE.Vector3(0, 0, 15)));
@@ -97,213 +97,213 @@ loadedModelPromises.push(getModel('../models/cha-siu-bao.gltf', new THREE.Vector
 loadedModelPromises.push(getModel('../models/dan-tat.gltf', new THREE.Vector3(-25, 0, -22)));
 
 Promise.all(loadedModelPromises).then((objects) => {
-    objects.forEach((mesh, index) => {
-        mesh.originalRotation = new THREE.Euler();
-        mesh.originalRotation.copy(mesh.rotation);
-        if(index === currDishIdx){
-            mesh.rotateX(Math.PI / 10);
-        }
-        loadedModels[index] = mesh;
-        destinationPositions[index] = new THREE.Vector3();
-        startPositions[index] = new THREE.Vector3();
-        scene.add(mesh);
-    });
-    animate();
+  objects.forEach((mesh, index) => {
+    mesh.originalRotation = new THREE.Euler();
+    mesh.originalRotation.copy(mesh.rotation);
+    if(index === currDishIdx){
+      mesh.rotateX(Math.PI / 10);
+    }
+    loadedModels[index] = mesh;
+    destinationPositions[index] = new THREE.Vector3();
+    startPositions[index] = new THREE.Vector3();
+    scene.add(mesh);
+  });
+  animate();
 });
 
 function update(){
-    // move stuff around, etc.
-    if(loadedModels[currDishIdx]) loadedModels[currDishIdx].rotation.y += 0.002;
+  // move stuff around, etc.
+  if(loadedModels[currDishIdx]) loadedModels[currDishIdx].rotation.y += 0.002;
     
-    if(isMoving){
-        // move the objects to their destination via lerp
-        moveDishes();
-    }
+  if(isMoving){
+    // move the objects to their destination via lerp
+    moveDishes();
+  }
 }
 
 function keydown(evt){
-    if(evt.keyCode === 32){
-        // spacebar
-    }else if(evt.keyCode === 49){
-        //1 key
-    }
+  if(evt.keyCode === 32){
+    // spacebar
+  }else if(evt.keyCode === 49){
+    //1 key
+  }
 }
 document.addEventListener("keydown", keydown);
 
 let time = 0;
 function moveDishes(){
-    let check = 0;
-    loadedModels.forEach((model, index) => {
-        const startPos = startPositions[index];
-        const destPos = destinationPositions[index];
+  let check = 0;
+  loadedModels.forEach((model, index) => {
+    const startPos = startPositions[index];
+    const destPos = destinationPositions[index];
         
-        model.position.lerpVectors(startPos, destPos, time);
+    model.position.lerpVectors(startPos, destPos, time);
         
-        if(model.position.distanceTo(destPos) <= 0.3){
-            check++;
-        }
-    });
-    
-    time += 0.005;
-    
-    if(check === destinationPositions.length){
-        isMoving = false;
-        time = 0;
+    if(model.position.distanceTo(destPos) <= 0.3){
+      check++;
     }
+  });
+    
+  time += 0.005;
+    
+  if(check === destinationPositions.length){
+    isMoving = false;
+    time = 0;
+  }
 }
 
 function getNextPositionsForward(){
-    const lastPos = new THREE.Vector3();
-    lastPos.copy(loadedModels[0].position);
+  const lastPos = new THREE.Vector3();
+  lastPos.copy(loadedModels[0].position);
     
-    loadedModels.forEach((model, index) => {
-        startPositions[index].copy(model.position);
-    });
+  loadedModels.forEach((model, index) => {
+    startPositions[index].copy(model.position);
+  });
     
-    // make a copy of positions since we'll be overwriting positions in loadedModels
-    const positions = loadedModels.slice().map(x => new THREE.Vector3(x.position.x, x.position.y, x.position.z));
-    for(let i = 1; i < loadedModels.length; i++){
-        destinationPositions[i-1].copy(positions[i]);
-    }
+  // make a copy of positions since we'll be overwriting positions in loadedModels
+  const positions = loadedModels.slice().map(x => new THREE.Vector3(x.position.x, x.position.y, x.position.z));
+  for(let i = 1; i < loadedModels.length; i++){
+    destinationPositions[i-1].copy(positions[i]);
+  }
     
-    destinationPositions[destinationPositions.length-1].copy(lastPos);
+  destinationPositions[destinationPositions.length-1].copy(lastPos);
 }
 
 function getNextPositionsBackward(){
-    const lastPos = new THREE.Vector3();
-    lastPos.copy(loadedModels[loadedModels.length - 1].position);
+  const lastPos = new THREE.Vector3();
+  lastPos.copy(loadedModels[loadedModels.length - 1].position);
     
-    loadedModels.forEach((model, index) => {
-        startPositions[index].copy(model.position);
-    });
+  loadedModels.forEach((model, index) => {
+    startPositions[index].copy(model.position);
+  });
     
-    const positions = loadedModels.slice().map(x => new THREE.Vector3(x.position.x, x.position.y, x.position.z));
-    for(let i = 0; i < loadedModels.length - 1; i++){
-        destinationPositions[i+1].copy(positions[i]);
-    }
+  const positions = loadedModels.slice().map(x => new THREE.Vector3(x.position.x, x.position.y, x.position.z));
+  for(let i = 0; i < loadedModels.length - 1; i++){
+    destinationPositions[i+1].copy(positions[i]);
+  }
     
-    destinationPositions[0].copy(lastPos);
+  destinationPositions[0].copy(lastPos);
 }
 
 document.getElementById('left').addEventListener('click', () => {
-    if(isMoving) return;
+  if(isMoving) return;
     
-    isMoving = true;
+  isMoving = true;
     
-    loadedModels[currDishIdx].rotation.copy(loadedModels[currDishIdx].originalRotation);
-    getNextPositionsBackward();
-    currDishIdx = (currDishIdx + 1) % loadedModels.length;
-    loadedModels[currDishIdx].rotateX(Math.PI / 10);
+  loadedModels[currDishIdx].rotation.copy(loadedModels[currDishIdx].originalRotation);
+  getNextPositionsBackward();
+  currDishIdx = (currDishIdx + 1) % loadedModels.length;
+  loadedModels[currDishIdx].rotateX(Math.PI / 10);
 });
 
 document.getElementById('right').addEventListener('click', () => {
-    if(isMoving) return;
+  if(isMoving) return;
     
-    isMoving = true;
+  isMoving = true;
     
-    // reset rotation for current dish
-    loadedModels[currDishIdx].rotation.copy(loadedModels[currDishIdx].originalRotation);
+  // reset rotation for current dish
+  loadedModels[currDishIdx].rotation.copy(loadedModels[currDishIdx].originalRotation);
     
-    getNextPositionsForward();
+  getNextPositionsForward();
     
-    if(currDishIdx > 0){
-        currDishIdx--;
-    }else{
-        currDishIdx = loadedModels.length - 1;
-    }
+  if(currDishIdx > 0){
+    currDishIdx--;
+  }else{
+    currDishIdx = loadedModels.length - 1;
+  }
     
-    loadedModels[currDishIdx].rotateX(Math.PI / 10);
+  loadedModels[currDishIdx].rotateX(Math.PI / 10);
 });
 
 function containsDimsumItem(mesh){
-    const validItems = ["siumai", "hagao", "chasiubao", "dantat"];
-    for(let x of validItems){
-        if(mesh.name.includes(x)){
-            return true;
-        }
+  const validItems = ["siumai", "hagao", "chasiubao", "dantat"];
+  for(const x of validItems){
+    if(mesh.name.includes(x)){
+      return true;
     }
-    return false;
+  }
+  return false;
 }
 
 // allow objects in renderer to be 'clickable'
 renderer.domElement.addEventListener('mousedown', (evt) => {
-    if(itemSelected) return;
+  if(itemSelected) return;
     
-    mouse.x = (evt.offsetX / evt.target.width) * 2 - 1;
-    mouse.y = -(evt.offsetY / evt.target.height) * 2 + 1;
-    raycaster.setFromCamera(mouse, camera);
+  mouse.x = (evt.offsetX / evt.target.width) * 2 - 1;
+  mouse.y = -(evt.offsetY / evt.target.height) * 2 + 1;
+  raycaster.setFromCamera(mouse, camera);
     
-    const intersects = raycaster.intersectObject(scene, true); // make sure it's recursive
-    const selected = intersects.filter(x => containsDimsumItem(x.object));
-    if(selected.length > 0){
-        const s = selected[0];
-        /*
+  const intersects = raycaster.intersectObject(scene, true); // make sure it's recursive
+  const selected = intersects.filter(x => containsDimsumItem(x.object));
+  if(selected.length > 0){
+    const s = selected[0];
+    /*
         s.object.material.wireframe = true;
         setTimeout(() => s.object.material.wireframe = false, 500);
         */
-        displaySelectedItemInfo(s.object);
-        itemSelected = true;
-    }
+    displaySelectedItemInfo(s.object);
+    itemSelected = true;
+  }
 });
 
 function displaySelectedItemInfo(mesh){
-    document.getElementById('displayCard').style.display = "block";
-    scene2.children.forEach(x => { if(containsDimsumItem(x)){ scene2.remove(x)}});
-    const container = document.getElementById('displayItemRenderer');
-    if(container.children.length == 0){
-        renderer2.setSize(container.clientWidth, container.clientHeight);    
-        container.appendChild(renderer2.domElement);
-    }
-    const meshCopy = mesh.clone();
-    //meshCopy.material = mesh.material.clone();
-    meshCopy.name2 = "selectedItem";
-    meshCopy.position.set(
-        camera2.position.x,
-        0.5,
-        camera2.position.z - 8
-    );
-    scene2.add(meshCopy);
+  document.getElementById('displayCard').style.display = "block";
+  scene2.children.forEach(x => { if(containsDimsumItem(x)){ scene2.remove(x);}});
+  const container = document.getElementById('displayItemRenderer');
+  if(container.children.length == 0){
+    renderer2.setSize(container.clientWidth, container.clientHeight);    
+    container.appendChild(renderer2.domElement);
+  }
+  const meshCopy = mesh.clone();
+  //meshCopy.material = mesh.material.clone();
+  meshCopy.name2 = "selectedItem";
+  meshCopy.position.set(
+    camera2.position.x,
+    0.5,
+    camera2.position.z - 8
+  );
+  scene2.add(meshCopy);
     
-    // update card text
-    const header = document.getElementById('displayCardHeader');
-    const description = document.getElementById('displayCardDescription');
-    if(mesh.name.includes('siumai')){
-        header.textContent = "siu mai (燒賣)";
-        description.textContent = "A dumpling whose filling consists of pork and shrimp. It is topped with crab roe or minced carrot sometimes.";
-    }else if(mesh.name.includes('hagao')){
-        header.textContent = "ha gao (蝦餃)";
-        description.textContent = "A dumpling with a translucent wrapper and shrimp filling.";
-    }else if(mesh.name.includes('dantat')){
-        header.textContent = "dan ta (蛋撻)";
-        description.textContent = "An eggy custard tart with a flaky crust.";
-    }else if(mesh.name.includes('chasiubao')){
-        header.textContent = "cha siu bao (叉燒包)";
-        description.textContent = "A bun with a sweet, roasted pork filling.";
-    }
+  // update card text
+  const header = document.getElementById('displayCardHeader');
+  const description = document.getElementById('displayCardDescription');
+  if(mesh.name.includes('siumai')){
+    header.textContent = "siu mai (燒賣)";
+    description.textContent = "A dumpling whose filling consists of pork and shrimp. It is topped with crab roe or minced carrot sometimes.";
+  }else if(mesh.name.includes('hagao')){
+    header.textContent = "ha gao (蝦餃)";
+    description.textContent = "A dumpling with a translucent wrapper and shrimp filling.";
+  }else if(mesh.name.includes('dantat')){
+    header.textContent = "dan ta (蛋撻)";
+    description.textContent = "An eggy custard tart with a flaky crust.";
+  }else if(mesh.name.includes('chasiubao')){
+    header.textContent = "cha siu bao (叉燒包)";
+    description.textContent = "A bun with a sweet, roasted pork filling.";
+  }
 }
 document.getElementById('displayCardCloseBtn').addEventListener('click', () => {
-    const currCard = document.getElementById('displayCard').style.display = "none";
-    itemSelected = false;
+  const currCard = document.getElementById('displayCard').style.display = "none";
+  itemSelected = false;
 });
 
-let t2 = 0.005;
-let rotationAxis = new THREE.Vector3(1, 1, -1); //new THREE.Vector3(-0.2, -0.3, 0.2);
+const t2 = 0.005;
+const rotationAxis = new THREE.Vector3(1, 1, -1); //new THREE.Vector3(-0.2, -0.3, 0.2);
 function animate(){
-    requestAnimationFrame(animate);
-    renderer.render(scene, camera);
+  requestAnimationFrame(animate);
+  renderer.render(scene, camera);
     
-    if(itemSelected){
-        scene2.children.forEach(x => {
-            if(x.name2 === "selectedItem"){
-                //t2 += 0.001;
-                x.rotateOnAxis(rotationAxis, t2);
-                //if(t2 > 1) t2 = 0;
-            }
-        });
-        renderer2.render(scene2, camera2);
-    }
+  if(itemSelected){
+    scene2.children.forEach(x => {
+      if(x.name2 === "selectedItem"){
+        //t2 += 0.001;
+        x.rotateOnAxis(rotationAxis, t2);
+        //if(t2 > 1) t2 = 0;
+      }
+    });
+    renderer2.render(scene2, camera2);
+  }
     
-    update();
+  update();
 }
 
 animate();

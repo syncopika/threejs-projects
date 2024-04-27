@@ -2,7 +2,7 @@
 // https://github.com/syncopika/music-visualizer/commit/e19ef49c5397e2a37332ca93cbff27ea2796d33f#diff-335967cf3a911f85b6f20eaedc439032b6722b9a81b0938d60d0cf6a18f94c7c
 
 const rippleShader = {
-    vertexShader: `
+  vertexShader: `
         out vec2 vUv;
         
         void main() {
@@ -11,7 +11,7 @@ const rippleShader = {
         }
     `,
     
-    fragShader: `
+  fragShader: `
         uniform float u_time;
         uniform vec2 u_resolution;
         

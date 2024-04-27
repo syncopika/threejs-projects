@@ -40,7 +40,7 @@ ctx.fillRect(0, 0, crosshairCanvas.width, crosshairCanvas.height);
 // TODO: put crosshair image on canvas
 const crosshairImg = new Image();
 crosshairImg.onload = () => {
-    ctx.drawImage(crosshairImg, 200, 130);
+  ctx.drawImage(crosshairImg, 200, 130);
 };
 crosshairImg.src = "crosshairs.png";
 
@@ -68,7 +68,7 @@ let moveDistance = 60 * sec;
 let rotationAngle = (Math.PI / 2) * sec;
 
 let animationController;
-let loadedModels = [];
+const loadedModels = [];
 let animationMixer = null;
 let animationClips = null;
 
@@ -79,8 +79,8 @@ let firstPersonViewOn = false;
 let sideViewOn = false;
 //let playerBody;
 
-let mouseX = 0;
-let mouseY = 0;
+const mouseX = 0;
+const mouseY = 0;
 
 let cowProjectileMesh;
 
@@ -114,162 +114,162 @@ planeBody.mesh = plane;
 world.addBody(planeBody);
 
 function addCannonBox(mesh, width, height, length, x, y, z, mass=0){
-    const box = new CANNON.Box(new CANNON.Vec3(width, height, length));
-    const mat = new CANNON.Material();
-    const body = new CANNON.Body({material: mat, mass});
+  const box = new CANNON.Box(new CANNON.Vec3(width, height, length));
+  const mat = new CANNON.Material();
+  const body = new CANNON.Body({material: mat, mass});
     
-    body.position.x = x;
-    body.position.y = y;
-    body.position.z = z;
+  body.position.x = x;
+  body.position.y = y;
+  body.position.z = z;
     
-    body.addShape(box);
-    world.addBody(body);
+  body.addShape(box);
+  world.addBody(body);
     
-    body.mesh = mesh; // associate mesh with body (not sure there's an official way of doing this atm but it works at least?
+  body.mesh = mesh; // associate mesh with body (not sure there's an official way of doing this atm but it works at least?
     
-    // detect collision
-    // https://stackoverflow.com/questions/31750026/cannon-js-registering-collision-without-colliding
-    body.addEventListener("collide", (e) => {
-        const collidingObj = e.body.mesh;
-        if(collidingObj.name === "projectile"){
-            const hitTarget = e.target.mesh;
+  // detect collision
+  // https://stackoverflow.com/questions/31750026/cannon-js-registering-collision-without-colliding
+  body.addEventListener("collide", (e) => {
+    const collidingObj = e.body.mesh;
+    if(collidingObj.name === "projectile"){
+      const hitTarget = e.target.mesh;
             
-            const hitMaterial = new THREE.MeshBasicMaterial({color: 0xff0000});
-            hitTarget.material = hitMaterial;
+      const hitMaterial = new THREE.MeshBasicMaterial({color: 0xff0000});
+      hitTarget.material = hitMaterial;
             
-            setTimeout(() => {
-                hitTarget.material = hitTarget.originalColor;
-            }, 300);
-        }
-    });
+      setTimeout(() => {
+        hitTarget.material = hitTarget.originalColor;
+      }, 300);
+    }
+  });
     
-    return {planeBody: body, mat};
+  return {planeBody: body, mat};
 }
 
 function generateProjectile(x, y, z){
-    const useCowProjectile = document.getElementById('useCowProjectile').checked;
-    if(!useCowProjectile){
-        const sphereGeometry = new THREE.SphereGeometry(0.05, 32, 16);
-        const normalMaterial = new THREE.MeshPhongMaterial({color: 0x055C9D});
-        const sphereMesh = new THREE.Mesh(sphereGeometry, normalMaterial);
-        sphereMesh.receiveShadow = true;
-        sphereMesh.castShadow = true;
-        sphereMesh.position.set(x, y, z);
-        sphereMesh.name = "projectile";
-        scene.add(sphereMesh);
+  const useCowProjectile = document.getElementById('useCowProjectile').checked;
+  if(!useCowProjectile){
+    const sphereGeometry = new THREE.SphereGeometry(0.05, 32, 16);
+    const normalMaterial = new THREE.MeshPhongMaterial({color: 0x055C9D});
+    const sphereMesh = new THREE.Mesh(sphereGeometry, normalMaterial);
+    sphereMesh.receiveShadow = true;
+    sphereMesh.castShadow = true;
+    sphereMesh.position.set(x, y, z);
+    sphereMesh.name = "projectile";
+    scene.add(sphereMesh);
 
-        const sphereShape = new CANNON.Sphere(0.05);
-        const sphereMat = new CANNON.Material();
-        const sphereBody = new CANNON.Body({material: sphereMat, mass: 0.2});
-        sphereBody.addShape(sphereShape);
-        sphereBody.position.x = sphereMesh.position.x;
-        sphereBody.position.y = sphereMesh.position.y;
-        sphereBody.position.z = sphereMesh.position.z;
-        sphereBody.mesh = sphereMesh;
-        world.addBody(sphereBody);
+    const sphereShape = new CANNON.Sphere(0.05);
+    const sphereMat = new CANNON.Material();
+    const sphereBody = new CANNON.Body({material: sphereMat, mass: 0.2});
+    sphereBody.addShape(sphereShape);
+    sphereBody.position.x = sphereMesh.position.x;
+    sphereBody.position.y = sphereMesh.position.y;
+    sphereBody.position.z = sphereMesh.position.z;
+    sphereBody.mesh = sphereMesh;
+    world.addBody(sphereBody);
         
-        return {sphereMesh, sphereBody};
-    }else{
-        const cowMesh = cowProjectileMesh.clone();
-        cowMesh.receiveShadow = true;
-        cowMesh.castShadow = true;
-        cowMesh.position.set(x, y, z);
-        cowMesh.name = "projectile";
-        scene.add(cowMesh);
+    return {sphereMesh, sphereBody};
+  }else{
+    const cowMesh = cowProjectileMesh.clone();
+    cowMesh.receiveShadow = true;
+    cowMesh.castShadow = true;
+    cowMesh.position.set(x, y, z);
+    cowMesh.name = "projectile";
+    scene.add(cowMesh);
         
-        const sphereShape = new CANNON.Sphere(1.2);
-        const sphereMat = new CANNON.Material();
-        const sphereBody = new CANNON.Body({material: sphereMat, mass: 0.2});
-        sphereBody.addShape(sphereShape);
-        sphereBody.position.x = cowMesh.position.x;
-        sphereBody.position.y = cowMesh.position.y;
-        sphereBody.position.z = cowMesh.position.z;
-        sphereBody.mesh = cowMesh;
-        world.addBody(sphereBody);
+    const sphereShape = new CANNON.Sphere(1.2);
+    const sphereMat = new CANNON.Material();
+    const sphereBody = new CANNON.Body({material: sphereMat, mass: 0.2});
+    sphereBody.addShape(sphereShape);
+    sphereBody.position.x = cowMesh.position.x;
+    sphereBody.position.y = cowMesh.position.y;
+    sphereBody.position.z = cowMesh.position.z;
+    sphereBody.mesh = cowMesh;
+    world.addBody(sphereBody);
 
-        return {sphereMesh: cowMesh, sphereBody};        
-    }
+    return {sphereMesh: cowMesh, sphereBody};        
+  }
 }
 
 function getModel(modelFilePath, name){
-    return new Promise((resolve, reject) => {
-        loader.load(
-            modelFilePath,
-            function(gltf){
-                if(gltf.animations.length > 0 && name === "player"){
-                    let clips = {};
-                    gltf.animations.forEach((action) => {
-                        let name = action['name'].toLowerCase();
-                        name = name.substring(0, name.length - 1);
-                        clips[name] = action;
-                    });
-                    animationClips = clips;
-                }
+  return new Promise((resolve, reject) => {
+    loader.load(
+      modelFilePath,
+      function(gltf){
+        if(gltf.animations.length > 0 && name === "player"){
+          const clips = {};
+          gltf.animations.forEach((action) => {
+            let name = action['name'].toLowerCase();
+            name = name.substring(0, name.length - 1);
+            clips[name] = action;
+          });
+          animationClips = clips;
+        }
                 
-                // if a scene has multiple meshes you want (like for the m4 carbine),
-                // do the traversal and attach the magazine mesh as a child or something to the m4 mesh.
-                // then resolve the thing outside the traverse.
-                let carbine = [];
-                gltf.scene.traverse((child) => {
-                    if(child.type === "Mesh" || child.type === "SkinnedMesh"){
-                        const obj = child;
+        // if a scene has multiple meshes you want (like for the m4 carbine),
+        // do the traversal and attach the magazine mesh as a child or something to the m4 mesh.
+        // then resolve the thing outside the traverse.
+        const carbine = [];
+        gltf.scene.traverse((child) => {
+          if(child.type === "Mesh" || child.type === "SkinnedMesh"){
+            const obj = child;
 
-                        if(name === "obj"){
-                            obj.scale.x = child.scale.x * 1.1;
-                            obj.scale.y = child.scale.y * 1.1;
-                            obj.scale.z = child.scale.z * 1.1;
-                            carbine.push(obj);
-                        }else{
-                            if(child.type === "SkinnedMesh"){
-                                obj.add(child.skeleton.bones[0]); // add pelvis to mesh as a child
+            if(name === "obj"){
+              obj.scale.x = child.scale.x * 1.1;
+              obj.scale.y = child.scale.y * 1.1;
+              obj.scale.z = child.scale.z * 1.1;
+              carbine.push(obj);
+            }else{
+              if(child.type === "SkinnedMesh"){
+                obj.add(child.skeleton.bones[0]); // add pelvis to mesh as a child
                             
-                                if(name !== "obj"){
-                                    obj.scale.x *= .3;
-                                    obj.scale.y *= .3;
-                                    obj.scale.z *= .3;
-                                }
-                            }
-                            
-                            if(name === "bg"){
-                                obj.scale.x = child.scale.x * 10;
-                                obj.scale.y = child.scale.y * 10;
-                                obj.scale.z = child.scale.z * 10;
-                            }
-                            
-                            obj.name = name;
-                            
-                            resolve(obj); // this will return only one mesh. if you expect a scene to yield multiple meshes, this will fail.
-                        }
-                    }
-                });
-                
-                // for the carbine (or really any scene with multiple meshes)
-                if(name === "obj"){
-                    const m4carbine = carbine[0];
-                    m4carbine.add(m4carbine.skeleton.bones[0]);
-                    m4carbine.name = name;
-                    
-                    const magazine = carbine[1];
-                    m4carbine.magazine = magazine;
-                    m4carbine.skeleton.bones[1].add(magazine); // add magazine to the mag bone
-
-                    m4carbine.rotateOnAxis(new THREE.Vector3(0,1,0), Math.PI/2);
-                    m4carbine.rotateOnAxis(new THREE.Vector3(0,0,-1), Math.PI/2);
-
-                    resolve(m4carbine);
+                if(name !== "obj"){
+                  obj.scale.x *= .3;
+                  obj.scale.y *= .3;
+                  obj.scale.z *= .3;
                 }
-            },
-            // called while loading is progressing
-            function(xhr){
-                console.log( (xhr.loaded / xhr.total * 100) + '% loaded' );
-            },
-            // called when loading has errors
-            function(error){
-                console.log('An error happened');
-                console.log(error);
+              }
+                            
+              if(name === "bg"){
+                obj.scale.x = child.scale.x * 10;
+                obj.scale.y = child.scale.y * 10;
+                obj.scale.z = child.scale.z * 10;
+              }
+                            
+              obj.name = name;
+                            
+              resolve(obj); // this will return only one mesh. if you expect a scene to yield multiple meshes, this will fail.
             }
-        );
-    });
+          }
+        });
+                
+        // for the carbine (or really any scene with multiple meshes)
+        if(name === "obj"){
+          const m4carbine = carbine[0];
+          m4carbine.add(m4carbine.skeleton.bones[0]);
+          m4carbine.name = name;
+                    
+          const magazine = carbine[1];
+          m4carbine.magazine = magazine;
+          m4carbine.skeleton.bones[1].add(magazine); // add magazine to the mag bone
+
+          m4carbine.rotateOnAxis(new THREE.Vector3(0,1,0), Math.PI/2);
+          m4carbine.rotateOnAxis(new THREE.Vector3(0,0,-1), Math.PI/2);
+
+          resolve(m4carbine);
+        }
+      },
+      // called while loading is progressing
+      function(xhr){
+        console.log( (xhr.loaded / xhr.total * 100) + '% loaded' );
+      },
+      // called when loading has errors
+      function(error){
+        console.log('An error happened');
+        console.log(error);
+      }
+    );
+  });
 }
 
 loadedModels.push(getModel('../models/humanoid-rig-with-gun.gltf', 'player'));
@@ -280,418 +280,418 @@ loadedModels.push(getModel('../models/box.gltf', 'box2'));
 loadedModels.push(getModel('../models/barrel.gltf', 'barrel'));
 
 getModel('../models/cow.gltf', 'cow').then(model => {
-    cowProjectileMesh = model;
+  cowProjectileMesh = model;
 });
 
 Promise.all(loadedModels).then(objects => {
-    objects.forEach(mesh => {
-        if(mesh.name === "npc"){
-            // npcs?
-        }else if(mesh.name === "obj"){
-            // tools that can be equipped
-            mesh.castShadow = true;
-            tool = mesh;
-            tool.visible = false;
-        }else if(mesh.name === "target" || mesh.name.includes("box") || mesh.name === "barrel"){
-            mesh.castShadow = true;
-            if(mesh.name === "target"){
-                mesh.position.set(10, mesh.position.y, -30);
-                mesh.scale.x *= 4;
-                mesh.scale.y *= 4;
-                mesh.scale.z *= 4;
-                mesh.translateY(1.1);
-                mesh.rotateX(Math.PI / 8);
-                mesh.rotateY(-Math.PI / 1.5);
-                mesh.rotateX(-Math.PI / 10);
+  objects.forEach(mesh => {
+    if(mesh.name === "npc"){
+      // npcs?
+    }else if(mesh.name === "obj"){
+      // tools that can be equipped
+      mesh.castShadow = true;
+      tool = mesh;
+      tool.visible = false;
+    }else if(mesh.name === "target" || mesh.name.includes("box") || mesh.name === "barrel"){
+      mesh.castShadow = true;
+      if(mesh.name === "target"){
+        mesh.position.set(10, mesh.position.y, -30);
+        mesh.scale.x *= 4;
+        mesh.scale.y *= 4;
+        mesh.scale.z *= 4;
+        mesh.translateY(1.1);
+        mesh.rotateX(Math.PI / 8);
+        mesh.rotateY(-Math.PI / 1.5);
+        mesh.rotateX(-Math.PI / 10);
                 
-                const bbox = new THREE.Box3().setFromObject(mesh);
+        const bbox = new THREE.Box3().setFromObject(mesh);
                 
-                const body = addCannonBox(
-                    mesh,
-                    Math.abs(bbox.max.x - bbox.min.x) / 3.8, 
-                    Math.abs(bbox.max.y - bbox.min.y) / 2.5, 
-                    Math.abs(bbox.max.z - bbox.min.z) / 5, 
-                    mesh.position.x + 0.5, mesh.position.y, mesh.position.z,
-                );
+        const body = addCannonBox(
+          mesh,
+          Math.abs(bbox.max.x - bbox.min.x) / 3.8, 
+          Math.abs(bbox.max.y - bbox.min.y) / 2.5, 
+          Math.abs(bbox.max.z - bbox.min.z) / 5, 
+          mesh.position.x + 0.5, mesh.position.y, mesh.position.z,
+        );
                 
-                body.planeBody.quaternion.setFromAxisAngle(
-                    new CANNON.Vec3(0, 1, 0),
-                    -Math.PI / 6
-                );
+        body.planeBody.quaternion.setFromAxisAngle(
+          new CANNON.Vec3(0, 1, 0),
+          -Math.PI / 6
+        );
                 
-                cannonBodies.push(body);
-            }
+        cannonBodies.push(body);
+      }
             
-            if(mesh.name === "box"){
-                mesh.position.set(-10, mesh.position.y, -20);
-                mesh.translateY(.05);
+      if(mesh.name === "box"){
+        mesh.position.set(-10, mesh.position.y, -20);
+        mesh.translateY(.05);
                 
-                const bbox = new THREE.Box3().setFromObject(mesh);
+        const bbox = new THREE.Box3().setFromObject(mesh);
                 
-                cannonBodies.push(addCannonBox(
-                    mesh,
-                    Math.abs(bbox.max.x - bbox.min.x) / 2, 
-                    Math.abs(bbox.max.y - bbox.min.y) / 2, 
-                    Math.abs(bbox.max.z - bbox.min.z) / 2, 
-                    mesh.position.x, mesh.position.y, mesh.position.z,
-                    5
-                ));
-            }
+        cannonBodies.push(addCannonBox(
+          mesh,
+          Math.abs(bbox.max.x - bbox.min.x) / 2, 
+          Math.abs(bbox.max.y - bbox.min.y) / 2, 
+          Math.abs(bbox.max.z - bbox.min.z) / 2, 
+          mesh.position.x, mesh.position.y, mesh.position.z,
+          5
+        ));
+      }
             
-            if(mesh.name === "box2"){
-                mesh.position.set(-10, mesh.position.y, -20);
-                mesh.translateY(2);
+      if(mesh.name === "box2"){
+        mesh.position.set(-10, mesh.position.y, -20);
+        mesh.translateY(2);
                 
-                const bbox = new THREE.Box3().setFromObject(mesh);
+        const bbox = new THREE.Box3().setFromObject(mesh);
                 
-                cannonBodies.push(addCannonBox(
-                    mesh,
-                    Math.abs(bbox.max.x - bbox.min.x) / 2, 
-                    Math.abs(bbox.max.y - bbox.min.y) / 2, 
-                    Math.abs(bbox.max.z - bbox.min.z) / 2, 
-                    mesh.position.x, mesh.position.y, mesh.position.z,
-                    2
-                ));
-            }
+        cannonBodies.push(addCannonBox(
+          mesh,
+          Math.abs(bbox.max.x - bbox.min.x) / 2, 
+          Math.abs(bbox.max.y - bbox.min.y) / 2, 
+          Math.abs(bbox.max.z - bbox.min.z) / 2, 
+          mesh.position.x, mesh.position.y, mesh.position.z,
+          2
+        ));
+      }
             
-            if(mesh.name === "barrel"){
-                mesh.position.set(1.1, mesh.position.y, 5);
+      if(mesh.name === "barrel"){
+        mesh.position.set(1.1, mesh.position.y, 5);
                 
-                const bbox = new THREE.Box3().setFromObject(mesh);
+        const bbox = new THREE.Box3().setFromObject(mesh);
                 
-                cannonBodies.push(addCannonBox(
-                    mesh,
-                    Math.abs(bbox.max.x - bbox.min.x) / 2, 
-                    Math.abs(bbox.max.y - bbox.min.y) / 2, 
-                    Math.abs(bbox.max.z - bbox.min.z) / 2, 
-                    mesh.position.x, mesh.position.y - 0.3, mesh.position.z,
-                    30
-                ));
-            }
-        }else if(mesh.name === "player"){
-            mesh.castShadow = true;
-            player = mesh;
+        cannonBodies.push(addCannonBox(
+          mesh,
+          Math.abs(bbox.max.x - bbox.min.x) / 2, 
+          Math.abs(bbox.max.y - bbox.min.y) / 2, 
+          Math.abs(bbox.max.z - bbox.min.z) / 2, 
+          mesh.position.x, mesh.position.y - 0.3, mesh.position.z,
+          30
+        ));
+      }
+    }else if(mesh.name === "player"){
+      mesh.castShadow = true;
+      player = mesh;
 
-            // add a 3d object (cube) to serve as a marker for the 
-            // location of the head of the mesh. we'll use this to 
-            // create a vertical ray towards the ground
-            // this ray can tell us the current height.
-            // if the height is < the height of our character,
-            // we know that we're on an uphill part of the terrain 
-            // and can adjust our character accordingly
-            // similarly, if the height is > the character height, we're going downhill
-            const cubeGeometry = new THREE.BoxGeometry(0.2, 0.2, 0.2);
-            const material = new THREE.MeshBasicMaterial({color: 0x00ff00});
-            const head = new THREE.Mesh(cubeGeometry, material);
-            head.visible = false;
+      // add a 3d object (cube) to serve as a marker for the 
+      // location of the head of the mesh. we'll use this to 
+      // create a vertical ray towards the ground
+      // this ray can tell us the current height.
+      // if the height is < the height of our character,
+      // we know that we're on an uphill part of the terrain 
+      // and can adjust our character accordingly
+      // similarly, if the height is > the character height, we're going downhill
+      const cubeGeometry = new THREE.BoxGeometry(0.2, 0.2, 0.2);
+      const material = new THREE.MeshBasicMaterial({color: 0x00ff00});
+      const head = new THREE.Mesh(cubeGeometry, material);
+      head.visible = false;
             
-            mesh.add(head);
-            mesh.head = head;
-            head.position.set(0, 4, 0);
+      mesh.add(head);
+      mesh.head = head;
+      head.position.set(0, 4, 0);
             
-            animationMixer = new THREE.AnimationMixer(mesh);
-            animationController = new AnimationController(player, animationMixer, animationClips, clock);
-            animationController.changeState("normal"); // set normal state by default for animations. see animation_state_map.json
+      animationMixer = new THREE.AnimationMixer(mesh);
+      animationController = new AnimationController(player, animationMixer, animationClips, clock);
+      animationController.changeState("normal"); // set normal state by default for animations. see animation_state_map.json
 
-            mesh.position.set(0, 1.4, -10);
-            mesh.rotateOnAxis(new THREE.Vector3(0, 1, 0), Math.PI);
+      mesh.position.set(0, 1.4, -10);
+      mesh.rotateOnAxis(new THREE.Vector3(0, 1, 0), Math.PI);
             
-            // add hand bone to equip tool with as a child of the player mesh
-            for(let bone of player.skeleton.bones){
-                if(bone.name === "HandR001"){
-                    player.hand = bone; // set an arbitrary new property to access the hand bone
-                }
-                
-                if(bone.name === "Chest"){
-                    player.chest = bone;
-                    player.head.quaternion.copy(bone.quaternion); // make sure head mesh follows chest bone rotation
-                }
-            }
-
-            animate();
+      // add hand bone to equip tool with as a child of the player mesh
+      for(const bone of player.skeleton.bones){
+        if(bone.name === "HandR001"){
+          player.hand = bone; // set an arbitrary new property to access the hand bone
         }
+                
+        if(bone.name === "Chest"){
+          player.chest = bone;
+          player.head.quaternion.copy(bone.quaternion); // make sure head mesh follows chest bone rotation
+        }
+      }
+
+      animate();
+    }
         
-        mesh.originalColor = mesh.material;
+    mesh.originalColor = mesh.material;
         
-        scene.add(mesh);
-        renderer.render(scene, camera);
-    });
+    scene.add(mesh);
+    renderer.render(scene, camera);
+  });
 });
 
 function moveBasedOnAction(controller, player, speed, reverse){
-    let action = controller.currAction;
-    if(action === 'walk' || action === 'run'){
-        if(action === 'run'){
-            speed += 0.10;
-        }
-        if(reverse){
-            player.translateZ(-speed);
-        }else{
-            player.translateZ(speed);
-        }
+  const action = controller.currAction;
+  if(action === 'walk' || action === 'run'){
+    if(action === 'run'){
+      speed += 0.10;
     }
+    if(reverse){
+      player.translateZ(-speed);
+    }else{
+      player.translateZ(speed);
+    }
+  }
 }
 
 function checkCollision(moveDistance, isReverse){
-    for(let body of cannonBodies){
-        const bodyPos = body.planeBody.position;
-        const destPos = new THREE.Vector3();
+  for(const body of cannonBodies){
+    const bodyPos = body.planeBody.position;
+    const destPos = new THREE.Vector3();
         
-        // get forward vector of player
-        player.getWorldDirection(destPos);
-        destPos.multiplyScalar((isReverse ? -moveDistance : moveDistance));
+    // get forward vector of player
+    player.getWorldDirection(destPos);
+    destPos.multiplyScalar((isReverse ? -moveDistance : moveDistance));
         
-        // using player.position doesn't seem to work - I guess cause it's local instead of world?
-        const playerWorldPos = new THREE.Vector3();
-        player.getWorldPosition(playerWorldPos);
-        destPos.add(playerWorldPos);
+    // using player.position doesn't seem to work - I guess cause it's local instead of world?
+    const playerWorldPos = new THREE.Vector3();
+    player.getWorldPosition(playerWorldPos);
+    destPos.add(playerWorldPos);
         
-        if(destPos.distanceTo(bodyPos) < 2){
-            return true;
-        }
+    if(destPos.distanceTo(bodyPos) < 2){
+      return true;
     }
-    return false;
+  }
+  return false;
 }
 
 function keydown(evt){
-    if(evt.keyCode === 16){
-        // shift key
-        // toggle between walk and run while moving
-        if(animationController.currAction === 'walk'){
-            animationController.changeAction('run');
-            //animationController.setUpdateTimeDivisor(.12);
-        }
-    }else if(evt.keyCode === 71){
-        // g key
-        // for toggling weapon/tool equip
-        let handBone = player.hand;
-        if(handBone.children.length === 0){
-            handBone.add(tool);
-            // also register the tool in the animationcontroller so we can hide it at the 
-            // right time when de-equipping
-            // yeah, doing it this way is still kinda weird. :/
-            animationController.addObject(tool);
-        }
-        
-        // adjust location of tool 
-        tool.position.set(0, 0.2, -0.3); // the coordinate system is a bit out of whack for the weapon...
-        
-        // the weapon-draw/hide animation should lead directly to the corresponding idle animation
-        // since I have the event listener for a 'finished' action set up
-        let timeScale = 1.0;
-        
-        if(animationController.currState === "normal"){
-            tool.visible = true;
-            animationController.changeState("equip"); // equip weapon
-        }else{
-            animationController.changeState("normal");
-            timeScale = -1; // need to play equip animation backwards to put away weapon
-        }
-        animationController.setUpdateTimeDivisor(0.002);
-        animationController.changeAction("drawgun", timeScale);
-    }else if(evt.keyCode === 49){
-        // toggle first-person view
-        firstPersonViewOn = !firstPersonViewOn;
-        sideViewOn = false;
-        
-        // make sure camera is in the head position
-        // and that the camera is parented to the character mesh
-        // so that it can rotate with the mesh
-        if(firstPersonViewOn){
-            player.add(camera);
-            camera.position.copy(player.head.position);
-            camera.position.z += 0.9;
-            camera.position.y -= 0.4;
-            camera.rotation.copy(player.chest.rotation);
-            camera.rotateY(Math.PI);
-        }else{
-            scene.add(camera);
-        }
-    }else if(evt.keyCode === 50){
-        // toggle side view
-        firstPersonViewOn = false;
-        sideViewOn = !sideViewOn;
+  if(evt.keyCode === 16){
+    // shift key
+    // toggle between walk and run while moving
+    if(animationController.currAction === 'walk'){
+      animationController.changeAction('run');
+      //animationController.setUpdateTimeDivisor(.12);
     }
+  }else if(evt.keyCode === 71){
+    // g key
+    // for toggling weapon/tool equip
+    const handBone = player.hand;
+    if(handBone.children.length === 0){
+      handBone.add(tool);
+      // also register the tool in the animationcontroller so we can hide it at the 
+      // right time when de-equipping
+      // yeah, doing it this way is still kinda weird. :/
+      animationController.addObject(tool);
+    }
+        
+    // adjust location of tool 
+    tool.position.set(0, 0.2, -0.3); // the coordinate system is a bit out of whack for the weapon...
+        
+    // the weapon-draw/hide animation should lead directly to the corresponding idle animation
+    // since I have the event listener for a 'finished' action set up
+    let timeScale = 1.0;
+        
+    if(animationController.currState === "normal"){
+      tool.visible = true;
+      animationController.changeState("equip"); // equip weapon
+    }else{
+      animationController.changeState("normal");
+      timeScale = -1; // need to play equip animation backwards to put away weapon
+    }
+    animationController.setUpdateTimeDivisor(0.002);
+    animationController.changeAction("drawgun", timeScale);
+  }else if(evt.keyCode === 49){
+    // toggle first-person view
+    firstPersonViewOn = !firstPersonViewOn;
+    sideViewOn = false;
+        
+    // make sure camera is in the head position
+    // and that the camera is parented to the character mesh
+    // so that it can rotate with the mesh
+    if(firstPersonViewOn){
+      player.add(camera);
+      camera.position.copy(player.head.position);
+      camera.position.z += 0.9;
+      camera.position.y -= 0.4;
+      camera.rotation.copy(player.chest.rotation);
+      camera.rotateY(Math.PI);
+    }else{
+      scene.add(camera);
+    }
+  }else if(evt.keyCode === 50){
+    // toggle side view
+    firstPersonViewOn = false;
+    sideViewOn = !sideViewOn;
+  }
 }
 
 function keyup(evt){
-    if(evt.keyCode === 16){
-        if(animationController.currAction === 'run'){
-            animationController.changeAction('walk');
-            animationController.setUpdateTimeDivisor(.12);
-        }
+  if(evt.keyCode === 16){
+    if(animationController.currAction === 'run'){
+      animationController.changeAction('walk');
+      animationController.setUpdateTimeDivisor(.12);
     }
+  }
 }
 
 document.addEventListener("keydown", keydown);
 document.addEventListener("keyup", keyup);
 document.getElementById("theCanvas").parentNode.addEventListener("pointerdown", (evt) => {
-    if(animationController && animationController.currState !== "normal"){
-        evt.preventDefault();
-        const forwardVec = new THREE.Vector3();
-        camera.getWorldDirection(forwardVec);
+  if(animationController && animationController.currState !== "normal"){
+    evt.preventDefault();
+    const forwardVec = new THREE.Vector3();
+    camera.getWorldDirection(forwardVec);
         
-        const impulseVal = parseInt(document.getElementById('impulseSlider').value);
-        forwardVec.multiplyScalar(impulseVal);
+    const impulseVal = parseInt(document.getElementById('impulseSlider').value);
+    forwardVec.multiplyScalar(impulseVal);
         
-        const sphere = generateProjectile(player.position.x, player.position.y + 1.0, player.position.z);
-        sphere.sphereBody.applyImpulse(new CANNON.Vec3(forwardVec.x, forwardVec.y, forwardVec.z), sphere.sphereBody.position);
+    const sphere = generateProjectile(player.position.x, player.position.y + 1.0, player.position.z);
+    sphere.sphereBody.applyImpulse(new CANNON.Vec3(forwardVec.x, forwardVec.y, forwardVec.z), sphere.sphereBody.position);
         
-        projectiles.add(sphere);
-    }
+    projectiles.add(sphere);
+  }
 });
 
 // https://stackoverflow.com/questions/48131322/three-js-first-person-camera-rotation
 document.getElementById("theCanvas").parentNode.addEventListener("mousemove", (evt) => {
-    if(firstPersonViewOn){
-        document.body.style.cursor = 'none';
-        evt.preventDefault();
+  if(firstPersonViewOn){
+    document.body.style.cursor = 'none';
+    evt.preventDefault();
         
-        const mouseMoveX = -(evt.clientX / renderer.domElement.clientWidth) * 2 + 1;
-        const mouseMoveY = -(evt.clientY / renderer.domElement.clientHeight) * 2 + 1;
+    const mouseMoveX = -(evt.clientX / renderer.domElement.clientWidth) * 2 + 1;
+    const mouseMoveY = -(evt.clientY / renderer.domElement.clientHeight) * 2 + 1;
         
-        player.chest.rotation.x = -mouseMoveY;
-        player.chest.rotation.y = mouseMoveX;
+    player.chest.rotation.x = -mouseMoveY;
+    player.chest.rotation.y = mouseMoveX;
         
-        camera.position.copy(player.head.position);
-        camera.position.z += 0.9;
-        camera.position.y -= 0.4;
-        camera.rotation.copy(player.chest.rotation);
-        camera.rotateY(Math.PI);
-    }
+    camera.position.copy(player.head.position);
+    camera.position.z += 0.9;
+    camera.position.y -= 0.4;
+    camera.rotation.copy(player.chest.rotation);
+    camera.rotateY(Math.PI);
+  }
 });
 
 function update(){
-    sec = clock.getDelta();
-    moveDistance = 5 * sec;
-    rotationAngle = (Math.PI / 2) * sec;
-    let changeCameraView = false;
+  sec = clock.getDelta();
+  moveDistance = 5 * sec;
+  rotationAngle = (Math.PI / 2) * sec;
+  let changeCameraView = false;
     
-    if(keyboard.pressed("z")){
-        changeCameraView = true;
+  if(keyboard.pressed("z")){
+    changeCameraView = true;
+  }
+    
+  if(keyboard.pressed("W")){
+    // moving forwards
+    if(animationController.currAction !== "run"){
+      animationController.changeAction('walk');
     }
-    
-    if(keyboard.pressed("W")){
-        // moving forwards
-        if(animationController.currAction !== "run"){
-            animationController.changeAction('walk');
-        }
-        animationController.setUpdateTimeDivisor(.008);
+    animationController.setUpdateTimeDivisor(.008);
         
-        if(!checkCollision(moveDistance, false)){
-            moveBasedOnAction(animationController, player, moveDistance, false);
-        }
-        
-        //playerBody.velocity.z = 0.5;
-    }else if(keyboard.pressed("S")){
-        // moving backwards
-        if(animationController.currAction !== "run"){
-            animationController.changeAction('walk', -1);
-        }
-        animationController.setUpdateTimeDivisor(.008);
-        
-        if(!checkCollision(moveDistance, true)){
-            moveBasedOnAction(animationController, player, moveDistance, true);
-        }
-        
-        //playerBody.velocity.z = -0.5;
-    }else if(!keyboard.pressed("W") && !keyboard.pressed("S")){
-        // can we make this less specific i.e. don't explicitly check for "drawgun"?
-        if(animationController.currAction !== 'idle' && animationController.currAction !== "drawgun"){
-            animationController.changeAction('idle');
-            animationController.setUpdateTimeDivisor(.05);
-        }
+    if(!checkCollision(moveDistance, false)){
+      moveBasedOnAction(animationController, player, moveDistance, false);
     }
-    
-    if(keyboard.pressed("A")){
-        player.rotateOnAxis(new THREE.Vector3(0, 1, 0), rotationAngle);
-        //playerBody.quaternion.setFromAxisAngle(new CANNON.Vec3(0, 1, 0), rotationAngle); // can't get this to work :/
-    }
-    
-    if(keyboard.pressed("D")){
-        player.rotateOnAxis(new THREE.Vector3(0, 1, 0), -rotationAngle);
-    }
-    
-    // we don't want idle animation to run if in first-person mode since I want to
-    // manually control the chest bone for look-around rotation
-    if(animationController.currAction !== 'idle' || !firstPersonViewOn){
-        // keep the current animation running
-        animationController.update();
-    }
-    
-    let relCameraOffset;
-    
-    if(firstPersonViewOn){
-        // have crosshairs showing
-        crosshairCanvas.style.display = 'block';
         
-        // https://stackoverflow.com/questions/25567369/show-children-of-invisible-parents
-        player.material.visible = false;
-    }else if(sideViewOn){
-        relCameraOffset = new THREE.Vector3(-10, 3, 0);
-    }else if(!changeCameraView){
-        relCameraOffset = new THREE.Vector3(0, 3, -15);
-    }else{
-        relCameraOffset = new THREE.Vector3(0, 3, 15);
+    //playerBody.velocity.z = 0.5;
+  }else if(keyboard.pressed("S")){
+    // moving backwards
+    if(animationController.currAction !== "run"){
+      animationController.changeAction('walk', -1);
     }
+    animationController.setUpdateTimeDivisor(.008);
+        
+    if(!checkCollision(moveDistance, true)){
+      moveBasedOnAction(animationController, player, moveDistance, true);
+    }
+        
+    //playerBody.velocity.z = -0.5;
+  }else if(!keyboard.pressed("W") && !keyboard.pressed("S")){
+    // can we make this less specific i.e. don't explicitly check for "drawgun"?
+    if(animationController.currAction !== 'idle' && animationController.currAction !== "drawgun"){
+      animationController.changeAction('idle');
+      animationController.setUpdateTimeDivisor(.05);
+    }
+  }
     
-    if(!firstPersonViewOn){
-        crosshairCanvas.style.display = 'none';
-        document.body.style.cursor = 'default';
+  if(keyboard.pressed("A")){
+    player.rotateOnAxis(new THREE.Vector3(0, 1, 0), rotationAngle);
+    //playerBody.quaternion.setFromAxisAngle(new CANNON.Vec3(0, 1, 0), rotationAngle); // can't get this to work :/
+  }
+    
+  if(keyboard.pressed("D")){
+    player.rotateOnAxis(new THREE.Vector3(0, 1, 0), -rotationAngle);
+  }
+    
+  // we don't want idle animation to run if in first-person mode since I want to
+  // manually control the chest bone for look-around rotation
+  if(animationController.currAction !== 'idle' || !firstPersonViewOn){
+    // keep the current animation running
+    animationController.update();
+  }
+    
+  let relCameraOffset;
+    
+  if(firstPersonViewOn){
+    // have crosshairs showing
+    crosshairCanvas.style.display = 'block';
         
-        player.material.visible = true;
+    // https://stackoverflow.com/questions/25567369/show-children-of-invisible-parents
+    player.material.visible = false;
+  }else if(sideViewOn){
+    relCameraOffset = new THREE.Vector3(-10, 3, 0);
+  }else if(!changeCameraView){
+    relCameraOffset = new THREE.Vector3(0, 3, -15);
+  }else{
+    relCameraOffset = new THREE.Vector3(0, 3, 15);
+  }
+    
+  if(!firstPersonViewOn){
+    crosshairCanvas.style.display = 'none';
+    document.body.style.cursor = 'default';
         
-        const cameraOffset = relCameraOffset.applyMatrix4(player.matrixWorld);
-        camera.position.x = cameraOffset.x;
-        camera.position.y = cameraOffset.y;
-        camera.position.z = cameraOffset.z;
+    player.material.visible = true;
         
-        camera.lookAt(player.position);
-    }
+    const cameraOffset = relCameraOffset.applyMatrix4(player.matrixWorld);
+    camera.position.x = cameraOffset.x;
+    camera.position.y = cameraOffset.y;
+    camera.position.z = cameraOffset.z;
+        
+    camera.lookAt(player.position);
+  }
 }
 
 function animate(){
-    requestAnimationFrame(animate);
-    renderer.render(scene, camera);
-    update();
-    cannonDebugRenderer.update();
+  requestAnimationFrame(animate);
+  renderer.render(scene, camera);
+  update();
+  cannonDebugRenderer.update();
     
-    world.step(0.01);
+  world.step(0.01);
     
-    projectiles.forEach(p => {
-        if(p.sphereMesh.position.y < 0.5){
-            // remove projectile from scene and set of projectiles
-            scene.remove(p.sphereMesh);
-            world.remove(p.sphereBody);
-            projectiles.delete(p);
-            return;
-        }
-        p.sphereMesh.position.set(p.sphereBody.position.x, p.sphereBody.position.y, p.sphereBody.position.z);
-        p.sphereMesh.quaternion.set(
-            p.sphereBody.quaternion.x,
-            p.sphereBody.quaternion.y,
-            p.sphereBody.quaternion.z,
-            p.sphereBody.quaternion.w,
-        );
-    });
+  projectiles.forEach(p => {
+    if(p.sphereMesh.position.y < 0.5){
+      // remove projectile from scene and set of projectiles
+      scene.remove(p.sphereMesh);
+      world.remove(p.sphereBody);
+      projectiles.delete(p);
+      return;
+    }
+    p.sphereMesh.position.set(p.sphereBody.position.x, p.sphereBody.position.y, p.sphereBody.position.z);
+    p.sphereMesh.quaternion.set(
+      p.sphereBody.quaternion.x,
+      p.sphereBody.quaternion.y,
+      p.sphereBody.quaternion.z,
+      p.sphereBody.quaternion.w,
+    );
+  });
     
-    cannonBodies.forEach(b => {
-        const bBody = b.planeBody;
-        const bMesh = bBody.mesh;
+  cannonBodies.forEach(b => {
+    const bBody = b.planeBody;
+    const bMesh = bBody.mesh;
         
-        // for now only have boxes be able to move on projectile impact
-        if(bMesh.name.includes("box")){
-            bMesh.position.set(bBody.position.x, bBody.position.y, bBody.position.z);    
-            bMesh.quaternion.set(
-                bBody.quaternion.x,
-                bBody.quaternion.y,
-                bBody.quaternion.z,
-                bBody.quaternion.w,
-            );
-        }
-    });
+    // for now only have boxes be able to move on projectile impact
+    if(bMesh.name.includes("box")){
+      bMesh.position.set(bBody.position.x, bBody.position.y, bBody.position.z);    
+      bMesh.quaternion.set(
+        bBody.quaternion.x,
+        bBody.quaternion.y,
+        bBody.quaternion.z,
+        bBody.quaternion.w,
+      );
+    }
+  });
 }
 
 document.getElementById('impulseSlider').addEventListener('change', (evt) => {
-    document.getElementById('impulseVal').textContent = evt.target.value;
+  document.getElementById('impulseVal').textContent = evt.target.value;
 });

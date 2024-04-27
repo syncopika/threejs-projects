@@ -1,7 +1,7 @@
 // PPBS - per-pixel blinn-phong shading
 
 const jetModelShader2 = {
-    vertexShader: `
+  vertexShader: `
         uniform vec4 lightPosition[1];
 
         out vec4 direction[1];
@@ -30,7 +30,7 @@ const jetModelShader2 = {
         }
     `,
     
-    fragShader: `
+  fragShader: `
         uniform sampler2D img;
         uniform float u_time;
         uniform vec2 u_resolution;

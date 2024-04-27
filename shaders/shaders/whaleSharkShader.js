@@ -1,5 +1,5 @@
 const whaleSharkShader = {
-    vertexShader: `
+  vertexShader: `
         varying vec2 vUv;
         uniform float u_time;
     
@@ -12,7 +12,7 @@ const whaleSharkShader = {
         }
     `,
     
-    fragShader: `
+  fragShader: `
         varying vec2 vUv;
         uniform sampler2D img;
         uniform float u_time;
@@ -39,4 +39,4 @@ const whaleSharkShader = {
             }
         }
     `,
-}
+};

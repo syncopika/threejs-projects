@@ -63,27 +63,27 @@ sphere.position.z = 0;
 scene.add(sphere);
 
 function update(){
-    // move stuff around, etc.
+  // move stuff around, etc.
 }
 
 function keydown(evt){
-    if(evt.keyCode === 32){
-        // spacebar
-    }else if(evt.keyCode === 49){
-        //1 key
-    }else if(evt.keyCode === 50){
-        //2 key
-    }else if(evt.keyCode === 82){
-        // r key
-    }
+  if(evt.keyCode === 32){
+    // spacebar
+  }else if(evt.keyCode === 49){
+    //1 key
+  }else if(evt.keyCode === 50){
+    //2 key
+  }else if(evt.keyCode === 82){
+    // r key
+  }
 }
 document.addEventListener("keydown", keydown);
 
 
 function animate(){
-    requestAnimationFrame(animate);
-    renderer.render(scene, camera);
-    update();
+  requestAnimationFrame(animate);
+  renderer.render(scene, camera);
+  update();
 }
 
 animate();

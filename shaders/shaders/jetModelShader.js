@@ -1,5 +1,5 @@
 const jetModelShader = {
-    vertexShader: `
+  vertexShader: `
         varying vec2 vUv;
         uniform float u_time;
     
@@ -37,7 +37,7 @@ const jetModelShader = {
                           vec4(position.x+xDelta, position.y, position.z+zDelta, 1.0);
         }
     `,
-    fragShader: `
+  fragShader: `
         varying vec2 vUv;
         uniform sampler2D img;
         uniform float u_time;

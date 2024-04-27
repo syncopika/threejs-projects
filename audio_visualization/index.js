@@ -3,7 +3,6 @@
 // https://github.com/syncopika/jsProjects/blob/master/audio_visualizer/audioVisualiser.html
 
 const container = document.getElementById("container");
-//const keyboard = new THREEx.KeyboardState();
 
 const fov = 60;
 const camera = new THREE.PerspectiveCamera(fov, container.clientWidth / container.clientHeight, 0.01, 1000);
@@ -39,9 +38,10 @@ pointLight.position.set(0, 15, 10);
 //pointLight.castShadow = true;
 scene.add(pointLight);
 
-//const hemiLight = new THREE.HemisphereLight(0xffffff);
-//hemiLight.position.set(0, 10, 0);
-//scene.add(hemiLight);
+const controls = new THREE.TrackballControls(camera, renderer.domElement);
+controls.rotateSpeed = 1.2;
+controls.zoomSpeed = 1.2;
+controls.panSpeed = 0.8;
 
 const clock = new THREE.Clock();
 
@@ -74,183 +74,186 @@ let isPlaying = false;
 let isStopped = true;
 
 function loadAudioFile(url){
-    //console.log("loading: " + url);
-    audioSource = audioCtx.createBufferSource();  
+  //console.log("loading: " + url);
+  audioSource = audioCtx.createBufferSource();  
 
-    const req = new XMLHttpRequest();
-    req.open("GET", url, true);
-    req.responseType = 'arraybuffer';
-    req.onload = function(){
-        audioCtx.decodeAudioData(req.response, (buffer) => {
-            if (!audioSource.buffer) audioSource.buffer = buffer;
-            audioSource.connect(analyser);
-            audioSource.connect(freqAnalyser);
-            audioSource.connect(audioCtx.destination);
-        });
-    }
-    req.send();
+  const req = new XMLHttpRequest();
+  req.open("GET", url, true);
+  req.responseType = 'arraybuffer';
+  req.onload = function(){
+    audioCtx.decodeAudioData(req.response, (buffer) => {
+      if (!audioSource.buffer) audioSource.buffer = buffer;
+      audioSource.connect(analyser);
+      audioSource.connect(freqAnalyser);
+      audioSource.connect(audioCtx.destination);
+    });
+  };
+  req.send();
 }
 
 function createVisualizationSphere(){
-    const sphereGeometry = new THREE.SphereGeometry(0.5, 30, 16);
-    const sphereMaterial = new THREE.MeshPhongMaterial({color: '#ff69b4'});
-    const sphere = new THREE.Mesh(sphereGeometry, sphereMaterial);
-    sphere.receiveShadow = true;
-    sphere.castShadow = true;
-    return sphere;
+  const sphereGeometry = new THREE.SphereGeometry(0.5, 30, 16);
+  const sphereMaterial = new THREE.MeshPhongMaterial({color: '#ff69b4'});
+  const sphere = new THREE.Mesh(sphereGeometry, sphereMaterial);
+  sphere.receiveShadow = true;
+  sphere.castShadow = true;
+  return sphere;
 }
 
 function createVisualizationCube(){
-    const boxGeometry = new THREE.BoxGeometry(0.3, 0.3, 0.3);
-    const boxMaterial = new THREE.MeshPhongMaterial({color: '#aaff00'});
-    const box = new THREE.Mesh(boxGeometry, boxMaterial);
-    box.receiveShadow = true;
-    box.castShadow = true;
-    return box;    
+  const boxGeometry = new THREE.BoxGeometry(0.3, 0.3, 0.3);
+  const boxMaterial = new THREE.MeshPhongMaterial({color: '#aaff00'});
+  const box = new THREE.Mesh(boxGeometry, boxMaterial);
+  box.receiveShadow = true;
+  box.castShadow = true;
+  return box;    
 }
 
 // visualization for time domain
 const visualizationSpheres = [];
 function createTimeDomainVisualization(){
-    const numSpheres = 50;
-    const increment = Math.floor(bufferLength / numSpheres);
-    const xIncrement = 0.5 + 0.6; // 0.5 is the radius of a sphere, + extra buffer space between the next sphere
-    let xPos = -25;
+  const numSpheres = 50;
+  const increment = Math.floor(bufferLength / numSpheres);
+  const xIncrement = 0.5 + 0.6; // 0.5 is the radius of a sphere, + extra buffer space between the next sphere
+  let xPos = -25;
     
-    for(let i = 0; i < bufferLength; i += increment){
-        const newSphere = createVisualizationSphere();
-        visualizationSpheres.push(newSphere);
+  for(let i = 0; i < bufferLength; i += increment){
+    const newSphere = createVisualizationSphere();
+    visualizationSpheres.push(newSphere);
         
-        newSphere.position.x = xPos + xIncrement;
-        newSphere.position.z = -12;
+    newSphere.position.x = xPos + xIncrement;
+    newSphere.position.z = -12;
         
-        scene.add(newSphere);
+    scene.add(newSphere);
         
-        xPos += xIncrement;
-    }
+    xPos += xIncrement;
+  }
 }
 
 function updateTimeDomainVisualization(audioDataBuffer){
-    const increment = Math.floor(bufferLength / visualizationSpheres.length);
+  const increment = Math.floor(bufferLength / visualizationSpheres.length);
     
-    for(let i = 0; i < visualizationSpheres.length; i++){
-        const value = audioDataBuffer[i*increment] / 128.0; // why 128?
-        const y = value * 10; // multiply by maximum height
+  for(let i = 0; i < visualizationSpheres.length; i++){
+    const value = audioDataBuffer[i*increment] / 128.0; // why 128?
+    const y = value * 10; // multiply by maximum height
         
-        const sphere = visualizationSpheres[i];
-        sphere.position.lerp(new THREE.Vector3(sphere.position.x, y, sphere.position.z), 0.3); // lerp for smoother animation
-        //sphere.position.y = y; // corresponds to amplitude from time domain
-    }
+    const sphere = visualizationSpheres[i];
+    sphere.position.lerp(new THREE.Vector3(sphere.position.x, y, sphere.position.z), 0.3); // lerp for smoother animation
+    //sphere.position.y = y; // corresponds to amplitude from time domain
+  }
 }
 
 // visualization for frequency domain
 const visualizationCubes = [];
 function createFrequencyDomainVisualization(){
-    const numCubes = 50;
-    const increment = Math.floor(freqBufferLength / numCubes);
-    const xIncrement = 0.3 + 0.2; // cube is 0.3 x 0.3 x 0.3
-    let xPos = -12;
+  const numCubes = 50;
+  const increment = Math.floor(freqBufferLength / numCubes);
+  const xIncrement = 0.3 + 0.2; // cube is 0.3 x 0.3 x 0.3
+  let xPos = -12;
     
-    for(let i = 0; i < freqBufferLength; i += increment){
-        const newCube = createVisualizationCube();
-        newCube.position.x = xPos + xIncrement;
-        newCube.position.z = -20;
-        visualizationCubes.push(newCube);
-        scene.add(newCube);
-        xPos += xIncrement;
-    }
+  for(let i = 0; i < freqBufferLength; i += increment){
+    const newCube = createVisualizationCube();
+    newCube.position.x = xPos + xIncrement;
+    newCube.position.z = -20;
+    visualizationCubes.push(newCube);
+    scene.add(newCube);
+    xPos += xIncrement;
+  }
 }
 
 function updateFreqDomainVisualization(audioDataBuffer){
-    const increment = Math.floor(freqBufferLength / visualizationCubes.length);
-    for(let i = 0; i < visualizationCubes.length; i++){
-        const value = audioDataBuffer[i*increment];
-        const cube = visualizationCubes[i];
+  const increment = Math.floor(freqBufferLength / visualizationCubes.length);
+  for(let i = 0; i < visualizationCubes.length; i++){
+    const value = audioDataBuffer[i*increment];
+    const cube = visualizationCubes[i];
         
-        // scale the cube based on freq bin value
-        cube.scale.lerp(new THREE.Vector3(1, value, 1), 0.2);
-    }
+    // scale the cube based on freq bin value
+    cube.scale.lerp(new THREE.Vector3(1, value, 1), 0.2);
+  }
 }
 
 function play(){
-    if(!isPlaying && audioSource){
-        isPlaying = true;
-        isStopped = false;
-        audioSource.start();
-    }
+  if(!isPlaying && audioSource){
+    isPlaying = true;
+    isStopped = false;
+    audioSource.start();
+  }
 }
 document.getElementById("play").addEventListener("click", play);
 
 function stop(){
-    if(isPlaying && audioSource){
-        isPlaying = false;
-        isStopped = true;
-        audioSource.stop();
-    }
+  if(isPlaying && audioSource){
+    isPlaying = false;
+    isStopped = true;
+    audioSource.stop();
+  }
     
-    // reload since we can't restart buffer source
-    if(audioFileUrl) loadAudioFile(audioFileUrl);
+  // reload since we can't restart buffer source
+  if(audioFileUrl) loadAudioFile(audioFileUrl);
 }
 document.getElementById("stop").addEventListener("click", stop);
 
 // enable audio file finding
 const openFile = (function(){    
-   return function(handleFileFunc){
-       if(isPlaying) return;
+  return function(handleFileFunc){
+    if(isPlaying) return;
        
-       const fileInput = document.getElementById('fileInput');
+    const fileInput = document.getElementById('fileInput');
        
-       function onFileChange(evt){
-           const files = evt.target.files;
-           if(files && files.length > 0){
-               handleFileFunc(files[0]);
-           }
-       }
+    function onFileChange(evt){
+      const files = evt.target.files;
+      if(files && files.length > 0){
+        handleFileFunc(files[0]);
+      }
+    }
        
-       fileInput.addEventListener("change", onFileChange, false);
-       fileInput.click();
-   } 
+    fileInput.addEventListener("change", onFileChange, false);
+    fileInput.click();
+  }; 
 })();
 
 function handleFile(file){
-    audioFileUrl = URL.createObjectURL(file);
-    const type = /audio.*/;
-    if(!file.type.match(type)){
-        return;
-    }
+  audioFileUrl = URL.createObjectURL(file);
+  const type = /audio.*/;
+  if(!file.type.match(type)){
+    return;
+  }
     
-    const reader = new FileReader();
-    reader.onload = (function(f){
-        return function(evt){
-            document.getElementById('audioFileName').textContent = f.name;
-        }
-    })(file);
+  const reader = new FileReader();
+  reader.onload = (function(f){
+    return function(evt){
+      document.getElementById('audioFileName').textContent = f.name;
+    };
+  })(file);
     
-    reader.readAsDataURL(file);
-    loadAudioFile(audioFileUrl);
+  reader.readAsDataURL(file);
+  loadAudioFile(audioFileUrl);
 }
 
 document.getElementById("importAudio").addEventListener("click", () => {
-    openFile(handleFile);
+  openFile(handleFile);
 });
 
 function update(){
-    if(isPlaying){
-        // time domain viz
-        analyser.fftSize = 2048;
-        analyser.getByteTimeDomainData(buffer);
-        updateTimeDomainVisualization(buffer);
+  if(isPlaying){
+    // time domain viz
+    analyser.fftSize = 2048;
+    analyser.getByteTimeDomainData(buffer);
+    updateTimeDomainVisualization(buffer);
         
-        // freq domain viz
-        freqAnalyser.getByteFrequencyData(freqBuffer);
-        updateFreqDomainVisualization(freqBuffer);
-    }
+    // freq domain viz
+    freqAnalyser.getByteFrequencyData(freqBuffer);
+    updateFreqDomainVisualization(freqBuffer);
+  }
+  
+  // update trackball
+  controls.update();
 }
 
 function animate(){
-    requestAnimationFrame(animate);
-    renderer.render(scene, camera);
-    update();
+  requestAnimationFrame(animate);
+  renderer.render(scene, camera);
+  update();
 }
 
 createTimeDomainVisualization();

@@ -1,5 +1,5 @@
 const springyShardShader = {
-    vertexShader: `
+  vertexShader: `
         uniform float u_time;
         
         attribute vec4 color;
@@ -36,7 +36,7 @@ const springyShardShader = {
         }
     `,
     
-    fragShader: `
+  fragShader: `
         uniform sampler2D img;
         uniform float u_time;
         uniform vec2 u_resolution; // dimensions of renderer canvas
@@ -50,4 +50,4 @@ const springyShardShader = {
             1.0);
         }
     `,
-}
+};
