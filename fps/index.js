@@ -1,4 +1,4 @@
-import { AnimationController } from '../character_demo/AnimationController.js';
+import { AnimationController } from '../libs/AnimationController.js';
 
 const container = document.getElementById("container");
 const fov = 60;
@@ -93,7 +93,7 @@ world.gravity.set(0, -9.82, 0);
 const cannonDebugRenderer = new THREE.CannonDebugRenderer(scene, world);
 
 // add ground
-const texture = new THREE.TextureLoader().load('../car_demo/grass2.jpg');
+const texture = new THREE.TextureLoader().load('../models/grass2.jpg');
 const terrainMat = new THREE.MeshPhongMaterial({map: texture, side: THREE.DoubleSide});
 const terrainGeometry = new THREE.PlaneGeometry(200, 200);
 const plane = new THREE.Mesh(terrainGeometry, terrainMat);

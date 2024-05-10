@@ -1,5 +1,5 @@
 // snowboarding
-import { AnimationController } from './AnimationController.js';
+import { AnimationController } from '../libs/AnimationController.js';
 
 const container = document.getElementById("container");
 

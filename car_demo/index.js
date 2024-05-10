@@ -96,7 +96,7 @@ function getModel(modelFilePath, name){
 
 function addPlane(scene){
   const planeGeometry = new THREE.PlaneGeometry(400, 400);
-  const texture = new THREE.TextureLoader().load('grass2.jpg');
+  const texture = new THREE.TextureLoader().load('../models/grass2.jpg');
   const material = new THREE.MeshBasicMaterial({map: texture}); 
   const plane = new THREE.Mesh(planeGeometry, material); 
   plane.position.set(-100, -1.5, 0);

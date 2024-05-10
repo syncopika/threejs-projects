@@ -309,7 +309,7 @@ function setupSceneLights(scene){
 }
 
 function setupTerrain(scene){
-  const texture = new THREE.TextureLoader().load('../car_demo/grass2.jpg');
+  const texture = new THREE.TextureLoader().load('../models/grass2.jpg');
   const terrainMat = new THREE.MeshBasicMaterial({map: texture});
   const terrain = new THREE.PlaneGeometry(200, 200, 1);
   const plane = new THREE.Mesh(terrain, terrainMat);
