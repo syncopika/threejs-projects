@@ -20,6 +20,14 @@
         text-align: center;
         margin: 0 auto;
       }
+      
+      #selectExamplePiece {
+        margin-top: 10px;
+      }
+      
+      #playExample {
+        margin-bottom: 10px;
+      }
     </style>
   </head>
 
@@ -41,23 +49,21 @@
       <option>5</option>
     </select>
     
-    <br />
-    <br />
-    
     <select id='selectExamplePiece'>
       <option value='examplePiece1'>example piece 1</option>
       <option value='examplePiece2'>example piece 2</option>
       <option value='nostalgia-excerpt'>'nostalgia' (fats navarro) excerpt</option>
     </select>
+    
     <button id='playExample'>play</button>
     
-    <br /><br />
-    
-    <label> import audio and sync the trumpet with it: </label>
-    <button id='importAudio'> import </button>
-    <button id='play'>play</button>
-    <button id='stop'>stop</button>
-    <p id='currentNote'></p>
+    <div id='importAudioSection'>
+      <label> import audio and sync the trumpet with it: </label>
+      <button id='importAudio'> import </button>
+      <button id='play'>play</button>
+      <button id='stop'>stop</button>
+      <p id='currentNote'></p>
+    </div>
   </body>
 
   <script type="module" src="index.js">

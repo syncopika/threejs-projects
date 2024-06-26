@@ -33,7 +33,11 @@
     
     #showKeyboard {
       display: block;
-      margin: 0 auto;
+      margin: 10px auto;
+    }
+    
+    #mobileKeyboard {
+      margin-top: 10px;
     }
   </style>
   
@@ -53,14 +57,9 @@
       <button id="createPath"> create path </button>
       <button id="ridePath"> ride path </button>
       <button id="setTarget"> unset target </button>
-      
-      <br />
-      <br />
-      
+
       <button id="toggleMarkerVisibility">toggle marker visibility</button>
       <button id="togglePathVisibility">toggle path visibility</button>
-      
-      <br />
       
       <div id='mobileKeyboard'></div>
       
@@ -69,8 +68,6 @@
       <p> click on any marker when the 'select marker' button is active. (they should change to red when clicked)</p>
       <p> after markers have been selected, press the 'create path' button to connect the markers. </p>
       <p> the 'ride path' button will move the camera along the created path. note that currently there is a 5 second duration for each created path. </p>
-      
-      <br />
       
       <button id='showKeyboard'>show keyboard (if mobile)</button>
     </div>

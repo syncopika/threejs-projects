@@ -303,6 +303,7 @@ function animate(){
 getModel("../models/rubikscube.gltf");
 animate();
 
-document.getElementById('pause').addEventListener('click', () => {
+document.getElementById('pause').addEventListener('click', (evt) => {
   pause = !pause;
+  evt.target.textContent = pause ? 'unpause' : 'pause';
 });

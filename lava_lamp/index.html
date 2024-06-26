@@ -22,6 +22,10 @@
         margin: 0 auto;
       }
       
+      #colorPicker {
+        margin-top: 15px;
+      }
+      
       #colorPicked {
         width: 200px;
         display: block;
@@ -40,11 +44,12 @@
     
     <label>toggle wall</label><input type='checkbox' id='toggleWall' />
     <label>toggle stand</label><input type='checkbox' id='toggleStand' />
-    <br />
-    <br />
-    <label>lava color</label>
-    <div id='colorWheelContainer'></div>
-    <div id='colorPicked'></div>
+    
+    <div id='colorPicker'>
+      <label>lava color</label>
+      <div id='colorWheelContainer'></div>
+      <div id='colorPicked'></div>
+    </div>
   </body>
 
   <script type="module" src="index.js">
