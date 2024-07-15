@@ -54,9 +54,10 @@ const letters = 'abcdefghijklmnopqrstuvwxyz';
 letters.split('').forEach(l => textures[l] = {});
 
 class SplitFlapDisplay {
-  constructor(scene, mesh, textures, animationClips){
+  constructor(scene, mesh, textures, animationClips, setLetter=true){
     this.scene = scene;
     this.mesh = mesh;
+    this.textures = textures;
     
     // keep track of the flaps that show the letters
     this.topFlap = mesh.children.find(x => x.name === 'flap1001');
@@ -66,14 +67,7 @@ class SplitFlapDisplay {
     this.animationMixer = new THREE.AnimationMixer(mesh);
     
     this.animationMixer.addEventListener('loop', () => {
-      const letters = Array.from(Object.keys(textures));
-      const pick = letters[Math.floor(Math.random() * letters.length)];
-      const newTexture = textures[pick];
-      
-      if(this.topFlap && newTexture.top) this.topFlap.material = newTexture.top;
-      if(this.bottomFlap && newTexture.bottom) this.bottomFlap.material = newTexture.bottom;
-      
-      this.currentLetter = pick;
+      this.getRandomLetter();
       
       if(this.destinationLetter && this.destinationLetter === this.currentLetter){
         this.moveAction.stop();
@@ -84,6 +78,8 @@ class SplitFlapDisplay {
     
     this.currentLetter = null;
     this.destinationLetter = null;
+    
+    if(setLetter) this.getRandomLetter();
   }
   
   attachToScene(){
@@ -110,6 +106,30 @@ class SplitFlapDisplay {
     return this.moveAction;
   }
   
+  getRandomLetter(){
+    const letters = Array.from(Object.keys(this.textures));
+    const pick = letters[Math.floor(Math.random() * letters.length)];
+    const newTexture = this.textures[pick];
+    
+    if(this.topFlap && newTexture.top){
+      this.topFlap.material = newTexture.top;
+      this.topFlap.material.onBeforeCompile = function(shader){
+        //console.log(shader.fragmentShader);
+        //https://discourse.threejs.org/t/is-there-any-way-to-make-image-negative-in-three-js/38545/2
+        shader.fragmentShader = shader.fragmentShader.replace(
+          'gl_FragColor = vec4( outgoingLight, diffuseColor.a );',
+          'gl_FragColor = vec4( (1.0 - outgoingLight.r), (1.0 - outgoingLight.g), (1.0 - outgoingLight.b), diffuseColor.a );'
+        );
+      };
+    }
+    
+    if(this.bottomFlap && newTexture.bottom){
+      this.bottomFlap.material = newTexture.bottom;
+    }
+    
+    this.currentLetter = pick;
+  }
+  
   setPosition(x, y, z){
     this.mesh.position.set(x, y, z);
   }
@@ -134,9 +154,11 @@ function getModel(modelFilePath, xPos=null, letterToStopAt=null){
         
         [...gltf.scene.children].forEach(c => {
           if(c.type === 'Object3D'){
-            const newDisplay = new SplitFlapDisplay(scene, c, textures, clips);
+            const newDisplay = new SplitFlapDisplay(scene, c, textures, clips, (letterToStopAt ? true : false));
             
             newDisplay.attachToScene();
+            
+            newDisplay.getAction().setEffectiveTimeScale(1.6);
             
             currentSplitFlapDisplays.push(newDisplay);
             
@@ -170,31 +192,40 @@ function getModel(modelFilePath, xPos=null, letterToStopAt=null){
 }
 
 function getTextures(){
-  Object.keys(textures).forEach(letter => {
-    // load top part of letter image
-    textureLoader.load(
-      `letters/${letter}-top.png`,
-      (texture) => {
-        texture.flipY = false;
-        textures[letter]['top'] = new THREE.MeshBasicMaterial({map: texture, skinning: true});
-      },
-      undefined,
-      (err) => console.error(err)
-    );
-    
-    // load bottom part of letter image
-    textureLoader.load(
-      `letters/${letter}-bottom.png`,
-      (texture) => {
-        texture.flipY = false;
-        textures[letter]['bottom'] = new THREE.MeshBasicMaterial({map: texture, skinning: true});
-      },
-      undefined,
-      (err) => console.error(err)
-    );
-    
-    // TODO: should return promise so we know everything's been loaded?
-    //console.log(textures);
+  return new Promise((resolve) => {
+    let numLoaded = 0;
+    const numLoadedExpected = Object.keys(textures).length * 2;
+    Object.keys(textures).forEach(letter => {
+      // load top part of letter image
+      textureLoader.load(
+        `letters/${letter}-top.png`,
+        (texture) => {
+          numLoaded++;
+          if(numLoadedExpected === numLoaded){
+            resolve(true);
+          }
+          texture.flipY = false;
+          textures[letter]['top'] = new THREE.MeshBasicMaterial({map: texture, skinning: true});
+        },
+        undefined,
+        (err) => console.error(err)
+      );
+      
+      // load bottom part of letter image
+      textureLoader.load(
+        `letters/${letter}-bottom.png`,
+        (texture) => {
+          numLoaded++;
+          if(numLoadedExpected === numLoaded){
+            resolve(true);
+          }
+          texture.flipY = false;
+          textures[letter]['bottom'] = new THREE.MeshBasicMaterial({map: texture, skinning: true});
+        },
+        undefined,
+        (err) => console.error(err)
+      );
+    });
   });
 }
 
@@ -208,10 +239,10 @@ function update(){
   });
 }
 
-document.getElementById('test').addEventListener('click', () => {
+document.getElementById('run-btn').addEventListener('click', () => {
   currentSplitFlapDisplays.forEach(disp => {
     const action = disp.getAction();
-    if(!action.isRunning()){
+    if(disp.destinationLetter && !action.isRunning()){
       action.play();
     }else{
       action.stop();
@@ -227,17 +258,17 @@ function animate(){
   update();
 }
 
-getTextures();
+getTextures().then(res => {
+  const textToDisplay = "hello world";
+  const distBetweenDisplays = 3;
+  const numDisplays = textToDisplay.length;
 
-const textToDisplay = "hello world";
-const distBetweenDisplays = 3;
-const numDisplays = textToDisplay.length;
+  let xPos = -(Math.floor(numDisplays / 2) * distBetweenDisplays);
 
-let xPos = -(Math.floor(numDisplays / 2) * distBetweenDisplays);
+  for(let i = 0; i < numDisplays; i++){
+    getModel("../models/split-flap-idea.gltf", xPos, textToDisplay[i].trim());
+    xPos += distBetweenDisplays;
+  }
 
-for(let i = 0; i < numDisplays; i++){
-  getModel("../models/split-flap-idea.gltf", xPos, textToDisplay[i]);
-  xPos += distBetweenDisplays;
-}
-
-animate();
+  animate();
+});
