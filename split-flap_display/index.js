@@ -46,20 +46,80 @@ scene.add(hemiLight);
 
 const clock = new THREE.Clock();
 
-// keep track of the flaps that show the letters
-let topFlap = null;
-let bottomFlap = null;
-
-let animationMixer = null;
-let animationClips = null;
-let action = null;
+const currentSplitFlapDisplays = [];
 
 const textures = {};
 
 const letters = 'abcdefghijklmnopqrstuvwxyz';
 letters.split('').forEach(l => textures[l] = {});
 
-function getModel(modelFilePath){
+class SplitFlapDisplay {
+  constructor(scene, mesh, textures, animationClips){
+    this.scene = scene;
+    this.mesh = mesh;
+    
+    // keep track of the flaps that show the letters
+    this.topFlap = mesh.children.find(x => x.name === 'flap1001');
+    this.bottomFlap = mesh.children.find(x => x.name === 'flap12001');
+    
+    this.animationClips = animationClips;
+    this.animationMixer = new THREE.AnimationMixer(mesh);
+    
+    this.animationMixer.addEventListener('loop', () => {
+      if(this.destinationLetter && this.destinationLetter === this.currentLetter){
+        this.moveAction.stop();
+      }
+      
+      const letters = Array.from(Object.keys(textures));
+      const pick = letters[Math.floor(Math.random() * letters.length)];
+      const newTexture = textures[pick];
+      
+      if(this.topFlap && newTexture.top) this.topFlap.material = newTexture.top;
+      if(this.bottomFlap && newTexture.bottom) this.bottomFlap.material = newTexture.bottom;
+      
+      this.currentLetter = pick;
+    });
+    
+    this.moveAction = this.animationMixer.clipAction(animationClips['move']);
+    
+    this.currentLetter = null;
+    this.destinationLetter = null;
+  }
+  
+  attachToScene(){
+    this.scene.add(this.mesh);
+  }
+  
+  removeFromScene(){
+    this.scene.remove(this.mesh);
+  }
+  
+  play(){
+    this.moveAction.play();
+  }
+  
+  stop(){
+    this.moveAction.stop();
+  }
+  
+  getAnimationMixer(){
+    return this.animationMixer;
+  }
+  
+  getAction(){
+    return this.moveAction;
+  }
+  
+  setPosition(x, y, z){
+    this.mesh.position.set(x, y, z);
+  }
+  
+  setDestinationLetter(letterToStopAt){
+    this.destinationLetter = letterToStopAt;
+  }
+}
+
+function getModel(modelFilePath, xPos=null){
   return new Promise((resolve, reject) => {
     loader.load(
       modelFilePath,
@@ -71,37 +131,25 @@ function getModel(modelFilePath){
           name = name.substring(0, name.length);
           clips[name] = action;
         });
-        animationClips = clips;
         
         [...gltf.scene.children].forEach(c => {
           if(c.type === 'Object3D'){
-            c.children.forEach(x => {
-              if(x.name === 'flap1001'){
-                topFlap = x;
-              }else if(x.name === 'flap12001'){
-                bottomFlap = x;
-              }
-            });
+            const newDisplay = new SplitFlapDisplay(scene, c, textures, clips);
             
-            animationMixer = new THREE.AnimationMixer(c);
+            newDisplay.attachToScene();
             
-            animationMixer.addEventListener('loop', () => {
-              const letters = Array.from(Object.keys(textures));
-              const pick = letters[Math.floor(Math.random() * letters.length)];
-              const newTexture = textures[pick];
-              if(topFlap && newTexture.top) topFlap.material = newTexture.top;
-              if(bottomFlap && newTexture.bottom) bottomFlap.material = newTexture.bottom;
-            });
+            currentSplitFlapDisplays.push(newDisplay);
             
-            action = animationMixer.clipAction(animationClips['move']);
-            console.log(action);
+            if(xPos){
+              newDisplay.setPosition(
+                xPos,
+                c.position.y,
+                c.position.z,
+              );
+            }
           }
-          scene.add(c);
         });
         
-        console.log(scene);
-        console.log(topFlap);
-        console.log(bottomFlap);
         controls.target.set(scene.position.x, scene.position.y, scene.position.z);
       },
       // called while loading is progressing
@@ -149,20 +197,22 @@ function getTextures(){
 function update(){
   // move stuff around, etc.
   const sec = clock.getDelta();
-  if(animationMixer) animationMixer.update(sec);
+  
+  currentSplitFlapDisplays.forEach(disp => {
+    const animationMixer = disp.getAnimationMixer();
+    if(animationMixer) animationMixer.update(sec);
+  });
 }
 
 document.getElementById('test').addEventListener('click', () => {
-  const letters = Array.from(Object.keys(textures));
-  const pick = letters[Math.floor(Math.random() * letters.length)];
-  const newTexture = textures[pick];
-  if(topFlap && newTexture.top) topFlap.material = newTexture.top;
-  if(bottomFlap && newTexture.bottom) bottomFlap.material = newTexture.bottom;
-  if(!action.isRunning()){
-    action.play();
-  }else{
-    action.stop();
-  }
+  currentSplitFlapDisplays.forEach(disp => {
+    const action = disp.getAction();
+    if(!action.isRunning()){
+      action.play();
+    }else{
+      action.stop();
+    }
+  });
 });
 
 
@@ -173,6 +223,14 @@ function animate(){
   update();
 }
 
-getModel("../models/split-flap-idea.gltf");
 getTextures();
+
+const numDisplays = 3;
+let xPos = -5;
+
+for(let i = 0; i < numDisplays; i++){
+  getModel("../models/split-flap-idea.gltf", xPos);
+  xPos += 5;
+}
+
 animate();
