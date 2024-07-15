@@ -5,7 +5,7 @@ const container = document.getElementById("container");
 
 const fov = 60;
 const camera = new THREE.PerspectiveCamera(fov, container.clientWidth / container.clientHeight, 0.01, 1000);
-camera.position.set(0, 2, 10);
+camera.position.set(0, 2, 25);
 
 //const raycaster = new THREE.Raycaster();
 const mouse = new THREE.Vector2();
@@ -66,10 +66,6 @@ class SplitFlapDisplay {
     this.animationMixer = new THREE.AnimationMixer(mesh);
     
     this.animationMixer.addEventListener('loop', () => {
-      if(this.destinationLetter && this.destinationLetter === this.currentLetter){
-        this.moveAction.stop();
-      }
-      
       const letters = Array.from(Object.keys(textures));
       const pick = letters[Math.floor(Math.random() * letters.length)];
       const newTexture = textures[pick];
@@ -78,6 +74,10 @@ class SplitFlapDisplay {
       if(this.bottomFlap && newTexture.bottom) this.bottomFlap.material = newTexture.bottom;
       
       this.currentLetter = pick;
+      
+      if(this.destinationLetter && this.destinationLetter === this.currentLetter){
+        this.moveAction.stop();
+      }
     });
     
     this.moveAction = this.animationMixer.clipAction(animationClips['move']);
@@ -119,7 +119,7 @@ class SplitFlapDisplay {
   }
 }
 
-function getModel(modelFilePath, xPos=null){
+function getModel(modelFilePath, xPos=null, letterToStopAt=null){
   return new Promise((resolve, reject) => {
     loader.load(
       modelFilePath,
@@ -146,6 +146,10 @@ function getModel(modelFilePath, xPos=null){
                 c.position.y,
                 c.position.z,
               );
+            }
+            
+            if(letterToStopAt){
+              newDisplay.setDestinationLetter(letterToStopAt);
             }
           }
         });
@@ -225,12 +229,15 @@ function animate(){
 
 getTextures();
 
-const numDisplays = 3;
-let xPos = -5;
+const textToDisplay = "hello world";
+const distBetweenDisplays = 3;
+const numDisplays = textToDisplay.length;
+
+let xPos = -(Math.floor(numDisplays / 2) * distBetweenDisplays);
 
 for(let i = 0; i < numDisplays; i++){
-  getModel("../models/split-flap-idea.gltf", xPos);
-  xPos += 5;
+  getModel("../models/split-flap-idea.gltf", xPos, textToDisplay[i]);
+  xPos += distBetweenDisplays;
 }
 
 animate();
