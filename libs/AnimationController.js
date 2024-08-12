@@ -31,11 +31,25 @@ class AnimationController {
         // modify some clips as needed according to the animation map
         for(const state in data.states){
           for(const action in data.states[state]){
-            const actionParams = data.states[state][action];
-            if(actionParams.loop === "once"){
-              const actionClip = this.mixer.clipAction(this.clips[actionParams.actionName]);
-              actionClip.paused = false;
-              actionClip.setLoop(THREE.LoopOnce);
+            if(
+              data.states[state][action].top &&
+              data.states[state][action].bottom
+            ){
+              for(let prop in data.states[state][action]){
+                const actionParams = data.states[state][action][prop];
+                if(actionParams.loop === "once"){
+                  const actionClip = this.mixer.clipAction(this.clips[actionParams.actionName]);
+                  actionClip.paused = false;
+                  actionClip.setLoop(THREE.LoopOnce);
+                }
+              }
+            }else{
+              const actionParams = data.states[state][action];
+              if(actionParams.loop === "once"){
+                const actionClip = this.mixer.clipAction(this.clips[actionParams.actionName]);
+                actionClip.paused = false;
+                actionClip.setLoop(THREE.LoopOnce);
+              }
             }
           }
         }
@@ -104,17 +118,40 @@ class AnimationController {
       this.mixer.stopAllAction();
             
       this.currAction = actionToPlay;
-      actionToPlay = this.animationMap[this.currState][actionToPlay]['actionName'];
-            
-      const action = this.mixer.clipAction(this.clips[actionToPlay]);
-            
-      // https://stackoverflow.com/questions/31274674/reverse-keyframe-animation-in-three-js
-      if(action.time === 0 && timeScale === -1) {
-        action.time = action.getClip().duration;
+      
+      if(
+        this.animationMap[this.currState][actionToPlay].top &&
+        this.animationMap[this.currState][actionToPlay].bottom
+      ){
+        // we want to play 2 animations simultaneously (e.g. 2 separate animations
+        // that control the upper and lower body of the player)
+        const topAnim = this.animationMap[this.currState][actionToPlay].top.actionName;
+        const bottomAnim = this.animationMap[this.currState][actionToPlay].bottom.actionName;
+        
+        [topAnim, bottomAnim].forEach(anim => {
+          // clipAction returns an AnimationAction
+          const action = this.mixer.clipAction(this.clips[anim]);
+                
+          // https://stackoverflow.com/questions/31274674/reverse-keyframe-animation-in-three-js
+          if(action.time === 0 && timeScale === -1) {
+            action.time = action.getClip().duration;
+          }
+                
+          action.timeScale = timeScale;
+          action.play();
+        });
+      }else{
+        actionToPlay = this.animationMap[this.currState][actionToPlay]['actionName'];
+        
+        const action = this.mixer.clipAction(this.clips[actionToPlay]);
+        
+        if(action.time === 0 && timeScale === -1) {
+          action.time = action.getClip().duration;
+        }
+              
+        action.timeScale = timeScale;
+        action.play();
       }
-            
-      action.timeScale = timeScale;
-      action.play();
     }
   }
     

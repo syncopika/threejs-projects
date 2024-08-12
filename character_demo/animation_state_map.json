@@ -6,39 +6,75 @@
 				"loop": "repeat"
 			},
 			"run": {
-				"actionName": "run", 
-				"loop": "repeat"
+        "top": {
+          "actionName": "runarmsonly",
+          "loop": "repeat"
+        },
+        "bottom": {
+          "actionName": "runlegsonly",
+          "loop": "repeat"
+        }
 			},
 			"walk": {
-				"actionName": "walk",
-				"loop": "repeat"
+        "top": {
+          "actionName": "walkarmsonly",
+          "loop": "repeat"
+        },
+        "bottom": {
+          "actionName": "walklegsonly",
+          "loop": "repeat"
+        }
 			},
 			"jump": {
 				"actionName": "jump",
 				"loop": "once"
 			},
 			"drawgun": {
-				"actionName": "drawgun",
+				"actionName": "drawgunarmsonly",
 				"loop": "once"
 			}
 		},
 		"equip": {
 			"idle": {
-				"actionName": "idlegu",
+				"actionName": "idlegun",
 				"loop": "repeat"
 			},
 			"walk": {
-				"actionName": "walkgu",
-				"loop": "repeat"
+        "top": {
+          "actionName": "holdgunarmsonly",
+          "loop": "repeat"
+        },
+        "bottom": {
+          "actionName": "walklegsonly",
+          "loop": "repeat"
+        }
+			},
+			"run": {
+        "top": {
+          "actionName": "holdgunarmsonly",
+          "loop": "repeat"
+        },
+        "bottom": {
+          "actionName": "runlegsonly",
+          "loop": "repeat"
+        }
 			},
 			"reload": {
-				"actionName": "reloadgu",
+				"actionName": "reloadgun",
 				"loop": "once"
 			},
 			"drawgun": {
-				"actionName": "drawgun",
+				"actionName": "drawgunarmsonly",
 				"loop": "once"
-			}
+			},
+      "leftlean": {
+        "actionName": "leanleftgunarmsonly",
+        "loop": "repeat"
+      },
+      "rightlean": {
+        "actionName": "leanrightgunarmsonly",
+        "loop": "repeat"   
+      }
 		},
 		"crouch": {},
 		"prone": {}

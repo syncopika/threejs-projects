@@ -24,15 +24,15 @@
 		},
 		"equip": {
 			"idle": {
-				"actionName": "idlegu",
+				"actionName": "idlegun",
 				"loop": "repeat"
 			},
 			"walk": {
-				"actionName": "walkgu",
+				"actionName": "walkgun2",
 				"loop": "repeat"
 			},
 			"reload": {
-				"actionName": "reloadgu",
+				"actionName": "reloadgun",
 				"loop": "once"
 			},
 			"drawgun": {

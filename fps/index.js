@@ -199,8 +199,8 @@ function getModel(modelFilePath, name){
         if(gltf.animations.length > 0 && name === "player"){
           const clips = {};
           gltf.animations.forEach((action) => {
-            let name = action['name'].toLowerCase();
-            name = name.substring(0, name.length - 1);
+            let name = action['name'].replace('1', '').toLowerCase();
+            name = name.substring(0, name.length);
             clips[name] = action;
           });
           animationClips = clips;
@@ -454,14 +454,14 @@ function checkCollision(moveDistance, isReverse){
 }
 
 function keydown(evt){
-  if(evt.keyCode === 16){
+  if(evt.code === 'ShiftLeft'){
     // shift key
     // toggle between walk and run while moving
     if(animationController.currAction === 'walk'){
       animationController.changeAction('run');
       //animationController.setUpdateTimeDivisor(.12);
     }
-  }else if(evt.keyCode === 71){
+  }else if(evt.code === 'KeyG'){
     // g key
     // for toggling weapon/tool equip
     const handBone = player.hand;
@@ -489,7 +489,7 @@ function keydown(evt){
     }
     animationController.setUpdateTimeDivisor(0.002);
     animationController.changeAction("drawgun", timeScale);
-  }else if(evt.keyCode === 49){
+  }else if(evt.code === 'Digit1'){
     // toggle first-person view
     firstPersonViewOn = !firstPersonViewOn;
     sideViewOn = false;
@@ -515,7 +515,7 @@ function keydown(evt){
 }
 
 function keyup(evt){
-  if(evt.keyCode === 16){
+  if(evt.code === 'ShiftLeft'){
     if(animationController.currAction === 'run'){
       animationController.changeAction('walk');
       animationController.setUpdateTimeDivisor(.12);
@@ -533,7 +533,8 @@ document.getElementById("theCanvas").parentNode.addEventListener("pointerdown", 
         
     const impulseVal = parseInt(document.getElementById('impulseSlider').value);
     forwardVec.multiplyScalar(impulseVal);
-        
+    
+    // TODO: use the barrel of the rifle as the starting position of the projectile (might need to add a marker mesh)
     const sphere = generateProjectile(player.position.x, player.position.y + 1.0, player.position.z);
     sphere.sphereBody.applyImpulse(new CANNON.Vec3(forwardVec.x, forwardVec.y, forwardVec.z), sphere.sphereBody.position);
         

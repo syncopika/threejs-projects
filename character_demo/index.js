@@ -53,21 +53,61 @@ const loadedModels = [];
 let animationMixer = null;
 let animationClips = null;
 
+function removeUnneededAnimationTracks(animation){
+  // if animation name has "ArmsOnly"
+  // delete any tracks whose name contains one of ["leg", "toe", "foot"] (we only want upper body bones)
+  //
+  // if animation name has "LegsOnly"
+  // delete any tracks whose name contains one of ["hand", "arm", "chest", "torso", "neck", "head"]
+  
+  const armsonly = new Set(["hand", "arm", "chest", "torso", "neck", "head"]);
+  const legsonly = new Set(["leg", "toe", "foot"]);
+  
+  if(animation.name.toLowerCase().includes("armsonly")){
+    animation.tracks = animation.tracks.filter(x => {
+      let ok = false;
+      for(const term of armsonly){
+        if(x.name.toLowerCase().includes(term)){
+          ok = true;
+        }
+      }
+      return ok;
+    });
+  }else if(animation.name.toLowerCase().includes("legsonly")){
+    animation.tracks = animation.tracks.filter(x => {
+      let ok = false;
+      for(const term of legsonly){
+        if(x.name.toLowerCase().includes(term)){
+          ok = true;
+        }
+      }
+      return ok;
+    });
+  }
+}
+
 function getModel(modelFilePath, side, name){
   return new Promise((resolve, reject) => {
     loader.load(
       modelFilePath,
       function(gltf){
+        console.log(gltf.animations);
         if(gltf.animations.length > 0 && name === "p1"){
           const clips = {};
           gltf.animations.forEach((action) => {
-            let name = action['name'].toLowerCase();
-            name = name.substring(0, name.length - 1);
+            let name = action.name.replace('1', '').toLowerCase();
+            name = name.substring(0, name.length);
+            
+            // this is a little silly (or a lot silly) but for some reason
+            // my animations are including bones that I didn't select in Blender
+            // so need to manually remove them here :/
+            removeUnneededAnimationTracks(action);
+            
             clips[name] = action;
           });
           animationClips = clips;
         }
-                
+        
         // if a scene has multiple meshes you want (like for the m4 carbine),
         // do the traversal and attach the magazine mesh as a child or something to the m4 mesh.
         // then resolve the thing outside the traverse.
@@ -138,7 +178,7 @@ function getModel(modelFilePath, side, name){
 
 // https://threejs.org/docs/#api/en/textures/Texture
 loadedModels.push(getModel('../models/oceanfloor.glb', 'none', 'bg'));
-loadedModels.push(getModel('../models/humanoid-rig-with-gun.gltf', 'player', 'p1'));
+loadedModels.push(getModel('../models/humanoid-rig.gltf', 'player', 'p1'));
 loadedModels.push(getModel('../models/m4carbine-final.gltf', 'tool', 'obj'));
 
 let thePlayer = null;
@@ -174,8 +214,12 @@ Promise.all(loadedModels).then((objects) => {
       // similarly, if the height is > the character height, we're going downhill
       const cubeGeometry = new THREE.BoxGeometry(0.2,0.2,0.2);
       const material = new THREE.MeshBasicMaterial({color: 0x00ff00});
-      const head = new THREE.Mesh(cubeGeometry, material); 
-            
+      const head = new THREE.Mesh(cubeGeometry, material);
+      
+      const neck = mesh.skeleton.bones.find(x => x.name === 'Neck');
+      console.log(neck);
+      mesh.neck = neck;
+      
       mesh.add(head);
       mesh.head = head;
       head.position.set(0, 4, 0);
@@ -241,18 +285,14 @@ function moveBasedOnAction(controller, thePlayer, speed, reverse){
 }
 
 function keydown(evt){
-  if(evt.keyCode === 16){
-    // shift key
+  if(evt.code === 'ShiftLeft'){
     // toggle between walk and run while moving
     if(animationController.currAction === 'walk'){
       animationController.changeAction('run');
       animationController.setUpdateTimeDivisor(.12);
     }
-  }else if(evt.keyCode === 71){
-    // g key
+  }else if(evt.code === 'KeyG'){
     // for toggling weapon/tool equip
-        
-    // attach the tool
     // try attaching tool to player's hand?
     // https://stackoverflow.com/questions/19031198/three-js-attaching-object-to-bone
     // https://stackoverflow.com/questions/54270675/three-js-parenting-mesh-to-bone
@@ -282,7 +322,7 @@ function keydown(evt){
     }
     animationController.setUpdateTimeDivisor(.20);
     animationController.changeAction("drawgun", timeScale);
-  }else if(evt.keyCode === 49){
+  }else if(evt.code === 'Digit1'){
     // toggle first-person view
     firstPersonViewOn = !firstPersonViewOn;
     sideViewOn = false;
@@ -299,16 +339,15 @@ function keydown(evt){
     }else{
       scene.add(camera);
     }
-  }else if(evt.keyCode === 50){
+  }else if(evt.code === 'Digit2'){
     // toggle side view
     firstPersonViewOn = false;
     sideViewOn = !sideViewOn;
-        
   }
 }
 
 function keyup(evt){
-  if(evt.keyCode === 16){
+  if(evt.code === 'ShiftLeft'){
     if(animationController.currAction === 'run'){
       animationController.changeAction('walk');
       animationController.setUpdateTimeDivisor(.12);
@@ -336,8 +375,7 @@ function update(){
       animationController.changeAction('walk');
     }
     animationController.setUpdateTimeDivisor(.10);
-    moveBasedOnAction(animationController, thePlayer, moveDistance, false);
-        
+    moveBasedOnAction(animationController, thePlayer, moveDistance, false);   
   }else if(keyboard.pressed("S")){
     // moving backwards
     if(animationController.currAction !== "run"){
@@ -345,7 +383,6 @@ function update(){
     }
     animationController.setUpdateTimeDivisor(.10);
     moveBasedOnAction(animationController, thePlayer, moveDistance, true);
-        
   }else if(!keyboard.pressed("W") && !keyboard.pressed("S")){
     // for idle pose
     // can we make this less specific i.e. don't explicitly check for "drawgun"?
@@ -373,6 +410,12 @@ function update(){
   if(keyboard.pressed("D")){
     thePlayer.rotateOnAxis(new THREE.Vector3(0, 1, 0), -rotationAngle);
   }
+  
+  if(keyboard.pressed("Q")){
+    animationController.changeAction('leftlean');
+  }else if(keyboard.pressed("E")){
+    animationController.changeAction('rightlean');
+  }
     
   adjustVerticalHeightBasedOnTerrain(thePlayer, raycaster, scene);
     
@@ -390,14 +433,14 @@ function update(){
   }else{
     relCameraOffset = new THREE.Vector3(0, 3, 15);
   }
-    
+  
   if(!firstPersonViewOn){
     const cameraOffset = relCameraOffset.applyMatrix4(thePlayer.matrixWorld);
     camera.position.x = cameraOffset.x;
     camera.position.y = cameraOffset.y;
     camera.position.z = cameraOffset.z;
   }
-    
+  
   if(!firstPersonViewOn) camera.lookAt(thePlayer.position);
 }
 
