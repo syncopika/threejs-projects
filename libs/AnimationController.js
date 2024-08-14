@@ -43,7 +43,7 @@ class AnimationController {
           for(const action in data.states[state]){
             const actionParams = data.states[state][action];
             const actionClip = this.mixer.clipAction(this.clips[actionParams.actionName]);
-            if(actionParams.loop === "once"){
+            if(actionParams.loop === 'once'){
               actionClip.paused = false;
               actionClip.setLoop(THREE.LoopOnce);
             }
@@ -58,7 +58,7 @@ class AnimationController {
     // TODO: how bout running a promise that'll switch back to the idle animation
     // after equip if finished?
     this.mixer.addEventListener('finished', (evt) => {
-      if(evt.action._clip.name.indexOf("DrawGunArmsOnly") > -1){
+      if(evt.action._clip.name.indexOf('DrawGunArmsOnly') > -1){
         if(this.currActionTimescale === -1){
           // de-equip == this animation played backwards
           // hide the weapon when de-equipping

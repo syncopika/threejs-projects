@@ -56,53 +56,18 @@ let currAction = null;
 
 let neckMarker = null;
 
-function removeUnneededAnimationTracks(animation){
-  // if animation name has "ArmsOnly"
-  // delete any tracks whose name contains one of ["leg", "toe", "foot"] (we only want upper body bones)
-  //
-  // if animation name has "LegsOnly"
-  // delete any tracks whose name contains one of ["hand", "arm", "chest", "torso", "neck", "head"]
-  const armsonly = new Set(["hand", "arm", "chest", "torso", "neck", "head"]);
-  const legsonly = new Set(["leg", "toe", "foot", "pelvis"]);
-  
-  if(animation.name.toLowerCase().includes("armsonly")){
-    animation.tracks = animation.tracks.filter(x => {
-      let ok = false;
-      for(const term of armsonly){
-        if(x.name.toLowerCase().includes(term)){
-          ok = true;
-        }
-      }
-      return ok;
-    });
-  }else if(animation.name.toLowerCase().includes("legsonly")){
-    animation.tracks = animation.tracks.filter(x => {
-      let ok = false;
-      for(const term of legsonly){
-        if(x.name.toLowerCase().includes(term)){
-          ok = true;
-        }
-      }
-      return ok;
-    });
-  }
-}
-
 function getModel(modelFilePath, side, name){
   return new Promise((resolve, reject) => {
     loader.load(
       modelFilePath,
       function(gltf){
-        //console.log(gltf.animations);
         if(gltf.animations.length > 0 && name === "p1"){
           const clips = {};
           gltf.animations.forEach((action) => {
             let name = action.name.replace("1", "").toLowerCase();
             name = name.substring(0, name.length);
             
-            // this is a bit silly but for some reason
-            // my animations are including bones that I didn't select in Blender
-            // so need to manually remove them here :/
+            // from libs/utils.js
             removeUnneededAnimationTracks(action);
             
             clips[name] = action;
@@ -150,7 +115,6 @@ function getModel(modelFilePath, side, name){
         // for the carbine (or really any scene with multiple meshes)
         if(name === "obj"){
           const m4carbine = carbine[0];
-          //console.log(m4carbine.skeleton);
           m4carbine.add(m4carbine.skeleton.bones[0]);
           m4carbine.name = name;
                     
@@ -218,7 +182,6 @@ Promise.all(loadedModels).then((objects) => {
       const head = new THREE.Mesh(cubeGeometry, material);
       
       const neck = mesh.skeleton.bones.find(x => x.name === "Neck");
-      //console.log(neck);
       
       const cubeGeometry2 = new THREE.BoxGeometry(2.2, 2.2, 2.2);
       const material2 = new THREE.MeshBasicMaterial({color: 0x0000ff});
@@ -282,7 +245,6 @@ function adjustVerticalHeightBasedOnTerrain(thePlayer, raycaster, scene){
 
 function moveBasedOnAction(controller, thePlayer, speed, reverse){
   const action = controller.bottomAnimation.name;
-  console.log(action);
   if(action && (action.includes("walk") || action.includes("run"))){
     if(action.includes("run")){
       speed += 0.12;
@@ -299,11 +261,10 @@ function keydown(evt){
   if(evt.code === "ShiftLeft"){
     // toggle between walk and run while moving
     if(currAction === "walk"){
-      //console.log("running");
       currAction = "run";
+      animationController.setUpdateTimeDivisor(.12);
       animationController.changeAction("run-arms", "top");
       animationController.changeAction("run-legs", "bottom");
-      animationController.setUpdateTimeDivisor(.12);
     }
   }else if(evt.code === "KeyG"){
     // for toggling weapon/tool equip
@@ -364,9 +325,9 @@ function keyup(evt){
   if(evt.code === "ShiftLeft"){
     if(currAction === "run"){
       currAction = "walk";
+      animationController.setUpdateTimeDivisor(.12);
       animationController.changeAction("walk-arms", "top");
       animationController.changeAction("walk-legs", "bottom");
-      animationController.setUpdateTimeDivisor(.12);
     }
   }
 }
@@ -389,25 +350,25 @@ function update(){
     // moving forwards
     if(currAction !== "run"){
       currAction = "walk";
+      animationController.setUpdateTimeDivisor(.10);
       animationController.changeAction("walk-legs", "bottom");
     }
-    animationController.setUpdateTimeDivisor(.10);
     moveBasedOnAction(animationController, thePlayer, moveDistance, false);   
   }else if(keyboard.pressed("s")){
     // moving backwards
     if(currAction !== "run"){
       currAction = "walk";
+      animationController.setUpdateTimeDivisor(.10);
       animationController.changeAction("walk-legs", "bottom", -1);
     }
-    animationController.setUpdateTimeDivisor(.10);
     moveBasedOnAction(animationController, thePlayer, moveDistance, true);
   }else if(!keyboard.pressed("w") && !keyboard.pressed("s")){
     // for idle pose
     if(currAction !== "drawgun"){
       currAction = "idle";
+      animationController.setUpdateTimeDivisor(.50);
       animationController.changeAction("idle-arms", "top");
       animationController.changeAction("idle-legs", "bottom");
-      animationController.setUpdateTimeDivisor(.50);
     }
   }
     
