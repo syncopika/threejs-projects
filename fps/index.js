@@ -433,16 +433,16 @@ Promise.all(loadedModels).then(objects => {
   });
 });
 
-function moveBasedOnAction(controller, thePlayer, speed, reverse){
+function moveBasedOnAction(controller, player, speed, reverse){
   const action = controller.bottomAnimation.name;
   if(action && (action.includes("walk") || action.includes("run"))){
     if(action.includes("run")){
-      speed += 0.12;
+      speed += 0.10;
     }
     if(reverse){
-      thePlayer.translateZ(-speed);
+      player.translateZ(-speed);
     }else{
-      thePlayer.translateZ(speed);
+      player.translateZ(speed);
     }
   }
 }
@@ -473,7 +473,6 @@ function keydown(evt){
     // toggle between walk and run while moving
     if(currAction === "walk"){
       currAction = "run";
-      animationController.setUpdateTimeDivisor(.12);
       animationController.changeAction("run-arms", "top");
       animationController.changeAction("run-legs", "bottom");
     }
@@ -504,9 +503,8 @@ function keydown(evt){
       animationController.changeState("normal"); // go back to normal state
       timeScale = -1; // need to play equip animation backwards to put away weapon
     }
-    
+    animationController.setUpdateTimeDivisor(.002);
     currAction = "drawgun";
-    animationController.setUpdateTimeDivisor(.20);
     animationController.changeAction("drawgun", "top", timeScale);
   }else if(evt.code === "Digit1"){
     // toggle first-person view
@@ -596,25 +594,29 @@ function update(){
     
   if(keyboard.pressed("w")){
     // moving forwards
+    animationController.setUpdateTimeDivisor(.008);
     if(currAction !== "run"){
       currAction = "walk";
-      animationController.setUpdateTimeDivisor(.01);
       animationController.changeAction("walk-legs", "bottom");
     }
-    moveBasedOnAction(animationController, player, moveDistance, false);   
+    if(!checkCollision(moveDistance, false)){
+      moveBasedOnAction(animationController, player, moveDistance, false);
+    }
   }else if(keyboard.pressed("s")){
     // moving backwards
+    animationController.setUpdateTimeDivisor(.008);
     if(currAction !== "run"){
       currAction = "walk";
-      animationController.setUpdateTimeDivisor(.01);
-      animationController.changeAction("walk-legs", "bottom", -1);
+      if(!checkCollision(moveDistance, true)){
+        animationController.changeAction("walk-legs", "bottom", -1);
+      }
     }
     moveBasedOnAction(animationController, player, moveDistance, true);
   }else if(!keyboard.pressed("w") && !keyboard.pressed("s")){
     // for idle pose
     if(currAction !== "drawgun"){
       currAction = "idle";
-      animationController.setUpdateTimeDivisor(.50);
+      animationController.setUpdateTimeDivisor(.05);
       animationController.changeAction("idle-arms", "top");
       animationController.changeAction("idle-legs", "bottom");
     }
