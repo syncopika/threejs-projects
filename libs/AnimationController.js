@@ -125,7 +125,6 @@ class AnimationController {
       }
             
       this.currActionTimescale = timeScale;
-      //this.mixer.stopAllAction();
       
       const action = this.mixer.clipAction(this.clips[this.animationMap[this.currState][actionToPlay].actionName]);
       

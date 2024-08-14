@@ -16,3 +16,5 @@ the coordinate system of the weapon was different.
     
 3. added an animation controller    
 Animating with several actions and managing them became a bit difficult quickly without having an additional object to help.    
+    
+4. player model animations are split into two parts: a top and bottom so that each animation controls a separate set of bones so that we can mix and match different animations that only concern a specifc set of bones. this is useful (or perhaps necessary?) for handling instances like running with a weapon equipped vs. running without a weapon equipped.     

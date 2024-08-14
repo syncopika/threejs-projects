@@ -485,7 +485,7 @@ function keydown(evt){
       handBone.add(tool);
       // also register the tool in the animationcontroller so we can hide it at the 
       // right time when de-equipping
-      // yeah, doing it this way is still kinda weird. :/
+      // but doing it this way is still kinda weird. :/
       animationController.addObject(tool);
     }
         
@@ -503,22 +503,22 @@ function keydown(evt){
       animationController.changeState("normal"); // go back to normal state
       timeScale = -1; // need to play equip animation backwards to put away weapon
     }
-    animationController.setUpdateTimeDivisor(.002);
+    animationController.setUpdateTimeDivisor(.0015);
     currAction = "drawgun";
     animationController.changeAction("drawgun", "top", timeScale);
   }else if(evt.code === "Digit1"){
     // toggle first-person view
     firstPersonViewOn = !firstPersonViewOn;
     sideViewOn = false;
-        
+    
     // make sure camera is in the head position
     // and that the camera is parented to the character mesh
     // so that it can rotate with the mesh
     if(firstPersonViewOn){
       neckMarker.add(camera);
-      camera.position.copy(player.head.position);
-      camera.position.z -= 1.5;
-      camera.position.y -= 1.2;
+      camera.position.copy(neckMarker.position);
+      camera.position.z -= 1.0;
+      camera.position.y -= 0.2;
       //camera.rotation.copy(player.chest.rotation);
       //camera.rotateY(Math.PI);
       camera.rotation.set(0, Math.PI, 0);
@@ -573,10 +573,7 @@ document.getElementById("theCanvas").parentNode.addEventListener("mousemove", (e
         
     player.chest.rotation.x = -mouseMoveY;
     player.chest.rotation.y = mouseMoveX;
-        
-    camera.position.copy(player.head.position);
-    camera.position.z += 0.9;
-    camera.position.y -= 0.4;
+    
     camera.rotation.copy(player.chest.rotation);
     camera.rotateY(Math.PI);
   }
@@ -607,11 +604,11 @@ function update(){
     animationController.setUpdateTimeDivisor(.008);
     if(currAction !== "run"){
       currAction = "walk";
-      if(!checkCollision(moveDistance, true)){
-        animationController.changeAction("walk-legs", "bottom", -1);
-      }
+      animationController.changeAction("walk-legs", "bottom", -1);
     }
-    moveBasedOnAction(animationController, player, moveDistance, true);
+    if(!checkCollision(moveDistance, true)){
+      moveBasedOnAction(animationController, player, moveDistance, true);
+    }
   }else if(!keyboard.pressed("w") && !keyboard.pressed("s")){
     // for idle pose
     if(currAction !== "drawgun"){
