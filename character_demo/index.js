@@ -1,4 +1,4 @@
-import { AnimationController } from '../libs/AnimationController.js';
+import { AnimationController } from "../libs/AnimationController.js";
 
 const container = document.getElementById("container");
 const fov = 60;
@@ -23,8 +23,8 @@ renderer.setSize(container.clientWidth, container.clientHeight);
 container.appendChild(renderer.domElement);
 
 // set up mobile keyboard
-document.getElementById('showKeyboard').addEventListener('click', () => {
-  new JSKeyboard(document.getElementById('mobileKeyboard'));
+document.getElementById("showKeyboard").addEventListener("click", () => {
+  new JSKeyboard(document.getElementById("mobileKeyboard"));
 });
 
 const camera = defaultCamera;
@@ -52,6 +52,9 @@ let animationController;
 const loadedModels = [];
 let animationMixer = null;
 let animationClips = null;
+let currAction = null;
+
+let neckMarker = null;
 
 function removeUnneededAnimationTracks(animation){
   // if animation name has "ArmsOnly"
@@ -59,9 +62,8 @@ function removeUnneededAnimationTracks(animation){
   //
   // if animation name has "LegsOnly"
   // delete any tracks whose name contains one of ["hand", "arm", "chest", "torso", "neck", "head"]
-  
   const armsonly = new Set(["hand", "arm", "chest", "torso", "neck", "head"]);
-  const legsonly = new Set(["leg", "toe", "foot"]);
+  const legsonly = new Set(["leg", "toe", "foot", "pelvis"]);
   
   if(animation.name.toLowerCase().includes("armsonly")){
     animation.tracks = animation.tracks.filter(x => {
@@ -91,14 +93,14 @@ function getModel(modelFilePath, side, name){
     loader.load(
       modelFilePath,
       function(gltf){
-        console.log(gltf.animations);
+        //console.log(gltf.animations);
         if(gltf.animations.length > 0 && name === "p1"){
           const clips = {};
           gltf.animations.forEach((action) => {
-            let name = action.name.replace('1', '').toLowerCase();
+            let name = action.name.replace("1", "").toLowerCase();
             name = name.substring(0, name.length);
             
-            // this is a little silly (or a lot silly) but for some reason
+            // this is a bit silly but for some reason
             // my animations are including bones that I didn't select in Blender
             // so need to manually remove them here :/
             removeUnneededAnimationTracks(action);
@@ -161,15 +163,14 @@ function getModel(modelFilePath, side, name){
 
           resolve(m4carbine);
         }
-                
       },
       // called while loading is progressing
       function(xhr){
-        console.log( (xhr.loaded / xhr.total * 100) + '% loaded' );
+        console.log( (xhr.loaded / xhr.total * 100) + "% loaded" );
       },
       // called when loading has errors
       function(error){
-        console.log('An error happened');
+        console.log("An error happened");
         console.log(error);
       }
     );
@@ -177,9 +178,9 @@ function getModel(modelFilePath, side, name){
 }
 
 // https://threejs.org/docs/#api/en/textures/Texture
-loadedModels.push(getModel('../models/oceanfloor.glb', 'none', 'bg'));
-loadedModels.push(getModel('../models/humanoid-rig.gltf', 'player', 'p1'));
-loadedModels.push(getModel('../models/m4carbine-final.gltf', 'tool', 'obj'));
+loadedModels.push(getModel("../models/oceanfloor.glb", "none", "bg"));
+loadedModels.push(getModel("../models/humanoid-rig.gltf", "player", "p1"));
+loadedModels.push(getModel("../models/m4carbine-final.gltf", "tool", "obj"));
 
 let thePlayer = null;
 let tool = null;
@@ -205,19 +206,28 @@ Promise.all(loadedModels).then((objects) => {
       thePlayer = mesh;
 
       // add a 3d object (cube) to serve as a marker for the 
-      // location of the head of the mesh. we'll use this to 
+      // location of the head of the mesh. we"ll use this to 
       // create a vertical ray towards the ground
       // this ray can tell us the current height.
       // if the height is < the height of our character,
-      // we know that we're on an uphill part of the terrain 
+      // we know that we"re on an uphill part of the terrain 
       // and can adjust our character accordingly
-      // similarly, if the height is > the character height, we're going downhill
-      const cubeGeometry = new THREE.BoxGeometry(0.2,0.2,0.2);
+      // similarly, if the height is > the character height, we"re going downhill
+      const cubeGeometry = new THREE.BoxGeometry(0.2, 0.2, 0.2);
       const material = new THREE.MeshBasicMaterial({color: 0x00ff00});
       const head = new THREE.Mesh(cubeGeometry, material);
       
-      const neck = mesh.skeleton.bones.find(x => x.name === 'Neck');
-      console.log(neck);
+      const neck = mesh.skeleton.bones.find(x => x.name === "Neck");
+      //console.log(neck);
+      
+      const cubeGeometry2 = new THREE.BoxGeometry(2.2, 2.2, 2.2);
+      const material2 = new THREE.MeshBasicMaterial({color: 0x0000ff});
+      neckMarker = new THREE.Mesh(cubeGeometry2, material2);
+      neck.add(neckMarker);
+      //neckMarker.material.wireframe = true;
+      neckMarker.material.transparent = true;
+      neckMarker.material.opacity = 0.0;
+      
       mesh.neck = neck;
       
       mesh.add(head);
@@ -227,9 +237,9 @@ Promise.all(loadedModels).then((objects) => {
       animationMixer = new THREE.AnimationMixer(mesh);
       animationController = new AnimationController(thePlayer, animationMixer, animationClips, clock);
       animationController.changeState("normal"); // set normal state by default for animations. see animation_state_map.json
-
+      
       mesh.position.set(0, 2.8, -10);
-      mesh.rotateOnAxis(new THREE.Vector3(0,1,0), Math.PI);
+      mesh.rotateOnAxis(new THREE.Vector3(0, 1, 0), Math.PI);
       mesh.originalColor = mesh.material;
             
       // alternate materials used for the sub depending on condition 
@@ -254,10 +264,10 @@ Promise.all(loadedModels).then((objects) => {
 
 // checkTerrainHeight comes from utils.js in /lib
 function adjustVerticalHeightBasedOnTerrain(thePlayer, raycaster, scene){
-  // for now I'm hardcoding the expected height at level terrain 
+  // for now I"m hardcoding the expected height at level terrain 
   const baseline = 2.75;
   const head = getCenter(thePlayer.head);
-  const verticalDirection = checkTerrainHeight(head, raycaster, terrain, document.getElementById('height'));
+  const verticalDirection = checkTerrainHeight(head, raycaster, terrain, document.getElementById("height"));
     
   if(verticalDirection < 2.74){
     // go uphill so increase y
@@ -271,9 +281,10 @@ function adjustVerticalHeightBasedOnTerrain(thePlayer, raycaster, scene){
 }
 
 function moveBasedOnAction(controller, thePlayer, speed, reverse){
-  const action = controller.currAction;
-  if(action === 'walk' || action === 'run'){
-    if(action === 'run'){
+  const action = controller.bottomAnimation.name;
+  console.log(action);
+  if(action && (action.includes("walk") || action.includes("run"))){
+    if(action.includes("run")){
       speed += 0.12;
     }
     if(reverse){
@@ -285,21 +296,22 @@ function moveBasedOnAction(controller, thePlayer, speed, reverse){
 }
 
 function keydown(evt){
-  if(evt.code === 'ShiftLeft'){
+  if(evt.code === "ShiftLeft"){
     // toggle between walk and run while moving
-    if(animationController.currAction === 'walk'){
-      animationController.changeAction('run');
+    if(currAction === "walk"){
+      //console.log("running");
+      currAction = "run";
+      animationController.changeAction("run-arms", "top");
+      animationController.changeAction("run-legs", "bottom");
       animationController.setUpdateTimeDivisor(.12);
     }
-  }else if(evt.code === 'KeyG'){
+  }else if(evt.code === "KeyG"){
     // for toggling weapon/tool equip
-    // try attaching tool to player's hand?
     // https://stackoverflow.com/questions/19031198/three-js-attaching-object-to-bone
     // https://stackoverflow.com/questions/54270675/three-js-parenting-mesh-to-bone
     const handBone = thePlayer.hand;
     if(handBone.children.length === 0){
       handBone.add(tool);
-            
       // also register the tool in the animationcontroller so we can hide it at the 
       // right time when de-equipping
       // yeah, doing it this way is still kinda weird. :/
@@ -310,7 +322,7 @@ function keydown(evt){
     tool.position.set(0, 0.2, -0.3); // the coordinate system is a bit out of whack for the weapon...
         
     // the weapon-draw/hide animation should lead directly to the corresponding idle animation
-    // since I have the event listener for a 'finished' action set up
+    // since I have the event listener for a "finished" action set up
     let timeScale = 1;
         
     if(animationController.currState === "normal"){
@@ -320,9 +332,11 @@ function keydown(evt){
       animationController.changeState("normal"); // go back to normal state
       timeScale = -1; // need to play equip animation backwards to put away weapon
     }
+    
+    currAction = "drawgun";
     animationController.setUpdateTimeDivisor(.20);
-    animationController.changeAction("drawgun", timeScale);
-  }else if(evt.code === 'Digit1'){
+    animationController.changeAction("drawgun", "top", timeScale);
+  }else if(evt.code === "Digit1"){
     // toggle first-person view
     firstPersonViewOn = !firstPersonViewOn;
     sideViewOn = false;
@@ -331,15 +345,15 @@ function keydown(evt){
     // and that the camera is parented to the character mesh
     // so that it can rotate with the mesh
     if(firstPersonViewOn){
-      thePlayer.add(camera);
+      neckMarker.add(camera);
       camera.position.copy(thePlayer.head.position);
-      camera.position.z += 1.0;
-      camera.position.y -= 0.4;
+      camera.position.z -= 1.5;
+      camera.position.y -= 1.2;
       camera.rotation.set(0, Math.PI, 0);
     }else{
       scene.add(camera);
     }
-  }else if(evt.code === 'Digit2'){
+  }else if(evt.code === "Digit2"){
     // toggle side view
     firstPersonViewOn = false;
     sideViewOn = !sideViewOn;
@@ -347,9 +361,11 @@ function keydown(evt){
 }
 
 function keyup(evt){
-  if(evt.code === 'ShiftLeft'){
-    if(animationController.currAction === 'run'){
-      animationController.changeAction('walk');
+  if(evt.code === "ShiftLeft"){
+    if(currAction === "run"){
+      currAction = "walk";
+      animationController.changeAction("walk-arms", "top");
+      animationController.changeAction("walk-legs", "bottom");
       animationController.setUpdateTimeDivisor(.12);
     }
   }
@@ -369,52 +385,44 @@ function update(){
     changeCameraView = true;
   }
     
-  if(keyboard.pressed("W")){
+  if(keyboard.pressed("w")){
     // moving forwards
-    if(animationController.currAction !== "run"){
-      animationController.changeAction('walk');
+    if(currAction !== "run"){
+      currAction = "walk";
+      animationController.changeAction("walk-legs", "bottom");
     }
     animationController.setUpdateTimeDivisor(.10);
     moveBasedOnAction(animationController, thePlayer, moveDistance, false);   
-  }else if(keyboard.pressed("S")){
+  }else if(keyboard.pressed("s")){
     // moving backwards
-    if(animationController.currAction !== "run"){
-      animationController.changeAction('walk', -1);
+    if(currAction !== "run"){
+      currAction = "walk";
+      animationController.changeAction("walk-legs", "bottom", -1);
     }
     animationController.setUpdateTimeDivisor(.10);
     moveBasedOnAction(animationController, thePlayer, moveDistance, true);
-  }else if(!keyboard.pressed("W") && !keyboard.pressed("S")){
+  }else if(!keyboard.pressed("w") && !keyboard.pressed("s")){
     // for idle pose
-    // can we make this less specific i.e. don't explicitly check for "drawgun"?
-    if(animationController.currAction !== 'idle' && animationController.currAction !== "drawgun"){
-      animationController.changeAction('idle');
+    if(currAction !== "drawgun"){
+      currAction = "idle";
+      animationController.changeAction("idle-arms", "top");
+      animationController.changeAction("idle-legs", "bottom");
       animationController.setUpdateTimeDivisor(.50);
     }
   }
     
-  if(keyboard.pressed("J")){
-    // for jumping
-    // this one is not yet working and a bit tricky to think about for me - the animation 
-    // is currently set to loop once and I'm not really sure yet how 
-    // to set up the transition. maybe I need to keep a reference to 
-    // the previous action before I trigger the jump?
-    animationController.changeAction('jump');
-    animationController.setUpdateTimeDivisor(.12);
-    //moveBasedOnState(state, thePlayer, moveDistance, true);
-  }
-    
-  if(keyboard.pressed("A")){
+  if(keyboard.pressed("a")){
     thePlayer.rotateOnAxis(new THREE.Vector3(0, 1, 0), rotationAngle);
   }
     
-  if(keyboard.pressed("D")){
+  if(keyboard.pressed("d")){
     thePlayer.rotateOnAxis(new THREE.Vector3(0, 1, 0), -rotationAngle);
   }
   
-  if(keyboard.pressed("Q")){
-    animationController.changeAction('leftlean');
-  }else if(keyboard.pressed("E")){
-    animationController.changeAction('rightlean');
+  if(keyboard.pressed("q")){
+    animationController.changeAction("leftlean", "top");
+  }else if(keyboard.pressed("e")){
+    animationController.changeAction("rightlean", "top");
   }
     
   adjustVerticalHeightBasedOnTerrain(thePlayer, raycaster, scene);
@@ -424,9 +432,7 @@ function update(){
     
   let relCameraOffset;
     
-  if(firstPersonViewOn){
-    // nothing to do
-  }else if(sideViewOn){
+  if(sideViewOn){
     relCameraOffset = new THREE.Vector3(-10, 3, 0);
   }else if(!changeCameraView){
     relCameraOffset = new THREE.Vector3(0, 3, -15);
