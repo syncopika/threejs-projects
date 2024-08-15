@@ -5,21 +5,31 @@ class AnimationController {
 
   mixer; // animation mixer
   clips; // all the clips for animation
-  currAction; // current animation of character (action name) - rename to currAction
+  //currActions; // currently-playing animations of character
   currState; // the state of character i.e. weapon equip or not
   character; // a reference to the mesh that this controller belongs to
   timeDivisor; // number to divide the time by when updating (i.e. a smaller num == faster animation)
   animationMap; // for knowing which actions correspond to which states
+  topAnimation;
+  bottomAnimation;
 
   constructor(character, animMixer, animClips, clock){
     this.character = character;
     this.mixer = animMixer;
     this.clips = animClips;
     this.clock = clock;
-    this.currAction = "";
+    /*
+    this.currActions = {
+      top: new Set(),
+      bottom: new Set(),
+    };*/
     this.currState = "";
     this.currActionTimescale = 1;
     this.animationMap = null;
+    
+    // separate character model animations based on area they affect
+    this.topAnimation = null;
+    this.bottomAnimation = null;
         
     this.objects = []; // objects that should have visibility turned on/off at some point
         
@@ -32,8 +42,8 @@ class AnimationController {
         for(const state in data.states){
           for(const action in data.states[state]){
             const actionParams = data.states[state][action];
-            if(actionParams.loop === "once"){
-              const actionClip = this.mixer.clipAction(this.clips[actionParams.actionName]);
+            const actionClip = this.mixer.clipAction(this.clips[actionParams.actionName]);
+            if(actionParams.loop === 'once'){
               actionClip.paused = false;
               actionClip.setLoop(THREE.LoopOnce);
             }
@@ -45,18 +55,19 @@ class AnimationController {
     // makes sure the draw-weapon animation gets played first and then 
     // the corresponding idle animation is played directly after it
     // what if you want to equip while walking or running though? :/
+    // TODO: how bout running a promise that'll switch back to the idle animation
+    // after equip if finished?
     this.mixer.addEventListener('finished', (evt) => {
-      if(evt.action._clip.name.indexOf("DrawGun") > -1){
+      if(evt.action._clip.name.indexOf('DrawGunArmsOnly') > -1){
         if(this.currActionTimescale === -1){
           // de-equip == this animation played backwards
           // hide the weapon when de-equipping
           this.toggleObjectVisibility();
         }
-                
         // draw gun then go to idle with gun
         // we just want to play the gun draw animation once
         this.timeDivisor = .60;
-        this.changeAction('idle', 1);
+        this.changeAction('idle-arms', 'top', 1);
       }
     });
   }
@@ -78,10 +89,23 @@ class AnimationController {
   changeState(newState){
     this.currState = newState;
   }
+  
+  needToChangeAction(actionName, location){
+    if(location === "top" && this.topAnimation){
+      return actionName !== this.topAnimation.name;
+    }else if(location === "bottom" && this.bottomAnimation){
+      return actionName !== this.bottomAnimation.name;
+    }else if(location === "top" && !this.topAnimation){
+      return true;
+    }else if(location === "bottom" && !this.bottomAnimation){
+      return true;
+    }
+    return false;
+  }
     
-  changeAction(newAction, timeScale=1){
+  changeAction(newAction, location, timeScale=1){
     // if a diff state or timescale is different
-    if(newAction !== this.currAction || timeScale !== this.currActionTimescale){
+    if(this.needToChangeAction(newAction, location) || timeScale !== this.currActionTimescale){
       this.playAnimation(newAction, this.clock.getDelta(), timeScale);
     }
   }
@@ -101,25 +125,30 @@ class AnimationController {
       }
             
       this.currActionTimescale = timeScale;
-      this.mixer.stopAllAction();
-            
-      this.currAction = actionToPlay;
-      actionToPlay = this.animationMap[this.currState][actionToPlay]['actionName'];
-            
-      const action = this.mixer.clipAction(this.clips[actionToPlay]);
-            
-      // https://stackoverflow.com/questions/31274674/reverse-keyframe-animation-in-three-js
+      
+      const action = this.mixer.clipAction(this.clips[this.animationMap[this.currState][actionToPlay].actionName]);
+      
       if(action.time === 0 && timeScale === -1) {
         action.time = action.getClip().duration;
       }
-            
+      
+      const actionParams = this.animationMap[this.currState][actionToPlay];
+      
+      if(actionParams.top){
+        if(this.topAnimation) this.topAnimation.action.stop();
+        this.topAnimation = {action, name: actionToPlay};
+      }else if(actionParams.bottom){
+        if(this.bottomAnimation) this.bottomAnimation.action.stop();
+        this.bottomAnimation = {action, name: actionToPlay};
+      }
+      
       action.timeScale = timeScale;
       action.play();
     }
   }
     
   update(){
-    this.mixer.update(this.clock.getDelta()/this.timeDivisor);
+    this.mixer.update(this.clock.getDelta() / this.timeDivisor);
   }
     
 }

@@ -71,12 +71,14 @@ let animationController;
 const loadedModels = [];
 let animationMixer = null;
 let animationClips = null;
+let currAction = null;
 
 let player = null;
 let tool = null;
 let terrain = null;
 let firstPersonViewOn = false;
 let sideViewOn = false;
+let neckMarker = null;
 //let playerBody;
 
 const mouseX = 0;
@@ -199,8 +201,12 @@ function getModel(modelFilePath, name){
         if(gltf.animations.length > 0 && name === "player"){
           const clips = {};
           gltf.animations.forEach((action) => {
-            let name = action['name'].toLowerCase();
-            name = name.substring(0, name.length - 1);
+            let name = action.name.replace("1", "").toLowerCase();
+            name = name.substring(0, name.length);
+            
+            // from libs/utils.js
+            removeUnneededAnimationTracks(action);
+            
             clips[name] = action;
           });
           animationClips = clips;
@@ -272,7 +278,7 @@ function getModel(modelFilePath, name){
   });
 }
 
-loadedModels.push(getModel('../models/humanoid-rig-with-gun.gltf', 'player'));
+loadedModels.push(getModel('../models/humanoid-rig.gltf', 'player'));
 loadedModels.push(getModel('../models/m4carbine-final.gltf', 'obj'));
 loadedModels.push(getModel('../models/target.gltf', 'target'));
 loadedModels.push(getModel('../models/box.gltf', 'box'));
@@ -388,6 +394,15 @@ Promise.all(loadedModels).then(objects => {
       mesh.add(head);
       mesh.head = head;
       head.position.set(0, 4, 0);
+      
+      const neck = mesh.skeleton.bones.find(x => x.name === "Neck");
+      
+      const cubeGeometry2 = new THREE.BoxGeometry(2.2, 2.2, 2.2);
+      const material2 = new THREE.MeshBasicMaterial({color: 0x0000ff});
+      neckMarker = new THREE.Mesh(cubeGeometry2, material2);
+      neck.add(neckMarker);
+      neckMarker.material.transparent = true;
+      neckMarker.material.opacity = 0.0;
             
       animationMixer = new THREE.AnimationMixer(mesh);
       animationController = new AnimationController(player, animationMixer, animationClips, clock);
@@ -401,7 +416,7 @@ Promise.all(loadedModels).then(objects => {
         if(bone.name === "HandR001"){
           player.hand = bone; // set an arbitrary new property to access the hand bone
         }
-                
+        
         if(bone.name === "Chest"){
           player.chest = bone;
           player.head.quaternion.copy(bone.quaternion); // make sure head mesh follows chest bone rotation
@@ -419,9 +434,9 @@ Promise.all(loadedModels).then(objects => {
 });
 
 function moveBasedOnAction(controller, player, speed, reverse){
-  const action = controller.currAction;
-  if(action === 'walk' || action === 'run'){
-    if(action === 'run'){
+  const action = controller.bottomAnimation.name;
+  if(action && (action.includes("walk") || action.includes("run"))){
+    if(action.includes("run")){
       speed += 0.10;
     }
     if(reverse){
@@ -454,22 +469,23 @@ function checkCollision(moveDistance, isReverse){
 }
 
 function keydown(evt){
-  if(evt.keyCode === 16){
-    // shift key
+  if(evt.code === "ShiftLeft"){
     // toggle between walk and run while moving
-    if(animationController.currAction === 'walk'){
-      animationController.changeAction('run');
-      //animationController.setUpdateTimeDivisor(.12);
+    if(currAction === "walk"){
+      currAction = "run";
+      animationController.changeAction("run-arms", "top");
+      animationController.changeAction("run-legs", "bottom");
     }
-  }else if(evt.keyCode === 71){
-    // g key
+  }else if(evt.code === "KeyG"){
     // for toggling weapon/tool equip
+    // https://stackoverflow.com/questions/19031198/three-js-attaching-object-to-bone
+    // https://stackoverflow.com/questions/54270675/three-js-parenting-mesh-to-bone
     const handBone = player.hand;
     if(handBone.children.length === 0){
       handBone.add(tool);
       // also register the tool in the animationcontroller so we can hide it at the 
       // right time when de-equipping
-      // yeah, doing it this way is still kinda weird. :/
+      // but doing it this way is still kinda weird. :/
       animationController.addObject(tool);
     }
         
@@ -477,37 +493,39 @@ function keydown(evt){
     tool.position.set(0, 0.2, -0.3); // the coordinate system is a bit out of whack for the weapon...
         
     // the weapon-draw/hide animation should lead directly to the corresponding idle animation
-    // since I have the event listener for a 'finished' action set up
-    let timeScale = 1.0;
+    // since I have the event listener for a "finished" action set up
+    let timeScale = 1;
         
     if(animationController.currState === "normal"){
       tool.visible = true;
       animationController.changeState("equip"); // equip weapon
     }else{
-      animationController.changeState("normal");
+      animationController.changeState("normal"); // go back to normal state
       timeScale = -1; // need to play equip animation backwards to put away weapon
     }
-    animationController.setUpdateTimeDivisor(0.002);
-    animationController.changeAction("drawgun", timeScale);
-  }else if(evt.keyCode === 49){
+    animationController.setUpdateTimeDivisor(.0015);
+    currAction = "drawgun";
+    animationController.changeAction("drawgun", "top", timeScale);
+  }else if(evt.code === "Digit1"){
     // toggle first-person view
     firstPersonViewOn = !firstPersonViewOn;
     sideViewOn = false;
-        
+    
     // make sure camera is in the head position
     // and that the camera is parented to the character mesh
     // so that it can rotate with the mesh
     if(firstPersonViewOn){
-      player.add(camera);
-      camera.position.copy(player.head.position);
-      camera.position.z += 0.9;
-      camera.position.y -= 0.4;
-      camera.rotation.copy(player.chest.rotation);
-      camera.rotateY(Math.PI);
+      neckMarker.add(camera);
+      camera.position.copy(neckMarker.position);
+      camera.position.z -= 1.0;
+      camera.position.y -= 0.2;
+      //camera.rotation.copy(player.chest.rotation);
+      //camera.rotateY(Math.PI);
+      camera.rotation.set(0, Math.PI, 0);
     }else{
       scene.add(camera);
     }
-  }else if(evt.keyCode === 50){
+  }else if(evt.code === "Digit2"){
     // toggle side view
     firstPersonViewOn = false;
     sideViewOn = !sideViewOn;
@@ -515,10 +533,12 @@ function keydown(evt){
 }
 
 function keyup(evt){
-  if(evt.keyCode === 16){
-    if(animationController.currAction === 'run'){
-      animationController.changeAction('walk');
+  if(evt.code === "ShiftLeft"){
+    if(currAction === "run"){
+      currAction = "walk";
       animationController.setUpdateTimeDivisor(.12);
+      animationController.changeAction("walk-arms", "top");
+      animationController.changeAction("walk-legs", "bottom");
     }
   }
 }
@@ -533,7 +553,8 @@ document.getElementById("theCanvas").parentNode.addEventListener("pointerdown", 
         
     const impulseVal = parseInt(document.getElementById('impulseSlider').value);
     forwardVec.multiplyScalar(impulseVal);
-        
+    
+    // TODO: use the barrel of the rifle as the starting position of the projectile (might need to add a marker mesh)
     const sphere = generateProjectile(player.position.x, player.position.y + 1.0, player.position.z);
     sphere.sphereBody.applyImpulse(new CANNON.Vec3(forwardVec.x, forwardVec.y, forwardVec.z), sphere.sphereBody.position);
         
@@ -552,10 +573,7 @@ document.getElementById("theCanvas").parentNode.addEventListener("mousemove", (e
         
     player.chest.rotation.x = -mouseMoveY;
     player.chest.rotation.y = mouseMoveX;
-        
-    camera.position.copy(player.head.position);
-    camera.position.z += 0.9;
-    camera.position.y -= 0.4;
+    
     camera.rotation.copy(player.chest.rotation);
     camera.rotateY(Math.PI);
   }
@@ -571,54 +589,57 @@ function update(){
     changeCameraView = true;
   }
     
-  if(keyboard.pressed("W")){
+  if(keyboard.pressed("w")){
     // moving forwards
-    if(animationController.currAction !== "run"){
-      animationController.changeAction('walk');
-    }
     animationController.setUpdateTimeDivisor(.008);
-        
+    if(currAction !== "run"){
+      currAction = "walk";
+      animationController.changeAction("walk-legs", "bottom");
+    }
     if(!checkCollision(moveDistance, false)){
       moveBasedOnAction(animationController, player, moveDistance, false);
     }
-        
-    //playerBody.velocity.z = 0.5;
-  }else if(keyboard.pressed("S")){
+  }else if(keyboard.pressed("s")){
     // moving backwards
-    if(animationController.currAction !== "run"){
-      animationController.changeAction('walk', -1);
-    }
     animationController.setUpdateTimeDivisor(.008);
-        
+    if(currAction !== "run"){
+      currAction = "walk";
+      animationController.changeAction("walk-legs", "bottom", -1);
+    }
     if(!checkCollision(moveDistance, true)){
       moveBasedOnAction(animationController, player, moveDistance, true);
     }
-        
-    //playerBody.velocity.z = -0.5;
-  }else if(!keyboard.pressed("W") && !keyboard.pressed("S")){
-    // can we make this less specific i.e. don't explicitly check for "drawgun"?
-    if(animationController.currAction !== 'idle' && animationController.currAction !== "drawgun"){
-      animationController.changeAction('idle');
+  }else if(!keyboard.pressed("w") && !keyboard.pressed("s")){
+    // for idle pose
+    if(currAction !== "drawgun"){
+      currAction = "idle";
       animationController.setUpdateTimeDivisor(.05);
+      animationController.changeAction("idle-arms", "top");
+      animationController.changeAction("idle-legs", "bottom");
     }
   }
-    
-  if(keyboard.pressed("A")){
+  
+  if(keyboard.pressed("a")){
     player.rotateOnAxis(new THREE.Vector3(0, 1, 0), rotationAngle);
-    //playerBody.quaternion.setFromAxisAngle(new CANNON.Vec3(0, 1, 0), rotationAngle); // can't get this to work :/
   }
     
-  if(keyboard.pressed("D")){
+  if(keyboard.pressed("d")){
     player.rotateOnAxis(new THREE.Vector3(0, 1, 0), -rotationAngle);
+  }
+  
+  if(keyboard.pressed("q")){
+    animationController.changeAction("leftlean", "top");
+  }else if(keyboard.pressed("e")){
+    animationController.changeAction("rightlean", "top");
   }
     
   // we don't want idle animation to run if in first-person mode since I want to
   // manually control the chest bone for look-around rotation
-  if(animationController.currAction !== 'idle' || !firstPersonViewOn){
+  if(currAction !== 'idle' || !firstPersonViewOn){
     // keep the current animation running
     animationController.update();
   }
-    
+  
   let relCameraOffset;
     
   if(firstPersonViewOn){
@@ -653,6 +674,7 @@ function update(){
 function animate(){
   requestAnimationFrame(animate);
   renderer.render(scene, camera);
+  
   update();
   cannonDebugRenderer.update();
     
@@ -666,7 +688,13 @@ function animate(){
       projectiles.delete(p);
       return;
     }
-    p.sphereMesh.position.set(p.sphereBody.position.x, p.sphereBody.position.y, p.sphereBody.position.z);
+    
+    p.sphereMesh.position.set(
+      p.sphereBody.position.x, 
+      p.sphereBody.position.y, 
+      p.sphereBody.position.z
+    );
+    
     p.sphereMesh.quaternion.set(
       p.sphereBody.quaternion.x,
       p.sphereBody.quaternion.y,

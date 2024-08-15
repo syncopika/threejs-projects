@@ -235,3 +235,38 @@ function createSphereWireframe(position, params){
 	sphere.position.set(x, y, z);
 	return sphere;
 }
+
+// this is a bit silly but for some reason
+// my animations are including bones that I didn't select in Blender
+// so need to manually remove them here :/
+function removeUnneededAnimationTracks(animation){
+  // if animation name has "ArmsOnly"
+  // delete any tracks whose name contains one of ["leg", "toe", "foot"] (we only want upper body bones)
+  //
+  // if animation name has "LegsOnly"
+  // delete any tracks whose name contains one of ["hand", "arm", "chest", "torso", "neck", "head"]
+  const armsonly = new Set(["hand", "arm", "chest", "torso", "neck", "head"]);
+  const legsonly = new Set(["leg", "toe", "foot", "pelvis"]);
+  
+  if(animation.name.toLowerCase().includes("armsonly")){
+    animation.tracks = animation.tracks.filter(x => {
+      let ok = false;
+      for(const term of armsonly){
+        if(x.name.toLowerCase().includes(term)){
+          ok = true;
+        }
+      }
+      return ok;
+    });
+  }else if(animation.name.toLowerCase().includes("legsonly")){
+    animation.tracks = animation.tracks.filter(x => {
+      let ok = false;
+      for(const term of legsonly){
+        if(x.name.toLowerCase().includes(term)){
+          ok = true;
+        }
+      }
+      return ok;
+    });
+  }
+}

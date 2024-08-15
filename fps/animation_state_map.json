@@ -1,46 +1,107 @@
 {
-	"states": {
-		"normal": {
-			"idle": {
-				"actionName": "idle",
-				"loop": "repeat"
-			},
-			"run": {
-				"actionName": "run", 
-				"loop": "repeat"
-			},
-			"walk": {
-				"actionName": "walk",
-				"loop": "repeat"
-			},
-			"jump": {
-				"actionName": "jump",
-				"loop": "once"
-			},
-			"drawgun": {
-				"actionName": "drawgun",
-				"loop": "once"
-			}
-		},
-		"equip": {
-			"idle": {
-				"actionName": "idlegu",
-				"loop": "repeat"
-			},
-			"walk": {
-				"actionName": "walkgu",
-				"loop": "repeat"
-			},
-			"reload": {
-				"actionName": "reloadgu",
-				"loop": "once"
-			},
-			"drawgun": {
-				"actionName": "drawgun",
-				"loop": "once"
-			}
-		},
-		"crouch": {},
-		"prone": {}
-	}
+  "states": {
+    "normal": {
+      "idle-arms": {
+        "actionName": "idlearmsonly",
+        "loop": "repeat",
+        "top": true
+      },
+      "idle-legs": {
+        "actionName": "idlelegsonly",
+        "loop": "repeat",
+        "bottom": true
+      },
+      "run-arms": {
+        "actionName": "runarmsonly",
+        "loop": "repeat",
+        "top": true
+      },
+      "run-legs": {
+        "actionName": "runlegsonly",
+        "loop": "repeat",
+        "bottom": true
+      },
+      "walk-arms": {
+        "actionName": "walkarmsonly",
+        "loop": "repeat",
+        "top": true
+      },
+      "walk-legs": {
+        "actionName": "walklegsonly",
+        "loop": "repeat",
+        "bottom": true
+      },
+      "jump": {
+        "actionName": "jump",
+        "loop": "once"
+       },
+      "drawgun": {
+        "actionName": "drawgunarmsonly",
+        "loop": "once",
+        "top": true
+      },
+      "leftlean": {
+        "actionName": "leanleftgunarmsonly",
+        "loop": "repeat",
+        "top": true
+      },
+      "rightlean": {
+        "actionName": "leanrightgunarmsonly",
+        "loop": "repeat",
+        "top": true        
+      }
+    },
+    "equip": {
+      "idle-arms": {
+        "actionName": "holdgunarmsonly",
+        "loop": "repeat",
+        "top": true
+      },
+      "idle-legs": {
+        "actionName": "idlelegsonly",
+        "loop": "repeat",
+        "bottom": true
+      },
+      "walk-arms": {
+        "actionName": "holdgunarmsonly",
+        "loop": "repeat",
+        "top": true
+      },
+      "walk-legs": {
+        "actionName": "walklegsonly",
+        "loop": "repeat",
+        "bottom": true
+      },
+      "run-legs": {
+        "actionName": "runlegsonly",
+        "loop": "repeat",
+        "bottom": true
+      },
+      "run-arms": {
+        "actionName": "holdgunarmsonly",
+        "loop": "repeat",
+        "top": true
+      },
+      "reload": {
+        "actionName": "reloadgun",
+        "loop": "once",
+        "top": true
+      },
+      "drawgun": {
+        "actionName": "drawgunarmsonly",
+        "loop": "once",
+        "top": true
+      },
+      "leftlean": {
+        "actionName": "leanleftgunarmsonly",
+        "loop": "repeat",
+        "top": true
+      },
+      "rightlean": {
+        "actionName": "leanrightgunarmsonly",
+        "loop": "repeat",
+        "top": true
+      }
+    }
+  }
 }
