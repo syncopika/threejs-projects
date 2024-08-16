@@ -97,7 +97,8 @@ class AnimationController {
       action.play();
     }
   }
-    
+ 
+  // https://discourse.threejs.org/t/animations-looks-different-and-wrong-when-i-play-them-on-three-js/55410/2
   update(clockDelta){
     this.mixer.update((clockDelta ? clockDelta : this.clock.getDelta()) / this.timeDivisor);
   }
