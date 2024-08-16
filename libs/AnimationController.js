@@ -5,7 +5,6 @@ class AnimationController {
 
   mixer; // animation mixer
   clips; // all the clips for animation
-  //currActions; // currently-playing animations of character
   currState; // the state of character i.e. weapon equip or not
   character; // a reference to the mesh that this controller belongs to
   timeDivisor; // number to divide the time by when updating (i.e. a smaller num == faster animation)
@@ -18,11 +17,6 @@ class AnimationController {
     this.mixer = animMixer;
     this.clips = animClips;
     this.clock = clock;
-    /*
-    this.currActions = {
-      top: new Set(),
-      bottom: new Set(),
-    };*/
     this.currState = "";
     this.currActionTimescale = 1;
     this.animationMap = null;
