@@ -101,7 +101,7 @@ function update(){
   controls.update();
     
   // update time uniform variable
-  if(currModel && currModel.material.uniforms){
+  if(currModel && currModel.material.uniforms && currModel.material.uniforms.u_time){
     currModel.material.uniforms.u_time.value += 0.01;
     //currModel.rotateOnAxis(new THREE.Vector3(0, 1, 0), 0.01);
   }
@@ -110,7 +110,7 @@ function update(){
 }
 
 // model selection
-document.getElementById('selectModel').addEventListener('change', (evt) => {
+document.getElementById('selectModel').addEventListener('change', async (evt) => {
     
   if(animationReqId){
     cancelAnimationFrame(animationReqId);
@@ -137,6 +137,9 @@ document.getElementById('selectModel').addEventListener('change', (evt) => {
     processMesh(currModel);
     currModel.rotation.x = -Math.PI / 2;
     camera.position.z = cameraZPos;
+  }else if(evt.target.value === "toon"){
+    await getModel('../models/f-16.gltf', 'f-16');
+    createToonShader();
   }else{
     getModel(`../models/${evt.target.value}.gltf`, evt.target.value);
     camera.position.z = cameraZPos;
@@ -426,5 +429,29 @@ function updateRipple(){
   mesh.name = "rippleScene";
     
   return mesh;
+}
+
+// toon shader
+function createToonShader(){
+  const vertexShader = toonShader.vertexShader;
+  const fragShader = toonShader.fragShader;
+  showShaderCode(vertexShader, fragShader, document.getElementById('shader'));
+  
+  const uniforms = {};
+  if(currModelTexture){
+    const textureUrl = getTextureImageUrl(currModelTexture);
+    const texture = textureLoader.load(textureUrl);
+    texture.flipY = false; // this part is important!
+    uniforms.img = {type: "t", value: texture};
+  }
+    
+  const newShaderMaterial = new THREE.ShaderMaterial({
+    uniforms: uniforms,
+    vertexShader: vertexShader,
+    fragmentShader: fragShader,
+    side: THREE.DoubleSide,
+  });
+  
+  currModel.material = newShaderMaterial;
 }
 
