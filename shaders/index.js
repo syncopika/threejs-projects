@@ -122,7 +122,7 @@ document.getElementById('selectModel').addEventListener('change', async (evt) =>
   currModelTexture = null;
     
   if(["whale-shark-camo", "f-18"].indexOf(evt.target.value) > -1){
-    getModel(`../models/${evt.target.value}.glb`, evt.target.value);
+    await getModel(`../models/${evt.target.value}.glb`, evt.target.value);
     camera.position.z = cameraZPos;
   }else if(evt.target.value === "scene1"){
     // this one changes the camera's z-position a bit
@@ -141,7 +141,7 @@ document.getElementById('selectModel').addEventListener('change', async (evt) =>
     await getModel('../models/f-16.gltf', 'f-16');
     createToonShader();
   }else{
-    getModel(`../models/${evt.target.value}.gltf`, evt.target.value);
+    await getModel(`../models/${evt.target.value}.gltf`, evt.target.value);
     camera.position.z = cameraZPos;
   }
 });

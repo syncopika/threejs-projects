@@ -10,6 +10,7 @@ const toonShader = {
         //float lineThickness = .03;
         
         // TODO: need to add outline
+        // do I need to add a separate pass shader?
     
         void main() {
             vUv = uv;
@@ -35,7 +36,7 @@ const toonShader = {
                 intensity = 0.;
             }
             
-            vec4 txColor = vec4(0, 0, 1, 1.0) * diffuseColor * diffuseIntensity;
+            vec4 txColor = vec4(0, 0, 1, 1.0) * diffuseColor * diffuseIntensity; // some shade of blue
             
             if(intensity > 0.95){
                 gl_FragColor = vec4(1, 1, 1, 1.0) * vec4(txColor.rgb, 1.0);
