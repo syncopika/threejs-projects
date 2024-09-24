@@ -258,6 +258,15 @@ function getModel(modelFilePath, name){
           const magazine = carbine[1];
           m4carbine.magazine = magazine;
           m4carbine.skeleton.bones[1].add(magazine); // add magazine to the mag bone
+          
+          // add a marker to the rifle barrel to indicate where the projectiles should originate from
+          const cubeGeometry = new THREE.CubeGeometry(0.2, 0.2, 0.2);
+          const normalMaterial = new THREE.MeshStandardMaterial({color: 0x055C9D}); //{opacity: 0.0, transparent: true});
+          const cubeMesh = new THREE.Mesh(cubeGeometry, normalMaterial);
+          m4carbine.add(cubeMesh);
+          m4carbine.projectileSrc = cubeMesh;
+          cubeMesh.rotateY(-Math.PI/2);
+          cubeMesh.position.set(-3.5, 0.2, 0);
 
           m4carbine.rotateOnAxis(new THREE.Vector3(0,1,0), Math.PI/2);
           m4carbine.rotateOnAxis(new THREE.Vector3(0,0,-1), Math.PI/2);
@@ -548,16 +557,27 @@ document.addEventListener("keyup", keyup);
 document.getElementById("theCanvas").parentNode.addEventListener("pointerdown", (evt) => {
   if(animationController && animationController.currState !== "normal"){
     evt.preventDefault();
+    
+    // use the marker of the barrel of the rifle as the starting position/direction of the projectile
+
+    
+    
+    const cameraForward = new THREE.Vector3();
+    camera.getWorldDirection(cameraForward);
+    cameraForward.multiplyScalar(500);
+    console.log(cameraForward);
+    tool.projectileSrc.lookAt(cameraForward);
+
     const forwardVec = new THREE.Vector3();
-    camera.getWorldDirection(forwardVec);
+    tool.projectileSrc.getWorldDirection(forwardVec);
         
     const impulseVal = parseInt(document.getElementById('impulseSlider').value);
     forwardVec.multiplyScalar(impulseVal);
     
-    // TODO: use the barrel of the rifle as the starting position of the projectile (might need to add a marker mesh)
-    const sphere = generateProjectile(player.position.x, player.position.y + 1.0, player.position.z);
+    const projectileSrcPos = tool.projectileSrc.getWorldPosition();
+    const sphere = generateProjectile(projectileSrcPos.x, projectileSrcPos.y, projectileSrcPos.z);
     sphere.sphereBody.applyImpulse(new CANNON.Vec3(forwardVec.x, forwardVec.y, forwardVec.z), sphere.sphereBody.position);
-        
+    
     projectiles.add(sphere);
   }
 });
