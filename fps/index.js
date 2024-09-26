@@ -261,7 +261,7 @@ function getModel(modelFilePath, name){
           
           // add a marker to the rifle barrel to indicate where the projectiles should originate from
           const cubeGeometry = new THREE.CubeGeometry(0.2, 0.2, 0.2);
-          const normalMaterial = new THREE.MeshStandardMaterial({color: 0x055C9D}); //{opacity: 0.0, transparent: true});
+          const normalMaterial = new THREE.MeshStandardMaterial({color: 0x055C9D, wireframe: true}); //{opacity: 0.0, transparent: true});
           const cubeMesh = new THREE.Mesh(cubeGeometry, normalMaterial);
           m4carbine.add(cubeMesh);
           m4carbine.projectileSrc = cubeMesh;
@@ -528,8 +528,6 @@ function keydown(evt){
       camera.position.copy(neckMarker.position);
       camera.position.z -= 1.0;
       camera.position.y -= 0.2;
-      //camera.rotation.copy(player.chest.rotation);
-      //camera.rotateY(Math.PI);
       camera.rotation.set(0, Math.PI, 0);
     }else{
       scene.add(camera);
@@ -559,14 +557,14 @@ document.getElementById("theCanvas").parentNode.addEventListener("pointerdown", 
     evt.preventDefault();
     
     // use the marker of the barrel of the rifle as the starting position/direction of the projectile
-
-    
-    
     const cameraForward = new THREE.Vector3();
     camera.getWorldDirection(cameraForward);
-    cameraForward.multiplyScalar(500);
+    cameraForward.multiplyScalar(300);
+    cameraForward.add(camera.position);
     console.log(cameraForward);
-    tool.projectileSrc.lookAt(cameraForward);
+    
+    tool.lookAt(cameraForward);
+    tool.rotateY(Math.PI / 2);
 
     const forwardVec = new THREE.Vector3();
     tool.projectileSrc.getWorldDirection(forwardVec);
