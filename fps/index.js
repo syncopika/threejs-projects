@@ -556,7 +556,6 @@ document.getElementById("theCanvas").parentNode.addEventListener("pointerdown", 
   if(animationController && animationController.currState !== "normal"){
     evt.preventDefault();
     
-    // use the marker of the barrel of the rifle as the starting position/direction of the projectile
     const cameraForward = new THREE.Vector3();
     camera.getWorldDirection(cameraForward);
     cameraForward.multiplyScalar(300);
@@ -585,15 +584,29 @@ document.getElementById("theCanvas").parentNode.addEventListener("mousemove", (e
   if(firstPersonViewOn){
     document.body.style.cursor = 'none';
     evt.preventDefault();
-        
+    
     const mouseMoveX = -(evt.clientX / renderer.domElement.clientWidth) * 2 + 1;
     const mouseMoveY = -(evt.clientY / renderer.domElement.clientHeight) * 2 + 1;
-        
-    player.chest.rotation.x = -mouseMoveY;
-    player.chest.rotation.y = mouseMoveX;
     
-    camera.rotation.copy(player.chest.rotation);
-    camera.rotateY(Math.PI);
+    const xDeg = mouseMoveX * 180 / Math.PI;
+    const yDeg = mouseMoveY * 180 / Math.PI;
+    
+    const cameraForward = new THREE.Vector3();
+    camera.getWorldDirection(cameraForward);
+    cameraForward.multiplyScalar(300);
+    cameraForward.add(camera.position);
+    
+    // rotate rifle with mouse
+    tool.lookAt(cameraForward);
+    tool.rotateY(Math.PI / 2);
+    
+    if(Math.abs(xDeg) <= 60 && Math.abs(yDeg) <= 60){
+      player.chest.rotation.x = -mouseMoveY;
+      player.chest.rotation.y = mouseMoveX;
+      
+      camera.rotation.copy(player.chest.rotation);
+      camera.rotateY(Math.PI);
+    }
   }
 });
 
@@ -681,10 +694,11 @@ function update(){
     player.material.visible = true;
         
     const cameraOffset = relCameraOffset.applyMatrix4(player.matrixWorld);
+    
     camera.position.x = cameraOffset.x;
     camera.position.y = cameraOffset.y;
     camera.position.z = cameraOffset.z;
-        
+    
     camera.lookAt(player.position);
   }
 }
