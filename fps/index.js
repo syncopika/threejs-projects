@@ -287,7 +287,7 @@ function getModel(modelFilePath, name){
   });
 }
 
-loadedModels.push(getModel('../models/humanoid-rig.gltf', 'player'));
+loadedModels.push(getModel('../models/humanoid-rig-alt.gltf', 'player'));
 loadedModels.push(getModel('../models/m4carbine-final.gltf', 'obj'));
 loadedModels.push(getModel('../models/target.gltf', 'target'));
 loadedModels.push(getModel('../models/box.gltf', 'box'));
