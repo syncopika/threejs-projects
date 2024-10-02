@@ -287,7 +287,7 @@ function getModel(modelFilePath, name){
   });
 }
 
-loadedModels.push(getModel('../models/humanoid-rig-alt.gltf', 'player'));
+loadedModels.push(getModel('../models/humanoid-rig.gltf', 'player'));
 loadedModels.push(getModel('../models/m4carbine-final.gltf', 'obj'));
 loadedModels.push(getModel('../models/target.gltf', 'target'));
 loadedModels.push(getModel('../models/box.gltf', 'box'));
@@ -526,8 +526,8 @@ function keydown(evt){
     if(firstPersonViewOn){
       neckMarker.add(camera);
       camera.position.copy(neckMarker.position);
-      camera.position.z -= 1.0;
-      camera.position.y -= 0.2;
+      camera.position.z += 1.0;
+      camera.position.y -= 0.1;
       camera.rotation.set(0, Math.PI, 0);
     }else{
       scene.add(camera);
@@ -556,23 +556,40 @@ document.getElementById("theCanvas").parentNode.addEventListener("pointerdown", 
   if(animationController && animationController.currState !== "normal"){
     evt.preventDefault();
     
+    // place a marker at cameraForward to confirm
+    // that is really where we would expect?
+    const cubeGeometry2 = new THREE.BoxGeometry(0.2, 0.2, 0.2);
+    const material2 = new THREE.MeshBasicMaterial({color: 0x0000ff});
+    const marker = new THREE.Mesh(cubeGeometry2, material2);
+    
+    const camWorldPos = new THREE.Vector3();
+    camera.getWorldPosition(camWorldPos);
+    //console.log(camWorldPos);
+    
     const cameraForward = new THREE.Vector3();
     camera.getWorldDirection(cameraForward);
-    cameraForward.multiplyScalar(300);
-    cameraForward.add(camera.position);
-    console.log(cameraForward);
+    cameraForward.multiplyScalar(100);
+    cameraForward.add(camWorldPos);
     
-    tool.lookAt(cameraForward);
-    tool.rotateY(Math.PI / 2);
-
+    //console.log(cameraForward);
+    //console.log('-------------');
+    marker.position.copy(cameraForward);
+    scene.add(marker);
+    
+    if(firstPersonViewOn){
+      tool.lookAt(cameraForward);
+      tool.rotateY(Math.PI / 2);
+    }
+    
     const forwardVec = new THREE.Vector3();
     tool.projectileSrc.getWorldDirection(forwardVec);
         
     const impulseVal = parseInt(document.getElementById('impulseSlider').value);
     forwardVec.multiplyScalar(impulseVal);
     
-    const projectileSrcPos = tool.projectileSrc.getWorldPosition();
-    const sphere = generateProjectile(projectileSrcPos.x, projectileSrcPos.y, projectileSrcPos.z);
+    const posVec = new THREE.Vector3();
+    const projectileSrcPos = tool.projectileSrc.getWorldPosition(posVec);
+    const sphere = generateProjectile(posVec.x, posVec.y, posVec.z);
     sphere.sphereBody.applyImpulse(new CANNON.Vec3(forwardVec.x, forwardVec.y, forwardVec.z), sphere.sphereBody.position);
     
     projectiles.add(sphere);
@@ -596,16 +613,16 @@ document.getElementById("theCanvas").parentNode.addEventListener("mousemove", (e
     cameraForward.multiplyScalar(300);
     cameraForward.add(camera.position);
     
-    // rotate rifle with mouse
-    tool.lookAt(cameraForward);
-    tool.rotateY(Math.PI / 2);
-    
     if(Math.abs(xDeg) <= 60 && Math.abs(yDeg) <= 60){
       player.chest.rotation.x = -mouseMoveY;
       player.chest.rotation.y = mouseMoveX;
       
       camera.rotation.copy(player.chest.rotation);
       camera.rotateY(Math.PI);
+      
+      // rotate rifle with mouse
+      tool.lookAt(cameraForward);
+      tool.rotateY(Math.PI / 2); // TODO: this is a problem. fix orientation of rifle model so we don't have to make adjustments
     }
   }
 });
@@ -678,7 +695,7 @@ function update(){
     crosshairCanvas.style.display = 'block';
         
     // https://stackoverflow.com/questions/25567369/show-children-of-invisible-parents
-    player.material.visible = false;
+    //player.material.visible = false;
   }else if(sideViewOn){
     relCameraOffset = new THREE.Vector3(-10, 3, 0);
   }else if(!changeCameraView){
