@@ -3,7 +3,6 @@
 import { MarchingCubes } from '../libs/MarchingCubes.js';
 
 const container = document.getElementById("container");
-//const keyboard = new THREEx.KeyboardState();
 
 const fov = 60;
 const camera = new THREE.PerspectiveCamera(fov, container.clientWidth / container.clientHeight, 0.01, 1000);
@@ -174,19 +173,6 @@ function update(){
   controls.update();
 }
 
-function keydown(evt){
-  if(evt.keyCode === 32){
-    // spacebar
-  }else if(evt.keyCode === 49){
-    //1 key
-  }else if(evt.keyCode === 50){
-    //2 key
-  }else if(evt.keyCode === 82){
-    // r key
-  }
-}
-document.addEventListener("keydown", keydown);
-
 document.getElementById('toggleWall').addEventListener('change', () => {
   wall.visible = !wall.visible;
 });
@@ -195,85 +181,14 @@ document.getElementById('toggleStand').addEventListener('change', () => {
   stand.visible = !stand.visible;
 });
 
-function makeColorWheel(elementId, size){
-  const location = document.getElementById(elementId);
-  if(location === undefined){
-    console.log(`could not find element with id ${elementId}!`);
-    return null;
-  }
-    
-  const colorWheel = document.createElement('canvas');
-  colorWheel.id = "colorWheel";
-  colorWheel.setAttribute('width', size);
-  colorWheel.setAttribute('height', size);
-    
-  const colorWheelContext = colorWheel.getContext('2d', {willReadFrequently: true});
-  const x = colorWheel.width / 2;
-  const y = colorWheel.height / 2;
-  const radius = 60;
-    
-  for(let angle = 0; angle <= 5600; angle++) {
-    const startAngle = (angle - 1) * Math.PI / 180; //convert angles to radians
-    const endAngle = angle * Math.PI / 180;
-    colorWheelContext.beginPath();
-    colorWheelContext.moveTo(x, y);
-    //.arc(x, y, radius, startAngle, endAngle, anticlockwise)
-    colorWheelContext.arc(x, y, radius, startAngle, endAngle, false);
-    colorWheelContext.closePath();
-    //use .createRadialGradient to get a different color for each angle
-    //createRadialGradient(x0, y0, r0, x1, y1, r1)
-    const gradient = colorWheelContext.createRadialGradient(x, y, 0, startAngle, endAngle, radius);
-    gradient.addColorStop(0, 'hsla(' + angle + ', 100%, 100%, 1)');
-    gradient.addColorStop(1, 'hsla(' + angle + ', 100%, 50%, 1)');
-    colorWheelContext.fillStyle = gradient;
-    colorWheelContext.fill();
-  }
-    
-  // make black a pickable color 
-  colorWheelContext.fillStyle = "rgba(0,0,0,1)";
-  colorWheelContext.beginPath();
-  colorWheelContext.arc(10, 10, 8, 0, 2*Math.PI);
-  colorWheelContext.fill();
-    
-  // make white pickable too (and add a black outline)
-  colorWheelContext.beginPath();
-  colorWheelContext.arc(30, 10, 8, 0, 2*Math.PI); // border around the white
-  colorWheelContext.stroke();
-    
-  // make sure circle is filled with #fff
-  colorWheelContext.fillStyle = "rgba(255,255,255,1)";
-  colorWheelContext.arc(30, 10, 8, 0, 2*Math.PI);
-  colorWheelContext.fill();
-    
-  location.appendChild(colorWheel);
-    
-  colorWheel.addEventListener('pointerdown', (evt) => {
-    const x = evt.offsetX;
-    const y = evt.offsetY;
-        
-    const colorPicked = colorWheel.getContext('2d').getImageData(x, y, 1, 1).data;
-        
-    //correct the font color if the color is really dark
-    const colorPickedText = document.getElementById('colorPicked');
-    if(colorPicked[0] > 10 && colorPicked[1] > 200){
-      colorPickedText.style.color = "#000";
-    }else{
-      colorPickedText.style.color = "#fff";
-    }
-        
-    colorPickedText.textContent = `rgba(${colorPicked[0]},${colorPicked[1]},${colorPicked[2]},${colorPicked[3]}0)`;
-    colorPickedText.style.backgroundColor = colorPickedText.textContent;
-        
-    // update lava lamp
-    const color = `rgb(${colorPicked[0]},${colorPicked[1]},${colorPicked[2]})`;
-    material.color = new THREE.Color(color);
-    lampModel.children.filter(child => child.name === 'blobBase')[0].material.color = new THREE.Color(color);
-  });
-    
-  return colorWheel;
-}
+document.getElementById('colorPickerInput').addEventListener('change', evt => {
+  material.color = new THREE.Color(evt.target.value);
+  lampModel.children.filter(child => child.name === 'blobBase')[0].material.color = new THREE.Color(evt.target.value);
+});
 
-makeColorWheel('colorWheelContainer', 170);
+document.getElementById('toggleWireframe').addEventListener('change', () => {
+  material.wireframe = !material.wireframe;
+});
 
 function animate(){
   requestAnimationFrame(animate);

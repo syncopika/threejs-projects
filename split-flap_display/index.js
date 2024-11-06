@@ -1,13 +1,11 @@
-// new project template
+//split-flap display
 
 const container = document.getElementById("container");
-//const keyboard = new THREEx.KeyboardState();
 
 const fov = 60;
 const camera = new THREE.PerspectiveCamera(fov, container.clientWidth / container.clientHeight, 0.01, 1000);
 camera.position.set(0, 2, 25);
 
-//const raycaster = new THREE.Raycaster();
 const mouse = new THREE.Vector2();
 
 const loadingManager = new THREE.LoadingManager();
@@ -111,10 +109,11 @@ class SplitFlapDisplay {
     const pick = letters[Math.floor(Math.random() * letters.length)];
     const newTexture = this.textures[pick];
     
+    
     if(this.topFlap && newTexture.top){
       this.topFlap.material = newTexture.top;
       this.topFlap.material.onBeforeCompile = function(shader){
-        //console.log(shader.fragmentShader);
+        // invert texture color (so that it's white letters on a black background)
         //https://discourse.threejs.org/t/is-there-any-way-to-make-image-negative-in-three-js/38545/2
         shader.fragmentShader = shader.fragmentShader.replace(
           'gl_FragColor = vec4( outgoingLight, diffuseColor.a );',
@@ -125,6 +124,13 @@ class SplitFlapDisplay {
     
     if(this.bottomFlap && newTexture.bottom){
       this.bottomFlap.material = newTexture.bottom;
+      this.bottomFlap.material.onBeforeCompile = function(shader){
+        //https://discourse.threejs.org/t/is-there-any-way-to-make-image-negative-in-three-js/38545/2
+        shader.fragmentShader = shader.fragmentShader.replace(
+          'gl_FragColor = vec4( outgoingLight, diffuseColor.a );',
+          'gl_FragColor = vec4( (1.0 - outgoingLight.r), (1.0 - outgoingLight.g), (1.0 - outgoingLight.b), diffuseColor.a );'
+        );
+      };
     }
     
     this.currentLetter = pick;
