@@ -52,9 +52,6 @@ scene.add(hemiLight);
 //controls.zoomSpeed = 1.2;
 //controls.panSpeed = 0.8;
 
-//const world = new CANNON.World();
-//world.gravity.set(0, -9.82, 0);
-
 let theAbacus = null;
 const abacusBottomName = 'Cube011';
 const abacusMidName = 'Cube010';
@@ -78,8 +75,6 @@ const abacusBeads = [];
 
 // for abacus bead move animation
 const beadMoveDuration = 500; // move bead within 500 milliseconds (0.5 seconds)
-
-//const cannonDebugRenderer = new THREE.CannonDebugRenderer(scene, world);
 
 let selectedBead = null;
 renderer.domElement.addEventListener('pointerdown', (evt) => {
@@ -177,12 +172,10 @@ renderer.domElement.addEventListener('pointerup', (evt) => {
     const distDiff = 0.3;
     const minYDiff = 0.1;
     
-    // TODO: lerp smoothly to next position if bead can move?
     if(deltaY > minYDiff){
       // move bead up
       const obstacleDist = getObstacleDist(selectedBead, raycaster, 'up');
       if(obstacleDist > distThreshold){
-        //selectedBead.position.y += Math.min(obstacleDist - distDiff, moveAmount);
         selectedBead.destination = new THREE.Vector3(
           selectedBead.position.x,
           selectedBead.position.y + Math.min(obstacleDist - distDiff, moveAmount),
@@ -196,7 +189,6 @@ renderer.domElement.addEventListener('pointerup', (evt) => {
       // move bead down
       const obstacleDist = getObstacleDist(selectedBead, raycaster, 'down');
       if(obstacleDist > distThreshold){
-        //selectedBead.position.y -= Math.min(obstacleDist - distDiff, moveAmount);
         selectedBead.destination = new THREE.Vector3(
           selectedBead.position.x,
           selectedBead.position.y - Math.min(obstacleDist - distDiff, moveAmount),
@@ -246,51 +238,9 @@ getModel('../models/abacus.gltf', 'abacus').then(abacus => {
     if(bead.name.includes('bead')){
       const mat = new THREE.MeshPhongMaterial({color: 0xE97451});
       bead.material = mat;
-      //bead.scale.set(0.8, 0.8, 0.8);
-      
-      /*
-      const beadShape = new CANNON.Box(new CANNON.Vec3(0.7, 0.3, 0.5));
-      const beadMat = new CANNON.Material();
-      const beadBody = new CANNON.Body({material: beadMat, friction: 0.9, mass: 0.3});
-      
-      const beadWorldPos = new THREE.Vector3();
-      bead.getWorldPosition(beadWorldPos);
-      
-      beadBody.position.x = beadWorldPos.x;
-      beadBody.position.y = beadWorldPos.y;
-      beadBody.position.z = beadWorldPos.z;
-      
-      beadBody.addShape(beadShape);
-      
-      world.addBody(beadBody);
-      
-      bead.cannonBody = beadBody;
-      */
-      
       abacusBeads.push(bead);
     }
   });
-  
-  /*[abacusTopName, abacusMidName, abacusBottomName].forEach(partName => {
-      const part = abacus.children.find(x => x.name === partName);
-      part.material.wireframe = true;
-      
-      const partShape = new CANNON.Box(new CANNON.Vec3(9.5, 0.1, 0.8));
-      const partMat = new CANNON.Material();
-      const partBody = new CANNON.Body({material: partMat, mass: 0});
-      
-      const partWorldPos = new THREE.Vector3();
-      part.getWorldPosition(partWorldPos);
-      //console.log(part);
-      
-      partBody.position.x = partWorldPos.x;
-      partBody.position.y = partWorldPos.y + 0.07;
-      partBody.position.z = partWorldPos.z;
-      
-      partBody.addShape(partShape);
-      
-      world.addBody(partBody);
-  });*/
 });
 
 function update(){
