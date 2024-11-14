@@ -140,6 +140,9 @@ document.getElementById('selectModel').addEventListener('change', async (evt) =>
   }else if(evt.target.value === "toon"){
     await getModel('../models/f-16.gltf', 'f-16');
     createToonShader();
+  }else if(evt.target.value === "glass"){
+    await getModel('../models/f14.gltf', 'f-14');
+    createGlassShader();
   }else{
     await getModel(`../models/${evt.target.value}.gltf`, evt.target.value);
     camera.position.z = cameraZPos;
@@ -450,6 +453,36 @@ function createToonShader(){
     vertexShader: vertexShader,
     fragmentShader: fragShader,
     side: THREE.DoubleSide,
+  });
+  
+  currModel.material = newShaderMaterial;
+}
+
+// glass shader
+function createGlassShader(){
+  const vertexShader = glassShader.vertexShader;
+  const fragShader = glassShader.fragShader;
+  showShaderCode(vertexShader, fragShader, document.getElementById('shader'));
+  
+  const uniforms = {};
+  if(currModelTexture){
+    const textureUrl = getTextureImageUrl(currModelTexture);
+    const texture = textureLoader.load(textureUrl);
+    texture.flipY = false; // this part is important!
+    uniforms.img = {
+      type: "t", 
+      value: texture,
+    };
+  }
+  
+  // https://stackoverflow.com/questions/59392774/point-cloud-texture-alpha-blending-threejs
+  const newShaderMaterial = new THREE.ShaderMaterial({
+    uniforms: uniforms,
+    vertexShader: vertexShader,
+    fragmentShader: fragShader,
+    side: THREE.DoubleSide,
+    transparent: true,
+    depthTest: false,
   });
   
   currModel.material = newShaderMaterial;
