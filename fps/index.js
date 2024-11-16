@@ -107,6 +107,30 @@ plane.translateY(0.6);
 terrain = plane;
 scene.add(plane);
 
+// debugging line for showing rifle line-of-sight
+function showDebuggingLine(pos, direction){
+  const lineMaterial = new THREE.LineBasicMaterial({
+    color: 0x0000ff
+  });
+  
+  const points = [];
+  const numPoints = 3;
+  let increment = 0;
+  for(let i = 0; i < numPoints; i++){
+    points.push(new THREE.Vector3(
+      pos.x + (increment * direction.x), 
+      pos.y + (increment * direction.y),  
+      pos.z + (increment * direction.z), 
+    ));
+    increment += 10;
+  }
+  
+  const geometry = new THREE.BufferGeometry().setFromPoints(points);
+  const line = new THREE.Line(geometry, lineMaterial);
+  
+  scene.add(line);
+}
+
 const planeShape = new CANNON.Plane();
 const groundMat = new CANNON.Material();
 const planeBody = new CANNON.Body({material: groundMat, mass: 0}); // this plane extends infinitely
@@ -512,7 +536,7 @@ function keydown(evt){
       animationController.changeState("normal"); // go back to normal state
       timeScale = -1; // need to play equip animation backwards to put away weapon
     }
-    animationController.setUpdateTimeDivisor(.0015);
+    animationController.setUpdateTimeDivisor(.0025); // controls speed of animation
     currAction = "drawgun";
     animationController.changeAction("drawgun", "top", timeScale);
   }else if(evt.code === "Digit1"){
@@ -556,8 +580,8 @@ document.getElementById("theCanvas").parentNode.addEventListener("pointerdown", 
   if(animationController && animationController.currState !== "normal"){
     evt.preventDefault();
     
-    // place a marker at cameraForward to confirm
-    // that is really where we would expect?
+    /* for debugging: place a marker at cameraForward to confirm
+    // that is really where we would expect the projectile to move towards?
     const cubeGeometry2 = new THREE.BoxGeometry(0.2, 0.2, 0.2);
     const material2 = new THREE.MeshBasicMaterial({color: 0x0000ff});
     const marker = new THREE.Mesh(cubeGeometry2, material2);
@@ -575,11 +599,7 @@ document.getElementById("theCanvas").parentNode.addEventListener("pointerdown", 
     //console.log('-------------');
     marker.position.copy(cameraForward);
     scene.add(marker);
-    
-    if(firstPersonViewOn){
-      tool.lookAt(cameraForward);
-      tool.rotateY(Math.PI / 2);
-    }
+    */
     
     const forwardVec = new THREE.Vector3();
     tool.projectileSrc.getWorldDirection(forwardVec);
@@ -598,7 +618,7 @@ document.getElementById("theCanvas").parentNode.addEventListener("pointerdown", 
 
 // https://stackoverflow.com/questions/48131322/three-js-first-person-camera-rotation
 document.getElementById("theCanvas").parentNode.addEventListener("mousemove", (evt) => {
-  if(firstPersonViewOn){
+  //if(firstPersonViewOn){
     document.body.style.cursor = 'none';
     evt.preventDefault();
     
@@ -610,21 +630,14 @@ document.getElementById("theCanvas").parentNode.addEventListener("mousemove", (e
     
     const cameraForward = new THREE.Vector3();
     camera.getWorldDirection(cameraForward);
-    cameraForward.multiplyScalar(300);
+    cameraForward.multiplyScalar(100);
     cameraForward.add(camera.position);
     
-    if(Math.abs(xDeg) <= 60 && Math.abs(yDeg) <= 60){
+    if(Math.abs(xDeg) <= 60 && Math.abs(yDeg) <= 80){
       player.chest.rotation.x = -mouseMoveY;
       player.chest.rotation.y = mouseMoveX;
-      
-      camera.rotation.copy(player.chest.rotation);
-      camera.rotateY(Math.PI);
-      
-      // rotate rifle with mouse
-      tool.lookAt(cameraForward);
-      tool.rotateY(Math.PI / 2); // TODO: this is a problem. fix orientation of rifle model so we don't have to make adjustments
     }
-  }
+  //}
 });
 
 function update(){
@@ -692,6 +705,7 @@ function update(){
     
   if(firstPersonViewOn){
     // have crosshairs showing
+    // TODO: place crosshairs where the cameraForward points towards (and where the rifle is pointing towards)
     crosshairCanvas.style.display = 'block';
         
     // https://stackoverflow.com/questions/25567369/show-children-of-invisible-parents

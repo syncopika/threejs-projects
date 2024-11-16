@@ -9,6 +9,8 @@ I don't need a lot of complicated physics here anyway.
 
 it's pretty much just movement along one axis
 and some simple bounding boxes ought to suffice for my meshes
+
+edit: turns out raycasting is enough for collision detection with no boxes needed :)
 */
 
 const container = document.getElementById("container");
@@ -77,22 +79,6 @@ const abacusBeads = [];
 const beadMoveDuration = 500; // move bead within 500 milliseconds (0.5 seconds)
 
 let selectedBead = null;
-renderer.domElement.addEventListener('pointerdown', (evt) => {
-  mouse.x = (evt.offsetX / evt.target.width) * 2 - 1;
-  mouse.y = -(evt.offsetY / evt.target.height) * 2 + 1;
-  raycaster.setFromCamera(mouse, camera);
-  
-  const intersects = raycaster.intersectObjects(scene.children, true); // make sure it's recursive
-    
-  const gotBead = intersects.filter(x => x.object.name.includes('bead'));
-  if(gotBead.length){
-    const hit = gotBead[0];
-    const bead = hit.object;
-    selectedBead = bead;
-    bead.material.wireframe = true;
-    setTimeout(() => bead.material.wireframe = false, 1000);
-  }
-});
 
 function getAbacusColumnValue(leadingBead, abacus){
   const leadBeadNum = parseInt(leadingBead.name.match(/\d+/g)[0]);
@@ -162,6 +148,23 @@ function getObstacleDist(bead, raycaster, direction){
 function isAtObstacleBoundary(bead, obstacle){
   return bead.position.distanceTo(obstacle.position) < 0.3;
 }
+
+renderer.domElement.addEventListener('pointerdown', (evt) => {
+  mouse.x = (evt.offsetX / evt.target.width) * 2 - 1;
+  mouse.y = -(evt.offsetY / evt.target.height) * 2 + 1;
+  raycaster.setFromCamera(mouse, camera);
+  
+  const intersects = raycaster.intersectObjects(scene.children, true); // make sure it's recursive
+    
+  const gotBead = intersects.filter(x => x.object.name.includes('bead'));
+  if(gotBead.length){
+    const hit = gotBead[0];
+    const bead = hit.object;
+    selectedBead = bead;
+    bead.material.wireframe = true;
+    setTimeout(() => bead.material.wireframe = false, 1000);
+  }
+});
 
 renderer.domElement.addEventListener('pointerup', (evt) => {
   if(selectedBead){
