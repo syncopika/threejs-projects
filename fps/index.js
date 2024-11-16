@@ -539,7 +539,7 @@ function keydown(evt){
     animationController.setUpdateTimeDivisor(.0025); // controls speed of animation
     currAction = "drawgun";
     animationController.changeAction("drawgun", "top", timeScale);
-  }else if(evt.code === "Digit1"){
+  }else if(evt.key === "1"){
     // toggle first-person view
     firstPersonViewOn = !firstPersonViewOn;
     sideViewOn = false;
@@ -556,7 +556,7 @@ function keydown(evt){
     }else{
       scene.add(camera);
     }
-  }else if(evt.code === "Digit2"){
+  }else if(evt.key === "2"){
     // toggle side view
     firstPersonViewOn = false;
     sideViewOn = !sideViewOn;
