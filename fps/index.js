@@ -107,6 +107,30 @@ plane.translateY(0.6);
 terrain = plane;
 scene.add(plane);
 
+// debugging line for showing rifle line-of-sight
+function showDebuggingLine(pos, direction){
+  const lineMaterial = new THREE.LineBasicMaterial({
+    color: 0x0000ff
+  });
+  
+  const points = [];
+  const numPoints = 3;
+  let increment = 0;
+  for(let i = 0; i < numPoints; i++){
+    points.push(new THREE.Vector3(
+      pos.x + (increment * direction.x), 
+      pos.y + (increment * direction.y),  
+      pos.z + (increment * direction.z), 
+    ));
+    increment += 10;
+  }
+  
+  const geometry = new THREE.BufferGeometry().setFromPoints(points);
+  const line = new THREE.Line(geometry, lineMaterial);
+  
+  scene.add(line);
+}
+
 const planeShape = new CANNON.Plane();
 const groundMat = new CANNON.Material();
 const planeBody = new CANNON.Body({material: groundMat, mass: 0}); // this plane extends infinitely
@@ -258,6 +282,15 @@ function getModel(modelFilePath, name){
           const magazine = carbine[1];
           m4carbine.magazine = magazine;
           m4carbine.skeleton.bones[1].add(magazine); // add magazine to the mag bone
+          
+          // add a marker to the rifle barrel to indicate where the projectiles should originate from
+          const cubeGeometry = new THREE.CubeGeometry(0.2, 0.2, 0.2);
+          const normalMaterial = new THREE.MeshStandardMaterial({color: 0x055C9D, wireframe: true}); //{opacity: 0.0, transparent: true});
+          const cubeMesh = new THREE.Mesh(cubeGeometry, normalMaterial);
+          m4carbine.add(cubeMesh);
+          m4carbine.projectileSrc = cubeMesh;
+          cubeMesh.rotateY(-Math.PI/2);
+          cubeMesh.position.set(-3.5, 0.2, 0);
 
           m4carbine.rotateOnAxis(new THREE.Vector3(0,1,0), Math.PI/2);
           m4carbine.rotateOnAxis(new THREE.Vector3(0,0,-1), Math.PI/2);
@@ -503,10 +536,10 @@ function keydown(evt){
       animationController.changeState("normal"); // go back to normal state
       timeScale = -1; // need to play equip animation backwards to put away weapon
     }
-    animationController.setUpdateTimeDivisor(.0015);
+    animationController.setUpdateTimeDivisor(.0025); // controls speed of animation
     currAction = "drawgun";
     animationController.changeAction("drawgun", "top", timeScale);
-  }else if(evt.code === "Digit1"){
+  }else if(evt.key === "1"){
     // toggle first-person view
     firstPersonViewOn = !firstPersonViewOn;
     sideViewOn = false;
@@ -517,15 +550,13 @@ function keydown(evt){
     if(firstPersonViewOn){
       neckMarker.add(camera);
       camera.position.copy(neckMarker.position);
-      camera.position.z -= 1.0;
-      camera.position.y -= 0.2;
-      //camera.rotation.copy(player.chest.rotation);
-      //camera.rotateY(Math.PI);
+      camera.position.z += 1.0;
+      camera.position.y -= 0.1;
       camera.rotation.set(0, Math.PI, 0);
     }else{
       scene.add(camera);
     }
-  }else if(evt.code === "Digit2"){
+  }else if(evt.key === "2"){
     // toggle side view
     firstPersonViewOn = false;
     sideViewOn = !sideViewOn;
@@ -548,35 +579,65 @@ document.addEventListener("keyup", keyup);
 document.getElementById("theCanvas").parentNode.addEventListener("pointerdown", (evt) => {
   if(animationController && animationController.currState !== "normal"){
     evt.preventDefault();
+    
+    /* for debugging: place a marker at cameraForward to confirm
+    // that is really where we would expect the projectile to move towards?
+    const cubeGeometry2 = new THREE.BoxGeometry(0.2, 0.2, 0.2);
+    const material2 = new THREE.MeshBasicMaterial({color: 0x0000ff});
+    const marker = new THREE.Mesh(cubeGeometry2, material2);
+    
+    const camWorldPos = new THREE.Vector3();
+    camera.getWorldPosition(camWorldPos);
+    //console.log(camWorldPos);
+    
+    const cameraForward = new THREE.Vector3();
+    camera.getWorldDirection(cameraForward);
+    cameraForward.multiplyScalar(100);
+    cameraForward.add(camWorldPos);
+    
+    //console.log(cameraForward);
+    //console.log('-------------');
+    marker.position.copy(cameraForward);
+    scene.add(marker);
+    */
+    
     const forwardVec = new THREE.Vector3();
-    camera.getWorldDirection(forwardVec);
+    tool.projectileSrc.getWorldDirection(forwardVec);
         
     const impulseVal = parseInt(document.getElementById('impulseSlider').value);
     forwardVec.multiplyScalar(impulseVal);
     
-    // TODO: use the barrel of the rifle as the starting position of the projectile (might need to add a marker mesh)
-    const sphere = generateProjectile(player.position.x, player.position.y + 1.0, player.position.z);
+    const posVec = new THREE.Vector3();
+    const projectileSrcPos = tool.projectileSrc.getWorldPosition(posVec);
+    const sphere = generateProjectile(posVec.x, posVec.y, posVec.z);
     sphere.sphereBody.applyImpulse(new CANNON.Vec3(forwardVec.x, forwardVec.y, forwardVec.z), sphere.sphereBody.position);
-        
+    
     projectiles.add(sphere);
   }
 });
 
 // https://stackoverflow.com/questions/48131322/three-js-first-person-camera-rotation
 document.getElementById("theCanvas").parentNode.addEventListener("mousemove", (evt) => {
-  if(firstPersonViewOn){
+  //if(firstPersonViewOn){
     document.body.style.cursor = 'none';
     evt.preventDefault();
-        
+    
     const mouseMoveX = -(evt.clientX / renderer.domElement.clientWidth) * 2 + 1;
     const mouseMoveY = -(evt.clientY / renderer.domElement.clientHeight) * 2 + 1;
-        
-    player.chest.rotation.x = -mouseMoveY;
-    player.chest.rotation.y = mouseMoveX;
     
-    camera.rotation.copy(player.chest.rotation);
-    camera.rotateY(Math.PI);
-  }
+    const xDeg = mouseMoveX * 180 / Math.PI;
+    const yDeg = mouseMoveY * 180 / Math.PI;
+    
+    const cameraForward = new THREE.Vector3();
+    camera.getWorldDirection(cameraForward);
+    cameraForward.multiplyScalar(100);
+    cameraForward.add(camera.position);
+    
+    if(Math.abs(xDeg) <= 60 && Math.abs(yDeg) <= 80){
+      player.chest.rotation.x = -mouseMoveY;
+      player.chest.rotation.y = mouseMoveX;
+    }
+  //}
 });
 
 function update(){
@@ -644,10 +705,11 @@ function update(){
     
   if(firstPersonViewOn){
     // have crosshairs showing
+    // TODO: place crosshairs where the cameraForward points towards (and where the rifle is pointing towards)
     crosshairCanvas.style.display = 'block';
         
     // https://stackoverflow.com/questions/25567369/show-children-of-invisible-parents
-    player.material.visible = false;
+    //player.material.visible = false;
   }else if(sideViewOn){
     relCameraOffset = new THREE.Vector3(-10, 3, 0);
   }else if(!changeCameraView){
@@ -663,10 +725,11 @@ function update(){
     player.material.visible = true;
         
     const cameraOffset = relCameraOffset.applyMatrix4(player.matrixWorld);
+    
     camera.position.x = cameraOffset.x;
     camera.position.y = cameraOffset.y;
     camera.position.z = cameraOffset.z;
-        
+    
     camera.lookAt(player.position);
   }
 }
