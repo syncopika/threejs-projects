@@ -618,26 +618,26 @@ document.getElementById("theCanvas").parentNode.addEventListener("pointerdown", 
 
 // https://stackoverflow.com/questions/48131322/three-js-first-person-camera-rotation
 document.getElementById("theCanvas").parentNode.addEventListener("mousemove", (evt) => {
-  //if(firstPersonViewOn){
-    document.body.style.cursor = 'none';
-    evt.preventDefault();
-    
-    const mouseMoveX = -(evt.clientX / renderer.domElement.clientWidth) * 2 + 1;
-    const mouseMoveY = -(evt.clientY / renderer.domElement.clientHeight) * 2 + 1;
-    
-    const xDeg = mouseMoveX * 180 / Math.PI;
-    const yDeg = mouseMoveY * 180 / Math.PI;
-    
-    const cameraForward = new THREE.Vector3();
-    camera.getWorldDirection(cameraForward);
-    cameraForward.multiplyScalar(100);
-    cameraForward.add(camera.position);
-    
-    if(Math.abs(xDeg) <= 60 && Math.abs(yDeg) <= 80){
+  document.body.style.cursor = 'none';
+  evt.preventDefault();
+
+  const mouseMoveX = -(evt.clientX / renderer.domElement.clientWidth) * 2 + 1;
+  const mouseMoveY = -(evt.clientY / renderer.domElement.clientHeight) * 2 + 1;
+
+  const xDeg = mouseMoveX * 180 / Math.PI;
+  const yDeg = mouseMoveY * 180 / Math.PI;
+
+  const cameraForward = new THREE.Vector3();
+  camera.getWorldDirection(cameraForward);
+  cameraForward.multiplyScalar(100);
+  cameraForward.add(camera.position);
+
+  if(Math.abs(xDeg) <= 60 && Math.abs(yDeg) <= 80){
+    if(player){
       player.chest.rotation.x = -mouseMoveY;
       player.chest.rotation.y = mouseMoveX;
     }
-  //}
+  }
 });
 
 function update(){
@@ -690,16 +690,21 @@ function update(){
   
   if(keyboard.pressed("q")){
     animationController.changeAction("leftlean", "top");
+    currAction = "leftlean";
   }else if(keyboard.pressed("e")){
     animationController.changeAction("rightlean", "top");
+    currAction = "rightlean";
   }
-    
-  // we don't want idle animation to run if in first-person mode since I want to
-  // manually control the chest bone for look-around rotation
-  if(currAction !== 'idle' || !firstPersonViewOn){
-    // keep the current animation running
-    animationController.update();
-  }
+  
+  // make sure to update controller animations
+  // TODO: currently in first-person mode the bones are still subject to rotations
+  // dictated by the idle animation, which isn't ideal because the player's torso still
+  // rotates even while trying to aim the weapon which can get annoying (although we can still point and aim ok at least)
+  //
+  // maybe we can turn off the animation controller updates just for the upper body animation
+  // only while in first-person mode and idle?
+  // we would still need to update the controller for leaning left/right
+  animationController.update();
   
   let relCameraOffset;
     
