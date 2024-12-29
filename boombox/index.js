@@ -227,6 +227,11 @@ getModel('../models/boombox.gltf', 'boombox').then(boombox => {
   listener.positionZ.value = boombox.position.z; //camera.position.z;
   
   boomboxMesh = boombox.children[3];
+  
+  // load demo audio
+  audioFileUrl = '../models/080415pianobgm3popver-edit-steinway.ogg';
+  loadAudioFile(audioFileUrl);
+  document.getElementById('audioFileName').textContent = '080415pianobgm3popver-edit-steinway.ogg';
 });
 
 function update(){

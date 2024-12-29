@@ -258,4 +258,10 @@ function animate(){
 
 createTimeDomainVisualization();
 createFrequencyDomainVisualization();
+
+// load demo audio
+audioFileUrl = '../models/080415pianobgm3popver-edit-steinway.ogg';
+loadAudioFile(audioFileUrl);
+document.getElementById('audioFileName').textContent = '080415pianobgm3popver-edit-steinway.ogg';
+
 animate();
