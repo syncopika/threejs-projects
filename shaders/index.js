@@ -5,7 +5,7 @@ let animationReqId;
 const loader = new THREE.GLTFLoader();
 const textureLoader = new THREE.TextureLoader();
 
-const container = document.getElementById("container");
+const container = document.getElementById('container');
 const fov = 60;
 const camera = new THREE.PerspectiveCamera(fov, container.clientWidth / container.clientHeight, 0.01, 1000);
 const scene = new THREE.Scene();
@@ -39,19 +39,19 @@ controls.panSpeed = 0.8;
 getModel('../models/f-16.gltf', 'f-16');
 
 function getModel(modelFilePath, name){
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve) => {
     loader.load(
       modelFilePath,
       function(gltf){
         gltf.scene.traverse((child) => {
-          if(child.type === "Mesh"){    
+          if(child.type === 'Mesh'){    
             const material = child.material;
             const geometry = child.geometry;
             const obj = new THREE.Mesh(geometry, material);            
             obj.rotateOnAxis(new THREE.Vector3(0,1,0), -Math.PI/4);
             obj.name = name;
                         
-            if(name === "whale-shark-camo"){
+            if(name === 'whale-shark-camo'){
               obj.scale.set(1.8, 1.8, 1.8);
               obj.position.set(5, 0, 0);
               obj.rotateOnAxis(new THREE.Vector3(0,1,0), Math.PI/2);
@@ -62,11 +62,11 @@ function getModel(modelFilePath, name){
             currModel = obj;
             currModelTexture = obj.material.map ? obj.material.map.image : null;
                         
-            if(name === "whale-shark-camo"){
+            if(name === 'whale-shark-camo'){
               updateWhaleShark();
-            }else if(name === "f-18"){
+            }else if(name === 'f-18'){
               updateJetModel2();
-            }else if(name === "f-16"){
+            }else if(name === 'f-16'){
               updateJetModel();
             }            
                         
@@ -76,7 +76,7 @@ function getModel(modelFilePath, name){
         });
       },
       // called while loading is progressing
-      function(xhr){
+      function(/*xhr*/){
         //console.log( (xhr.loaded / xhr.total * 100) + '% loaded' );
       },
       // called when loading has errors
@@ -121,26 +121,26 @@ document.getElementById('selectModel').addEventListener('change', async (evt) =>
   currModel = null;
   currModelTexture = null;
     
-  if(["whale-shark-camo", "f-18"].indexOf(evt.target.value) > -1){
+  if(['whale-shark-camo', 'f-18'].indexOf(evt.target.value) > -1){
     await getModel(`../models/${evt.target.value}.glb`, evt.target.value);
     camera.position.z = cameraZPos;
-  }else if(evt.target.value === "scene1"){
+  }else if(evt.target.value === 'scene1'){
     // this one changes the camera's z-position a bit
     currModel = createSceneSquares();
     processMesh(currModel);
-  }else if(evt.target.value === "scene2"){
+  }else if(evt.target.value === 'scene2'){
     currModel = createRaymarchShader();
     processMesh(currModel);
     camera.position.z = cameraZPos;
-  }else if(evt.target.value === "ripple"){
+  }else if(evt.target.value === 'ripple'){
     currModel = updateRipple();
     processMesh(currModel);
     currModel.rotation.x = -Math.PI / 2;
     camera.position.z = cameraZPos;
-  }else if(evt.target.value === "toon"){
+  }else if(evt.target.value === 'toon'){
     await getModel('../models/f-16.gltf', 'f-16');
     createToonShader();
-  }else if(evt.target.value === "glass"){
+  }else if(evt.target.value === 'glass'){
     await getModel('../models/f14.gltf', 'f-14');
     createGlassShader();
   }else{
@@ -161,14 +161,14 @@ function showShaderCode(vertexCode, fragCode, container){
   // clear container
   // https://stackoverflow.com/questions/3955229/remove-all-child-elements-of-a-dom-node-in-javascript
   const vh = document.createElement('h2');
-  vh.textContent = "vertex shader: ";
+  vh.textContent = 'vertex shader: ';
   const v = document.createElement('pre');
   v.textContent = vertexCode;
 
   const br = document.createElement('br');
 
   const fh = document.createElement('h2');
-  fh.textContent = "fragment shader: ";
+  fh.textContent = 'fragment shader: ';
   const f = document.createElement('pre');
   f.textContent = fragCode;
     
@@ -182,15 +182,15 @@ function updateJetModel(){
   showShaderCode(vertexShader, fragShader, document.getElementById('shader'));
     
   const uniforms = {
-    u_time: {type: "f", value: 0.0},
-    u_resolution: {type: "vec2", value: new THREE.Vector2(renderer.domElement.width, renderer.domElement.height)},
+    u_time: {type: 'f', value: 0.0},
+    u_resolution: {type: 'vec2', value: new THREE.Vector2(renderer.domElement.width, renderer.domElement.height)},
   };
     
   if(currModelTexture){
     const textureUrl = getTextureImageUrl(currModelTexture);
     const texture = textureLoader.load(textureUrl);
     texture.flipY = false; // this part is important!
-    uniforms.img = {type: "t", value: texture};
+    uniforms.img = {type: 't', value: texture};
   }
     
   const newShaderMaterial = new THREE.ShaderMaterial({
@@ -296,8 +296,8 @@ function createSceneSquares(){
   showShaderCode(vertexShader, fragShader, document.getElementById('shader'));
     
   const uniforms = {
-    u_time: {type: "f", value: 0.0},
-    u_resolution: {type: "vec2", value: new THREE.Vector2(renderer.domElement.width, renderer.domElement.height)},
+    u_time: {type: 'f', value: 0.0},
+    u_resolution: {type: 'vec2', value: new THREE.Vector2(renderer.domElement.width, renderer.domElement.height)},
   };
     
   const newShaderMaterial = new THREE.ShaderMaterial({
@@ -309,7 +309,7 @@ function createSceneSquares(){
   });
     
   const mesh = new THREE.Mesh(geometry, newShaderMaterial);
-  mesh.name = "squareScene";
+  mesh.name = 'squareScene';
     
   return mesh;
 }
@@ -323,8 +323,8 @@ function createRaymarchShader(){
   showShaderCode(vertexShader, fragShader, document.getElementById('shader'));
     
   const uniforms = {
-    u_time: {type: "f", value: 0.0},
-    u_resolution: {type: "vec2", value: new THREE.Vector2(renderer.domElement.width, renderer.domElement.height)},
+    u_time: {type: 'f', value: 0.0},
+    u_resolution: {type: 'vec2', value: new THREE.Vector2(renderer.domElement.width, renderer.domElement.height)},
   };
     
   const newShaderMaterial = new THREE.ShaderMaterial({
@@ -335,7 +335,7 @@ function createRaymarchShader(){
   });
     
   const mesh = new THREE.Mesh(geometry, newShaderMaterial);
-  mesh.name = "raymarchScene";
+  mesh.name = 'raymarchScene';
     
   return mesh;
 }
@@ -346,8 +346,8 @@ function updateJetModel2(){
   showShaderCode(vertexShader, fragShader, document.getElementById('shader'));
     
   const uniforms = {
-    u_time: {type: "f", value: 0.0},
-    u_resolution: {type: "vec2", value: new THREE.Vector2(renderer.domElement.width, renderer.domElement.height)},
+    u_time: {type: 'f', value: 0.0},
+    u_resolution: {type: 'vec2', value: new THREE.Vector2(renderer.domElement.width, renderer.domElement.height)},
     lightPosition: {value: [new THREE.Vector4(dirLight.position.x, dirLight.position.y, dirLight.position.z, 1.0)]},
     lightIntensity: {value: [new THREE.Vector4(0.8, 0.8, 0.8, 1.0)]},
     diffuseLight: {value: [new THREE.Vector3(0.15, 0.15, 0.15)]},
@@ -359,7 +359,7 @@ function updateJetModel2(){
     const textureUrl = getTextureImageUrl(currModelTexture);
     const texture = textureLoader.load(textureUrl);
     texture.flipY = false; // this part is important!
-    uniforms.img = {type: "t", value: texture};
+    uniforms.img = {type: 't', value: texture};
   }
     
   const newShaderMaterial = new THREE.ShaderMaterial({
@@ -378,15 +378,15 @@ function updateWhaleShark(){
   showShaderCode(vertexShader, fragShader, document.getElementById('shader'));
     
   const uniforms = {
-    u_time: {type: "f", value: 0.0},
-    u_resolution: {type: "vec2", value: new THREE.Vector2(renderer.domElement.width, renderer.domElement.height)},
+    u_time: {type: 'f', value: 0.0},
+    u_resolution: {type: 'vec2', value: new THREE.Vector2(renderer.domElement.width, renderer.domElement.height)},
   };
     
   if(currModelTexture){
     const textureUrl = getTextureImageUrl(currModelTexture);
     const texture = textureLoader.load(textureUrl);
     texture.flipY = false; // this part is important!
-    uniforms.img = {type: "t", value: texture};
+    uniforms.img = {type: 't', value: texture};
   }
     
   const newShaderMaterial = new THREE.ShaderMaterial({
@@ -409,14 +409,14 @@ function updateRipple(){
   showShaderCode(vertexShader, fragShader, document.getElementById('shader'));
     
   const uniforms = {
-    u_time: {type: "f", value: 0.0},
-    u_resolution: {type: "vec2", value: new THREE.Vector2(renderer.domElement.width, renderer.domElement.height)},
-    center: {type: "vec2", value: new THREE.Vector2(0.5, 0.5)},
-    color: {type: "vec4", value: new THREE.Vector4(0.3, 0.6, 1, 0.8)},
-    speed: {type: "f", value: 0.3},
-    density: {type: "f", value: 50},
-    strength: {type: "f", value: 2},
-    brightness: {type: "f", value: 1}
+    u_time: {type: 'f', value: 0.0},
+    u_resolution: {type: 'vec2', value: new THREE.Vector2(renderer.domElement.width, renderer.domElement.height)},
+    center: {type: 'vec2', value: new THREE.Vector2(0.5, 0.5)},
+    color: {type: 'vec4', value: new THREE.Vector4(0.3, 0.6, 1, 0.8)},
+    speed: {type: 'f', value: 0.3},
+    density: {type: 'f', value: 50},
+    strength: {type: 'f', value: 2},
+    brightness: {type: 'f', value: 1}
   };
     
   const newShaderMaterial = new THREE.ShaderMaterial({
@@ -429,7 +429,7 @@ function updateRipple(){
   //const mat = new THREE.MeshLambertMaterial({color: '#cccddd'});
     
   const mesh = new THREE.Mesh(geometry, newShaderMaterial);
-  mesh.name = "rippleScene";
+  mesh.name = 'rippleScene';
     
   return mesh;
 }
@@ -445,7 +445,7 @@ function createToonShader(){
     const textureUrl = getTextureImageUrl(currModelTexture);
     const texture = textureLoader.load(textureUrl);
     texture.flipY = false; // this part is important!
-    uniforms.img = {type: "t", value: texture};
+    uniforms.img = {type: 't', value: texture};
   }
     
   const newShaderMaterial = new THREE.ShaderMaterial({
@@ -470,7 +470,7 @@ function createGlassShader(){
     const texture = textureLoader.load(textureUrl);
     texture.flipY = false; // this part is important!
     uniforms.img = {
-      type: "t", 
+      type: 't', 
       value: texture,
     };
   }

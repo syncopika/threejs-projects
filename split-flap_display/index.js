@@ -1,12 +1,10 @@
 //split-flap display
 
-const container = document.getElementById("container");
+const container = document.getElementById('container');
 
 const fov = 60;
 const camera = new THREE.PerspectiveCamera(fov, container.clientWidth / container.clientHeight, 0.01, 1000);
 camera.position.set(0, 2, 25);
-
-const mouse = new THREE.Vector2();
 
 const loadingManager = new THREE.LoadingManager();
 setupLoadingManager(loadingManager);
@@ -146,7 +144,7 @@ class SplitFlapDisplay {
 }
 
 function getModel(modelFilePath, xPos=null, letterToStopAt=null){
-  return new Promise((resolve, reject) => {
+  return new Promise(() => {
     loader.load(
       modelFilePath,
       async function(gltf){
@@ -264,15 +262,15 @@ function animate(){
   update();
 }
 
-getTextures().then(res => {
-  const textToDisplay = "hello world";
+getTextures().then(() => {
+  const textToDisplay = 'hello world';
   const distBetweenDisplays = 3;
   const numDisplays = textToDisplay.length;
 
   let xPos = -(Math.floor(numDisplays / 2) * distBetweenDisplays);
 
   for(let i = 0; i < numDisplays; i++){
-    getModel("../models/split-flap-idea.gltf", xPos, textToDisplay[i].trim());
+    getModel('../models/split-flap-idea.gltf', xPos, textToDisplay[i].trim());
     xPos += distBetweenDisplays;
   }
 

@@ -1,8 +1,7 @@
-const container = document.getElementById("container");
+const container = document.getElementById('container');
 const fov = 60;
 const camera = new THREE.PerspectiveCamera(fov, container.clientWidth / container.clientHeight, 0.01, 1000);
 const keyboard = new THREEx.KeyboardState();
-const raycaster = new THREE.Raycaster();
 const loadingManager = new THREE.LoadingManager();
 
 /* const stats = new Stats();
@@ -37,23 +36,22 @@ scene.add(hemiLight);
 
 const clock = new THREE.Clock();
 let sec = clock.getDelta();
-let moveDistance = 60 * sec;
 let rotationAngle = (Math.PI / 2) * sec;
 
 const loadedModels = [];
 
 function getModel(modelFilePath, name){
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve) => {
     loader.load(
       modelFilePath,
       function(gltf){    
-        if(name === "car"){
+        if(name === 'car'){
           const car = new THREE.Group();
                     
           // the car and its wheels are separate meshes.
           // make a group and add all of them to it
           gltf.scene.traverse((child) => {
-            if(child.type === "Mesh"){
+            if(child.type === 'Mesh'){
               const geometry = child.geometry;
               const material = child.material;
               const obj = new THREE.Mesh(geometry, material);
@@ -69,10 +67,10 @@ function getModel(modelFilePath, name){
           });
           //console.log(car);
           resolve(car);
-        }else if(name === "racetrack"){
+        }else if(name === 'racetrack'){
           // handle racetrack
           gltf.scene.traverse((child) => {
-            if(child.type === "Mesh"){
+            if(child.type === 'Mesh'){
               child.material.shininess = 0;
               child.material.roughness = 1;
               child.name = name;
@@ -101,7 +99,7 @@ function addPlane(scene){
   const plane = new THREE.Mesh(planeGeometry, material); 
   plane.position.set(-100, -1.5, 0);
   plane.rotateX((3*Math.PI)/2);
-  plane.name = "grass";
+  plane.name = 'grass';
   scene.add(plane);
 }
 
@@ -121,7 +119,7 @@ let debugMode = false;
 
 Promise.all(loadedModels).then((objects) => {
   objects.forEach((mesh) => {
-    if(mesh.name === "racetrack"){
+    if(mesh.name === 'racetrack'){
       mesh.position.set(6, -1.2, -7);
       mesh.receiveShadow = true;
       terrain = mesh;
@@ -142,32 +140,32 @@ Promise.all(loadedModels).then((objects) => {
       // set the wheels right 
       thePlayer.children.forEach((child) => {
                 
-        if(child.name.indexOf("Cube") === 0){
+        if(child.name.indexOf('Cube') === 0){
           thePlayer.wheels.push(child);
         }
                 
-        if(child.name === "Cube001"){
+        if(child.name === 'Cube001'){
           // front left
           child.position.set(2, 0, -1.8);
-          child.name = "left";
+          child.name = 'left';
           thePlayer.frontWheels.push(child);
           child.add(wheelAxesHelper); // good for debugging rotations!
-        }else if(child.name === "Cube002"){
+        }else if(child.name === 'Cube002'){
           // front right
           child.rotateY(Math.PI);
           child.position.set(2, 0, 1.8);
-          child.name = "right";
+          child.name = 'right';
           thePlayer.frontWheels.push(child);
-        }else if(child.name === "Cube003"){
+        }else if(child.name === 'Cube003'){
           // rear right
           child.rotateY(Math.PI);
           child.position.set(-2.9, 0, 1.7);
-          child.name = "right";
+          child.name = 'right';
           thePlayer.rearWheels.push(child);
-        }else if(child.name === "Cube004"){
+        }else if(child.name === 'Cube004'){
           // rear left
           child.position.set(-2.9, 0, -1.7);
-          child.name = "left";
+          child.name = 'left';
           thePlayer.rearWheels.push(child);
         }else{
           // car body
@@ -255,7 +253,7 @@ function adjustLateralRotationBasedOnTerrain(thePlayer, terrain){
     
   let midPt;
   for(const obj of mp){
-    if(obj.object.name === "racetrack"){
+    if(obj.object.name === 'racetrack'){
       midPt = obj;
       break;
     }
@@ -301,14 +299,14 @@ function adjustLateralRotationBasedOnTerrain(thePlayer, terrain){
   // we want the top face only!
   let leftPt, rightPt;
   for(const obj of lp){
-    if(obj.object.name === "racetrack"){
+    if(obj.object.name === 'racetrack'){
       leftPt = obj.point; 
     }
     break;
   }
     
   for(const obj of rp){
-    if(obj.object.name === "racetrack"){
+    if(obj.object.name === 'racetrack'){
       rightPt = obj.point; 
     }
     break; 
@@ -326,7 +324,7 @@ function adjustLateralRotationBasedOnTerrain(thePlayer, terrain){
 
   // rotate car about its x-axis so it aligns with the track
   if(markerSlopeVector.dot(terrainSlopeVector) < 0.998){
-    console.log("need to rotate x on car!");
+    console.log('need to rotate x on car!');
         
     quat.setFromUnitVectors(markerSlopeVector, terrainSlopeVector);
     thePlayer.applyQuaternion(quat);
@@ -353,14 +351,14 @@ function adjustForwardRotation(thePlayer, terrain){
 
   let frontPt, rearPt;
   for(const obj of fp){
-    if(obj.object.name === "racetrack"){
+    if(obj.object.name === 'racetrack'){
       frontPt = obj.point; 
     }
     break;
   }
     
   for(const obj of rp){
-    if(obj.object.name === "racetrack"){
+    if(obj.object.name === 'racetrack'){
       rearPt = obj.point; 
     }
     break; 
@@ -415,7 +413,7 @@ function keydown(evt){
     thePlayer.heightMarker.visible = !thePlayer.heightMarker.visible;
   }
 }
-document.addEventListener("keydown", keydown);
+document.addEventListener('keydown', keydown);
 
 
 // use this when turning the wheel to determine if the angle at which the car should
@@ -455,8 +453,8 @@ function move(car, rotationAngle){
     // https://asawicki.info/Mirror/Car%20Physics%20for%20Games/Car%20Physics%20for%20Games.html
 
     // step 1: calculate radius of circle determined by angle of front wheels
-    const leftFront = thePlayer.frontWheels.filter((wheel) => wheel.name === "left")[0];
-    const leftRear = thePlayer.rearWheels.filter((wheel) => wheel.name === "left")[0];
+    const leftFront = thePlayer.frontWheels.filter((wheel) => wheel.name === 'left')[0];
+    const leftRear = thePlayer.rearWheels.filter((wheel) => wheel.name === 'left')[0];
     const frontRearDist = leftFront.position.distanceTo(leftRear.position); // get distance between front and rear wheels
     const sinAngle = Math.sin(angleToWheel);
     const circleRadius = frontRearDist / sinAngle; // this is the radius of the circle that would be followed given the front wheel angle
@@ -478,17 +476,17 @@ function update(){
   let changeCameraView = false;
   const maxRad = 0.56; // max/min radians for wheel angle
     
-  if(keyboard.pressed("Z")){
+  if(keyboard.pressed('Z')){
     changeCameraView = true;
   }
     
-  if(keyboard.pressed("W")){
+  if(keyboard.pressed('W')){
     move(thePlayer, -rotationAngle);
-  }else if(keyboard.pressed("S")){
+  }else if(keyboard.pressed('S')){
     move(thePlayer, rotationAngle);
   }
     
-  if(keyboard.pressed("A")){
+  if(keyboard.pressed('A')){
     lastDirection = -1;  // angle from car body to wheel forward vector should be positive
     // because the body needs to be rotated counterclockwise. multiply -1 because rotationAngle is negative.
         
@@ -504,7 +502,7 @@ function update(){
     });
   }
     
-  if(keyboard.pressed("D")){
+  if(keyboard.pressed('D')){
     lastDirection = 1; // clockwise rotation for the car body to align with front wheel rotation about y
     thePlayer.frontWheels.forEach((wheel) => {
       if(wheel.rotation.y >= -maxRad && wheel.rotation.y <= maxRad){

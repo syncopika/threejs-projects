@@ -4,7 +4,7 @@ let currModelTextureMesh = null; // use this variable to keep track of the mesh 
 const loader = new THREE.GLTFLoader();
 const textureLoader = new THREE.TextureLoader();
 
-const container = document.getElementById("display");
+const container = document.getElementById('display');
 const renderer = new THREE.WebGLRenderer({antialias: true});
 const fov = 60;
 const camera = new THREE.PerspectiveCamera(fov, container.clientWidth / container.clientHeight, 0.01, 1000);
@@ -41,18 +41,18 @@ getModel('../models/f-16.gltf', 'f16');
 update();
 
 function getModel(modelFilePath, name){
-  return new Promise((resolve, reject) => {
+  return new Promise(() => {
     loader.load(
       modelFilePath,
       async function(gltf){
-        if(name === "porsche"){
+        if(name === 'porsche'){
           currModel = gltf.scene;
           currModel.scale.set(4,4,4);
           currModel.position.set(0, 0, -5);
           currModel.rotateOnAxis(new THREE.Vector3(0,1,0), -Math.PI*.8);
           processMesh(currModel);
                     
-          const carBody = gltf.scene.children.filter((obj) => obj.name === "porsche")[0];
+          const carBody = gltf.scene.children.filter((obj) => obj.name === 'porsche')[0];
           currModelTextureMesh = carBody;
                     
           const texture = carBody.material.map.image;
@@ -61,20 +61,20 @@ function getModel(modelFilePath, name){
           canvas.height = texture.height;
                     
           // make sure to explicitly set size of the canvas container
-          canvas.parentNode.style.width = texture.width + "px";
-          canvas.parentNode.style.height = texture.height + "px";
+          canvas.parentNode.style.width = texture.width + 'px';
+          canvas.parentNode.style.height = texture.height + 'px';
                     
           canvas.getContext('2d').drawImage(texture, 0, 0);
         }else{
           gltf.scene.traverse((child) => {
-            if(child.type === "Mesh"){
+            if(child.type === 'Mesh'){
               // get the embedded texture and display in canvas
               const texture = child.material.map.image;
               const canvas = document.getElementById('liveryCanvas');
               canvas.width = texture.width;
               canvas.height = texture.height;
-              canvas.parentNode.style.width = texture.width + "px";
-              canvas.parentNode.style.height = texture.height + "px";
+              canvas.parentNode.style.width = texture.width + 'px';
+              canvas.parentNode.style.height = texture.height + 'px';
               canvas.getContext('2d').drawImage(texture, 0, 0);
                             
               const material = child.material;
@@ -144,7 +144,7 @@ function invertColor(pixels){
   }
   return pixels;
 }
-document.getElementById('invertColor').addEventListener('click', (evt) => {
+document.getElementById('invertColor').addEventListener('click', () => {
   const canvas = document.getElementById('liveryCanvas');
   const ctx = canvas.getContext('2d');
   const pixelData = ctx.getImageData(0, 0, canvas.width, canvas.height);
@@ -183,7 +183,7 @@ function mosaicFilter(pixels){
     
   return pixels;
 }
-document.getElementById('mosaic').addEventListener('click', (evt) => {
+document.getElementById('mosaic').addEventListener('click', () => {
   const canvas = document.getElementById('liveryCanvas');
   const ctx = canvas.getContext('2d');
   const pixelData = ctx.getImageData(0, 0, canvas.width, canvas.height);
@@ -208,12 +208,12 @@ function importTexture(){
     const reader = new FileReader();
     const file = e.target.files[0];
     if(!file.type.match(/image.*/)){
-      console.log("not a valid image");
+      console.log('not a valid image');
       return;
     }
     img.onload = () => {
-      const canvas = document.getElementById("liveryCanvas");
-      const context = canvas.getContext("2d");
+      const canvas = document.getElementById('liveryCanvas');
+      const context = canvas.getContext('2d');
       const height = canvas.height;
       const width = canvas.width;
       context.drawImage(img, 0, 0, width, height);
@@ -226,18 +226,18 @@ function importTexture(){
     reader.readAsDataURL(file);
   }
 }
-document.getElementById("importTexture").addEventListener('click', () => {
+document.getElementById('importTexture').addEventListener('click', () => {
   importTexture();
 });
 
 function exportTexture(){
-  const canvas = document.getElementById("liveryCanvas");
+  const canvas = document.getElementById('liveryCanvas');
   canvas.toBlob((blob) => {
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
         
-    const name = prompt("please enter a name for the file");
+    const name = prompt('please enter a name for the file');
     if(name === null) {
       return;
     }else{
@@ -247,7 +247,7 @@ function exportTexture(){
     }
   });
 }
-document.getElementById("exportTexture").addEventListener('click', () => {
+document.getElementById('exportTexture').addEventListener('click', () => {
   exportTexture();
 });
 
@@ -260,12 +260,10 @@ function updateModel(){
   const newTexture = textureLoader.load(imageUrl);
     
   // update model with new texture
-  const oldTexture = currModelTextureMesh.material.map;
-
   newTexture.flipY = false;
   currModelTextureMesh.material.map = newTexture;
 }
-document.getElementById('updateModel').addEventListener('click', (evt) => {
+document.getElementById('updateModel').addEventListener('click', () => {
   updateModel();
 });
 
@@ -281,7 +279,7 @@ function brushStart(evt){
   evt.preventDefault();
   if(evt.which === 1){
     isDrawing = true;
-    addClick(evt, true);
+    addClick(evt);
     stroke();
   }
 }
@@ -289,7 +287,7 @@ function brushStart(evt){
 function brushMove(evt){
   evt.preventDefault();
   if(isDrawing){
-    addClick(evt, true);
+    addClick(evt);
     stroke();
   }
 }
@@ -299,7 +297,7 @@ function brushStop(){
   isDrawing = false;
 }
 
-function addClick(ptrEvt, dragging){
+function addClick(ptrEvt){
   const size = 3;
   const color = document.getElementById('colorInput').value; //'rgba(0,0,0,255)';
   const x = ptrEvt.offsetX;

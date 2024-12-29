@@ -2,7 +2,7 @@
 // borrowed some code from https://threejs.org/examples/webgl_marchingcubes.html
 import { MarchingCubes } from '../libs/MarchingCubes.js';
 
-const container = document.getElementById("container");
+const container = document.getElementById('container');
 
 const fov = 60;
 const camera = new THREE.PerspectiveCamera(fov, container.clientWidth / container.clientHeight, 0.01, 1000);
@@ -58,8 +58,8 @@ const lavaColor = 0x39ff14;
 const material = new THREE.MeshPhongMaterial({color: lavaColor});
 //material.wireframe = true;
 
-function getModel(modelFilePath, name){
-  return new Promise((resolve, reject) => {
+function getModel(modelFilePath){
+  return new Promise((resolve) => {
     loader.load(
       modelFilePath,
       function(gltf){
@@ -77,7 +77,7 @@ function getModel(modelFilePath, name){
     );
   });
 }
-getModel("../models/lava-lamp.gltf", "lavalamp").then(obj => {
+getModel('../models/lava-lamp.gltf', 'lavalamp').then(obj => {
   lampModel = obj;
     
   lampModel.children[1].castShadow = true;

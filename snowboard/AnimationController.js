@@ -17,8 +17,8 @@ class AnimationController {
     this.mixer = animMixer;
     this.clips = animClips;
     this.clock = clock;
-    this.currAction = "";
-    this.currState = "";
+    this.currAction = '';
+    this.currState = '';
     this.currActionTimescale = 1;
     this.animationMap = null;
         
@@ -30,7 +30,7 @@ class AnimationController {
         for(const state in data.states){
           for(const action in data.states[state]){
             const actionParams = data.states[state][action];
-            if(actionParams.loop === "once"){
+            if(actionParams.loop === 'once'){
               const actionClip = this.mixer.clipAction(this.clips[actionParams.actionName]);
               actionClip.paused = false;
               actionClip.setLoop(THREE.LoopOnce);

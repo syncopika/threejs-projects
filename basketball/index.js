@@ -1,7 +1,7 @@
 // https://sbcode.net/threejs/physics-cannonjs/
 // https://github.com/schteppe/cannon.js/tree/master/tools/threejs
 
-const container = document.getElementById("container");
+const container = document.getElementById('container');
 //const keyboard = new THREEx.KeyboardState();
 
 // set up mobile keyboard
@@ -15,14 +15,6 @@ camera.position.set(0, 4, 10);
 camera.rotateX(-Math.PI/10);
 const camRotation = new THREE.Quaternion();
 camera.getWorldQuaternion(camRotation);
-
-const raycaster = new THREE.Raycaster();
-const mouse = new THREE.Vector2();
-
-const loadingManager = new THREE.LoadingManager();
-setupLoadingManager(loadingManager);
-
-const loader = new THREE.GLTFLoader(loadingManager);
 
 const renderer = new THREE.WebGLRenderer({antialias: true});
 renderer.shadowMap.enabled = true;
@@ -133,7 +125,7 @@ function keydown(evt){
     camera.setRotationFromQuaternion(camRotation);
   }
 }
-document.addEventListener("keydown", keydown);
+document.addEventListener('keydown', keydown);
 
 function createBasketballHoop(){
   // backboard

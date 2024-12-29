@@ -1,4 +1,4 @@
-const container = document.getElementById("container");
+const container = document.getElementById('container');
 
 const fov = 60;
 const camera = new THREE.PerspectiveCamera(fov, container.clientWidth / container.clientHeight, 0.01, 1000);
@@ -53,11 +53,11 @@ const durationTillClean = 1; // 1 sec. it takes 1 sec to decrease dirtiness
 let dirtiness = 3;
 
 function getModel(modelFilePath, side, name){
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve) => {
     loader.load(
       modelFilePath,
       function(gltf){
-        if(name === "rightHand" && gltf.animations.length > 0){
+        if(name === 'rightHand' && gltf.animations.length > 0){
           const clips = {};
           gltf.animations.forEach((action) => {
             let name = action['name'].toLowerCase();
@@ -69,14 +69,14 @@ function getModel(modelFilePath, side, name){
                 
         gltf.scene.traverse((child) => {
           //console.log(child);
-          if(child.type === "Mesh" || child.type === "SkinnedMesh"){
+          if(child.type === 'Mesh' || child.type === 'SkinnedMesh'){
             const obj = child;
-            if(child.type === "Mesh"){
+            if(child.type === 'Mesh'){
               //console.log(obj);
             }
-            if(name === "rightHand" && child.type === "SkinnedMesh"){
+            if(name === 'rightHand' && child.type === 'SkinnedMesh'){
               obj.add(child.skeleton.bones[0]); // this step is important for getting the mesh to show up properly!
-            }else if(name === "leftHand" && child.type === "SkinnedMesh"){
+            }else if(name === 'leftHand' && child.type === 'SkinnedMesh'){
               obj.add(child.skeleton.bones[0]);
             }
                         
@@ -87,7 +87,7 @@ function getModel(modelFilePath, side, name){
         });
                 
         // for the dishes
-        if(name === "obj"){
+        if(name === 'obj'){
         }
       },
       // called while loading is progressing
@@ -110,10 +110,10 @@ loadedModels.push(getModel('../models/sponge.gltf', '', 'sponge'));
 
 Promise.all(loadedModels).then((objects) => {
   objects.forEach((mesh) => {
-    if(mesh.name === "bg"){
+    if(mesh.name === 'bg'){
       mesh.position.set(0, 0, 0);
       mesh.receiveShadow = true;
-    }else if(mesh.name === "plate"){
+    }else if(mesh.name === 'plate'){
       // objs that can be equipped
       mesh.castShadow = true;
       mesh.receiveShadow = true;
@@ -122,7 +122,7 @@ Promise.all(loadedModels).then((objects) => {
       mesh.scale.y *= 8;
       mesh.scale.z *= 8;;
       plate = mesh;
-    }else if(mesh.name === "sponge"){
+    }else if(mesh.name === 'sponge'){
       mesh.castShadow = true;
       mesh.receiveShadow = true;
       mesh.position.set(3, -5, 0);
@@ -130,7 +130,7 @@ Promise.all(loadedModels).then((objects) => {
       mesh.scale.y *= 8;
       mesh.scale.z *= 8;   
       sponge = mesh;
-    }else if(mesh.name === "rightHand"){
+    }else if(mesh.name === 'rightHand'){
       mesh.castShadow = true;
       rightHand = mesh;
       rightHand.translateX(4);
@@ -142,11 +142,11 @@ Promise.all(loadedModels).then((objects) => {
       //rightHand.add(rightAxesHelper);
             
       animationMixerRightHand = new THREE.AnimationMixer(rightHand);
-      const action = animationMixerRightHand.clipAction(animationClips["idle"]);
+      const action = animationMixerRightHand.clipAction(animationClips['idle']);
       console.log(animationMixerRightHand);
             
       for(const bone of rightHand.skeleton.bones){
-        if(bone.name === "Bone"){
+        if(bone.name === 'Bone'){
           rightHand.hand = bone;
           break;
         }
@@ -156,7 +156,7 @@ Promise.all(loadedModels).then((objects) => {
             
       animate();
             
-    }else if(mesh.name === "leftHand"){
+    }else if(mesh.name === 'leftHand'){
       mesh.castShadow = true;
       leftHand = mesh;
       leftHand.applyMatrix4(new THREE.Matrix4().makeScale(1,1,-1));
@@ -169,11 +169,11 @@ Promise.all(loadedModels).then((objects) => {
       //leftHand.add(leftAxesHelper);
             
       animationMixerLeftHand = new THREE.AnimationMixer(leftHand);
-      const action = animationMixerLeftHand.clipAction(animationClips["hold2"]);
+      const action = animationMixerLeftHand.clipAction(animationClips['hold2']);
             
       // add hand bone to equip tool with as a child of the player mesh
       for(const bone of leftHand.skeleton.bones){
-        if(bone.name === "Bone"){
+        if(bone.name === 'Bone'){
           leftHand.hand = bone; // set an arbitrary new property to access the hand bone
           break;
         }
@@ -205,14 +205,14 @@ function attachSpongeToRightHand(){
     sponge.rotateZ(Math.PI/2);
         
     animationMixerRightHand = new THREE.AnimationMixer(rightHand);
-    const action = animationMixerRightHand.clipAction(animationClips["hold1"]);
+    const action = animationMixerRightHand.clipAction(animationClips['hold1']);
     action.play();
         
     spongeAttached = true;
   }
 }
 
-function detectSpongeToPlateContact(mouse){
+function detectSpongeToPlateContact(){
   // use raycast from sponge
   // if within certain distance, consider contact made
   // check duration of contact (TODO: take into account change in sponge distance
@@ -258,7 +258,7 @@ function detectSpongeToPlateContact(mouse){
           const newMat = new THREE.MeshBasicMaterial({color: 0xaaaa00});
           plate.material = newMat;
                     
-          alert("nice job! you cleaned the plate :D");
+          alert('nice job! you cleaned the plate :D');
         }
       }
             
@@ -281,11 +281,8 @@ function keydown(evt){
   }
 }
 
-function keyup(evt){
-}
-
-document.addEventListener("keydown", keydown);
-document.addEventListener("keyup", keyup);
+document.addEventListener('keydown', keydown);
+document.addEventListener('keyup', keyup);
 
 // allow objects in renderer to be 'clickable'
 renderer.domElement.addEventListener('mousedown', (evt) => {
@@ -294,8 +291,8 @@ renderer.domElement.addEventListener('mousedown', (evt) => {
   raycaster.setFromCamera(mouse, camera);
     
   const intersects = raycaster.intersectObjects(scene.children, true); // make sure it's recursive
-  const gotSponge = intersects.filter(x => x.object.name === "sponge");
-  const gotPlate = intersects.filter(x => x.object.name === "plate");
+  const gotSponge = intersects.filter(x => x.object.name === 'sponge');
+  const gotPlate = intersects.filter(x => x.object.name === 'plate');
     
   if(gotSponge.length > 0){
     attachSpongeToRightHand();
@@ -334,12 +331,6 @@ renderer.domElement.addEventListener('mousemove', (evt) => {
 
 function update(){
   const sec = clock.getDelta();
-  const moveDistance = 8 * sec;
-  const rotationAngle = (Math.PI / 2) * sec;
-    
-  //if(leftHand) leftHand.rotateY(rotationAngle);
-  //if(rightHand) rightHand.rotateY(rotationAngle);
-    
   if(animationMixerLeftHand) animationMixerLeftHand.update(sec);
   if(animationMixerRightHand) animationMixerRightHand.update(sec);
 }

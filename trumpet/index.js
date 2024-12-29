@@ -1,6 +1,6 @@
 // trumpet
 
-const container = document.getElementById("container");
+const container = document.getElementById('container');
 
 const fov = 60;
 const camera = new THREE.PerspectiveCamera(fov, container.clientWidth / container.clientHeight, 0.01, 1000);
@@ -37,7 +37,6 @@ let audioSource;
 let audioFileUrl;
 let animationFrameReqId;
 let isPlaying = false;
-let isStopped = true;
 
 const noteToValveComboMap = {
   'a': '12',
@@ -95,33 +94,33 @@ gainNode.connect(audioContext.destination);
 const noteBufferMap = {};
 let readyToPlay = false;
 function loadInNotes(){
-  document.getElementById('status').textContent = "loading in notes...";
+  document.getElementById('status').textContent = 'loading in notes...';
   const notesToLoad = [
-    "c4",
-    "cs4",
-    "d4",
-    "ds4",
-    "e4",
-    "f4",
-    "fs4",
-    "g4",
-    "gs4",
-    "a4",
-    "bb4",
-    "b4",
-    "c5",
-    "cs5",
-    "d5",
-    "e5",
-    "f5",
-    "g5",
-    "gs5",
-    "a5",
-    "b5",
+    'c4',
+    'cs4',
+    'd4',
+    'ds4',
+    'e4',
+    'f4',
+    'fs4',
+    'g4',
+    'gs4',
+    'a4',
+    'bb4',
+    'b4',
+    'c5',
+    'cs5',
+    'd5',
+    'e5',
+    'f5',
+    'g5',
+    'gs5',
+    'a5',
+    'b5',
   ];
   let totalNotes = notesToLoad.length;
   notesToLoad.forEach(note => {
-    const fileToFetch = "notes/" + note + '.ogg';
+    const fileToFetch = 'notes/' + note + '.ogg';
     const newSource = audioContext.createBufferSource();
         
     // https://developer.mozilla.org/en-US/docs/Web/API/Body/arrayBuffer
@@ -136,7 +135,7 @@ function loadInNotes(){
                 
         totalNotes--;
         if(totalNotes === 0){
-          document.getElementById('status').textContent = "";
+          document.getElementById('status').textContent = '';
           readyToPlay = true;
                     
           //console.log(noteBufferMap);
@@ -425,7 +424,7 @@ function playNostalgiaExcerpt(){
 }
 
 function getModel(modelFilePath){
-  return new Promise((resolve, reject) => {
+  return new Promise(() => {
     loader.load(
       modelFilePath,
       async function(gltf){
@@ -479,7 +478,7 @@ function keydown(evt){
   // simultaneous keydown? e.g. by default we're c4 - c5 (Bb)
   // but pressing down the 6 key at the same time will move to c5 - c6
 }
-document.addEventListener("keydown", keydown);
+document.addEventListener('keydown', keydown);
 
 function keyup(evt){
   if(evt.key === '1'){
@@ -492,11 +491,11 @@ function keyup(evt){
     
   if(evt.key === 'Shift'){
     // evaluate the current valves that are down and play corresponding note
-    let valveCombo = "";
-    valveCombo += valves[1].morphTargetInfluences[0] > 0 ? "1" : "";
-    valveCombo += valves[2].morphTargetInfluences[0] > 0 ? "2" : "";
-    valveCombo += valves[3].morphTargetInfluences[0] > 0 ? "3" : "";
-    if(valveCombo === "") valveCombo = "0";
+    let valveCombo = '';
+    valveCombo += valves[1].morphTargetInfluences[0] > 0 ? '1' : '';
+    valveCombo += valves[2].morphTargetInfluences[0] > 0 ? '2' : '';
+    valveCombo += valves[3].morphTargetInfluences[0] > 0 ? '3' : '';
+    if(valveCombo === '') valveCombo = '0';
         
     const note = valveToNoteComboMap[valveCombo];
     const octave = document.getElementById('octave').value;
@@ -518,33 +517,31 @@ function keyup(evt){
     });
   }
 }
-document.addEventListener("keyup", keyup);
+document.addEventListener('keyup', keyup);
 
 document.getElementById('playExample').addEventListener('click', () => {
   const selectedExample = document.getElementById('selectExamplePiece').value;
   //console.log(selectedExample);
     
   if(readyToPlay){
-    if(selectedExample === "examplePiece1") playExamplePiece1();
-    else if(selectedExample === "examplePiece2") playExamplePiece2();
-    else if(selectedExample === "nostalgia-excerpt") playNostalgiaExcerpt();
+    if(selectedExample === 'examplePiece1') playExamplePiece1();
+    else if(selectedExample === 'examplePiece2') playExamplePiece2();
+    else if(selectedExample === 'nostalgia-excerpt') playNostalgiaExcerpt();
   }
 });
 
 function playAudio(){
   if(!isPlaying && audioSource){
     isPlaying = true;
-    isStopped = false;
     audioSource.start();
     syncTrumpetToAudio();
   }
 }
-document.getElementById("play").addEventListener("click", playAudio);
+document.getElementById('play').addEventListener('click', playAudio);
 
 function stopAudio(){
   if(isPlaying && audioSource){
     isPlaying = false;
-    isStopped = true;
     audioSource.stop();
         
     window.cancelAnimationFrame(animationFrameReqId);
@@ -553,7 +550,7 @@ function stopAudio(){
   // reload since we can't restart buffer source
   if(audioFileUrl) loadAudioFile(audioFileUrl);
 }
-document.getElementById("stop").addEventListener("click", stopAudio);
+document.getElementById('stop').addEventListener('click', stopAudio);
 
 // trying pitch detection from imported audio to sync trumpet with
 // TODO: try/explore other methods other than autocorrelation? (if possible)
@@ -627,8 +624,8 @@ function syncTrumpetToAudio(){
         
     // Bb trumpet is a transposing instrument! it's a step lower than concert pitch
     // so valve combos need to be adjusted to match the actual pitch
-    const note = ["c", "cs", "d", "ds", "e", "f", "fs", "g", "gs", "a", "as", "b"][(noteFromPitch(freq)+2)%12];
-    document.getElementById('currentNote').textContent = "curr note (Bb concert pitch): " + note.replace('s', '#');
+    const note = ['c', 'cs', 'd', 'ds', 'e', 'f', 'fs', 'g', 'gs', 'a', 'as', 'b'][(noteFromPitch(freq)+2)%12];
+    document.getElementById('currentNote').textContent = 'curr note (Bb concert pitch): ' + note.replace('s', '#');
     setValves(note);
   }
   animationFrameReqId = window.requestAnimationFrame(syncTrumpetToAudio);
@@ -638,7 +635,7 @@ function loadAudioFile(url){
   audioSource = audioCtx.createBufferSource();  
 
   const req = new XMLHttpRequest();
-  req.open("GET", url, true);
+  req.open('GET', url, true);
   req.responseType = 'arraybuffer';
   req.onload = function(){
     audioCtx.decodeAudioData(req.response, (buffer) => {
@@ -664,7 +661,7 @@ const openFile = (function(){
       }
     }
        
-    fileInput.addEventListener("change", onFileChange, false);
+    fileInput.addEventListener('change', onFileChange, false);
     fileInput.click();
   }; 
 })();
@@ -677,17 +674,13 @@ function handleFile(file){
   }
     
   const reader = new FileReader();
-  reader.onload = (function(f){
-    return function(evt){
-      //document.getElementById('audioFileName').textContent = f.name;
-    };
-  })(file);
+  reader.onload = (() => {})(file);
     
   reader.readAsDataURL(file);
   loadAudioFile(audioFileUrl);
 }
 
-document.getElementById("importAudio").addEventListener("click", () => {
+document.getElementById('importAudio').addEventListener('click', () => {
   openFile(handleFile);
 });
 
@@ -697,5 +690,5 @@ function animate(){
   update();
 }
 
-getModel("../models/trumpet.gltf", "trumpet");
+getModel('../models/trumpet.gltf', 'trumpet');
 animate();

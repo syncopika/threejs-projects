@@ -17,11 +17,11 @@ let rotatingPasteCanvas = false;
 let originalPasteImage;
 
 function addPasteCanvas(imgData, width, height){
-  const canvasElement = document.createElement("canvas");
-  document.getElementById("liveryDisplay").appendChild(canvasElement);
-  canvasElement.id = "editCanvas";
-  canvasElement.style.position = "absolute";
-  canvasElement.style.border = "1px #000 solid";
+  const canvasElement = document.createElement('canvas');
+  document.getElementById('liveryDisplay').appendChild(canvasElement);
+  canvasElement.id = 'editCanvas';
+  canvasElement.style.position = 'absolute';
+  canvasElement.style.border = '1px #000 solid';
   canvasElement.style.zIndex = 10;
   canvasElement.style.top = 0;
   canvasElement.style.left = 0;
@@ -90,7 +90,7 @@ function addPastCanvasEventListeners(pasteCanvas){
     //console.log(newRotation);
         
     // https://stackoverflow.com/questions/17040360/javascript-function-to-rotate-a-base-64-image-by-x-degrees-and-return-new-base64
-    const ctx = pasteCanvas.getContext("2d");
+    const ctx = pasteCanvas.getContext('2d');
         
     // swap the dimensions because we're rotating the canvas
     const temp = pasteCanvas.height;
@@ -117,16 +117,16 @@ function addPastCanvasEventListeners(pasteCanvas){
       const offsetX = Math.abs(currX - initialOffsetX);
             
       if(currY < lastOffsetHeight){
-        pasteCanvas.style.top = (parseInt(pasteCanvas.style.top) - offsetY) + "px";
+        pasteCanvas.style.top = (parseInt(pasteCanvas.style.top) - offsetY) + 'px';
       }else{
-        pasteCanvas.style.top = (parseInt(pasteCanvas.style.top) + offsetY) + "px";
+        pasteCanvas.style.top = (parseInt(pasteCanvas.style.top) + offsetY) + 'px';
       }
       lastOffsetHeight = currY;
             
       if(currX < lastOffsetWidth){
-        pasteCanvas.style.left = (parseInt(pasteCanvas.style.left) - offsetX) + "px";
+        pasteCanvas.style.left = (parseInt(pasteCanvas.style.left) - offsetX) + 'px';
       }else{
-        pasteCanvas.style.left = (parseInt(pasteCanvas.style.left) + offsetX) + "px";
+        pasteCanvas.style.left = (parseInt(pasteCanvas.style.left) + offsetX) + 'px';
       }
       lastOffsetWidth = currX;
     }else if(resizingPasteCanvas){
@@ -166,7 +166,7 @@ function addPastCanvasEventListeners(pasteCanvas){
     }
   });
     
-  pasteCanvas.addEventListener('mouseup', (evt) => {
+  pasteCanvas.addEventListener('mouseup', () => {
     // place the image data from pasteCanvas onto the main canvas
     isMovingPasteCanvas = false;
         
@@ -258,11 +258,11 @@ function addPastCanvasEventListeners(pasteCanvas){
 }
 
 // need to add the event listener on the document
-document.addEventListener("paste", (evt) => {
+document.addEventListener('paste', (evt) => {
   const items = (evt.clipboardData || evt.originalEvent.clipboardData).items; // items is an object of type DataTransferItemList
     
   for(let i = 0; i < items.length; i++){
-    if(items[i].type.indexOf("image") > -1){
+    if(items[i].type.indexOf('image') > -1){
       const file = items[i]; // items[i] is a DataTransferItem type object
       const blob = file.getAsFile();
       const url = URL.createObjectURL(blob);

@@ -1,20 +1,20 @@
 // playing with curves
-import { Flow } from '../libs/CurveModifier.js';
+//import { Flow } from '../libs/CurveModifier.js';
 
 function getModel(modelFilePath){
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve) => {
     loader.load(
       modelFilePath,
       function(gltf){
         gltf.scene.traverse((child) => {
-          if(child.type === "Mesh"){
+          if(child.type === 'Mesh'){
             resolve(child);
           }
         });
       },
       // called while loading is progressing
       function(xhr){
-        console.log( (xhr.loaded / xhr.total * 100) + '% loaded' );
+        console.log((xhr.loaded / xhr.total * 100) + '% loaded');
       },
       // called when loading has errors
       function(error){
@@ -83,8 +83,7 @@ function setupCurveAndGetLine(curve, closed=false){
   return line;
 }
 
-const container = document.getElementById("container");
-//const keyboard = new THREEx.KeyboardState();
+const container = document.getElementById('container');
 
 const fov = 60;
 const camera = new THREE.PerspectiveCamera(fov, container.clientWidth / container.clientHeight, 0.01, 1000);
@@ -117,8 +116,6 @@ const pointLight = new THREE.PointLight(0xffffff, 1, 0);
 pointLight.position.set(2, 10, 2);
 pointLight.castShadow = true;
 scene.add(pointLight);
-
-const clock = new THREE.Clock();
 
 // add a plane
 const planeGeometry = new THREE.PlaneGeometry(25, 25);
@@ -202,13 +199,13 @@ let currCurve = curveOptions[0];
 scene.add(currCurve.line);
 
 
-const flow = null;
+//const flow = null;
 let model = null;
 let t = 0;
 let pause = false;
 
 // add the object that will follow the curve
-getModel("../models/f5tiger.gltf").then((modelData) => {
+getModel('../models/f5tiger.gltf').then((modelData) => {
   //modelData.scale.x *= 1;
   //modelData.scale.y *= 1;
   //modelData.scale.z *= 1;
@@ -310,7 +307,7 @@ function keydown(evt){
     camera.rotateX(-Math.PI/2);
   }
 }
-document.addEventListener("keydown", keydown);
+document.addEventListener('keydown', keydown);
 
 
 function animate(){
@@ -329,12 +326,12 @@ document.getElementById('pause').addEventListener('click', (evt) => {
 });
 
 document.getElementById('toggleCurve').addEventListener('click', (evt) => {
-  if(evt.target.textContent === "show curve"){
+  if(evt.target.textContent === 'show curve'){
     currCurve.line.material.opacity = 1;
     currCurve.line.material.transparent = false;
-    evt.target.textContent = "hide curve";
+    evt.target.textContent = 'hide curve';
   }else{
-    evt.target.textContent = "show curve";
+    evt.target.textContent = 'show curve';
     currCurve.line.material.opacity = 0;
     currCurve.line.material.transparent = true;
         
@@ -346,15 +343,15 @@ document.getElementById('selectCurve').addEventListener('change', (evt) => {
     
   scene.remove(currCurve.line);
     
-  if(curveName === "curved lateral loop"){
+  if(curveName === 'curved lateral loop'){
     currCurve = curveOptions[0];
-  }else if(curveName === "aileron roll"){
+  }else if(curveName === 'aileron roll'){
     currCurve = curveOptions[2];
-  }else if(curveName === "barrel roll"){
+  }else if(curveName === 'barrel roll'){
     currCurve = curveOptions[1];
-  }else if(curveName === "vertical loop"){
+  }else if(curveName === 'vertical loop'){
     currCurve = curveOptions[3];
-  }else if(curveName === "Immelmann Turn"){
+  }else if(curveName === 'Immelmann Turn'){
     currCurve = curveOptions[4];
   }
     

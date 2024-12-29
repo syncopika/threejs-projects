@@ -1,9 +1,7 @@
-const container = document.getElementById("container");
+const container = document.getElementById('container');
 const fov = 60;
 const camera = new THREE.PerspectiveCamera(fov, container.clientWidth / container.clientHeight, 0.01, 1000);
 camera.position.set(1,5,5);
-
-const keyboard = new THREEx.KeyboardState();
 
 const raycaster = new THREE.Raycaster();
 const mouse = new THREE.Vector2();
@@ -55,12 +53,11 @@ composer.addPass(bloomPass);
 composer.addPass(copyShader);
 
 
-let keysEntered = "";
+let keysEntered = '';
 let currScreenText = null;
 let vendingMachine;
 let vendingMachineColor;
 let vendingMachineNoColor;
-let keys;
 let animationHandler;
 let animationHandlerColor;
 let animationHandlerNoColor;
@@ -77,47 +74,47 @@ renderer.domElement.addEventListener('mousedown', (evt) => {
   const intersects = raycaster.intersectObjects(scene.children, true); // make sure it's recursive
   //console.log(intersects);
     
-  const gotBox = intersects.filter(x => x.object.name === "box1");
+  const gotBox = intersects.filter(x => x.object.name === 'box1');
     
   // allow box pickup when in pick-up area
   if(gotBox.length === 1 && gotBox[0].point.y < 2.5){
     // do something with box
-    console.log("picked up box");
+    console.log('picked up box');
         
     // reset action
     animationHandler.currentAction.stop();
   }
     
   // we want to pick up only raycasts that hit any of the black buttons on the right panel of the machine
-  const targets = intersects.filter(x => x.object.name.indexOf("key") > 0); // each key is a cube so the ray will hit the front and back faces leaving us with 2 targets (but same object)
+  const targets = intersects.filter(x => x.object.name.indexOf('key') > 0); // each key is a cube so the ray will hit the front and back faces leaving us with 2 targets (but same object)
     
   if(targets.length > 0){
     const keyPressed = targets[0].object;
         
     switch(keyPressed.name){
-    case "A-key":
-      animationHandler.playClipName("A-key-press");
+    case 'A-key':
+      animationHandler.playClipName('A-key-press');
       break;
-    case "B-key":
-      animationHandler.playClipName("B-key-press");
+    case 'B-key':
+      animationHandler.playClipName('B-key-press');
       break;
-    case "C-Key":
-      animationHandler.playClipName("C-key-press");
+    case 'C-Key':
+      animationHandler.playClipName('C-key-press');
       break;
-    case "D-Key":
-      animationHandler.playClipName("D-key-press");
+    case 'D-Key':
+      animationHandler.playClipName('D-key-press');
       break;
-    case "E-key":
-      animationHandler.playClipName("E-key-press");
+    case 'E-key':
+      animationHandler.playClipName('E-key-press');
       break;
-    case "1-key":
-      animationHandler.playClipName("1-key-press");
+    case '1-key':
+      animationHandler.playClipName('1-key-press');
       break;
-    case "2-key":
-      animationHandler.playClipName("2-key-press");
+    case '2-key':
+      animationHandler.playClipName('2-key-press');
       break;
-    case "3-key":
-      animationHandler.playClipName("3-key-press");
+    case '3-key':
+      animationHandler.playClipName('3-key-press');
       break;
     }
         
@@ -127,50 +124,50 @@ renderer.domElement.addEventListener('mousedown', (evt) => {
     displayTextOnScreen(keysEntered);
         
     if(keysEntered.length === 2){
-      console.log("code " + keysEntered + " was entered!");
+      console.log('code ' + keysEntered + ' was entered!');
       // then check format. should be 1 letter followed by 1 number e.g. A1, A2 or A3 - use regex
       // match combination with corresponding coil in machine. call the animation for that
       // if A1 was entered, run the animation for dropping the box and depositing it in the drop area
-      if(keysEntered === "A1"){
-        animationHandler.playClipName("rotation", false);
-        animationHandler.playClipName("box-drop-1", true);
+      if(keysEntered === 'A1'){
+        animationHandler.playClipName('rotation', false);
+        animationHandler.playClipName('box-drop-1', true);
       }
             
       if(currScreenText) setTimeout(() => {vendingMachine.remove(currScreenText);}, 1500); // reset display screen text after a delay
-      keysEntered = "";
+      keysEntered = '';
     }
   }
 });
 
 
-document.getElementById("rotate").addEventListener("click", (evt) => {
+document.getElementById('rotate').addEventListener('click', (evt) => {
   rotateMachine = !rotateMachine;
   if(rotateMachine){
-    evt.target.textContent = "stop rotation";
+    evt.target.textContent = 'stop rotation';
   }else{
-    evt.target.textContent = "rotate";
+    evt.target.textContent = 'rotate';
   }
 });
 
-document.getElementById("toggleBloom").addEventListener("click", (evt) => {
+document.getElementById('toggleBloom').addEventListener('click', (evt) => {
   bloomOn = !bloomOn;
   if(bloomOn){
-    evt.target.textContent = "bloom off";
+    evt.target.textContent = 'bloom off';
   }else{
-    evt.target.textContent = "bloom on";
+    evt.target.textContent = 'bloom on';
   }
 });
 
-document.getElementById("switchMachine").addEventListener("click", (evt) => {
+document.getElementById('switchMachine').addEventListener('click', (evt) => {
   if(colorOn){
     if(bloomOn){
-      document.getElementById("toggleBloom").click();
+      document.getElementById('toggleBloom').click();
     }
     showRegularVendingMachine();
-    evt.target.textContent = "show color";
+    evt.target.textContent = 'show color';
   }else{
     showNeonVendingMachine();
-    evt.target.textContent = "no color";
+    evt.target.textContent = 'no color';
   }
   colorOn = !colorOn;
 });
@@ -242,8 +239,8 @@ function displayTextOnScreen(textToDisplay){
 }
 
 // add the vending machine
-function getModel(modelFilePath, side, name){
-  return new Promise((resolve, reject) => {
+function getModel(modelFilePath){
+  return new Promise((resolve) => {
     loader.load(
       modelFilePath,
       function(gltf){
@@ -279,12 +276,9 @@ getModel('../models/vending-machine.gltf').then(data => {
   vendingMachineNoColor = data.scene;
   animationHandlerNoColor = new AnimationHandler(vendingMachineNoColor, data.animations);
   animationHandler = animationHandlerNoColor;
-    
-  // keep track of the buttons of the vending machine
-  keys = data.scene.children.filter(x => x.name === "display")[0].children.filter(x => x.name.indexOf('key') > 0);
-    
+  
   // load font for displaying text
-  fontLoader.load("helvetiker_bold.typeface.json", (tex) => {
+  fontLoader.load('helvetiker_bold.typeface.json', (tex) => {
     textFont = tex;
         
     setVendingMachine(vendingMachineNoColor);
@@ -305,14 +299,6 @@ getModel('../models/vending-machine.gltf').then(data => {
     });
   });
 });
-
-// add keyboard key bindings if you want
-/* function keydown(evt){
-    if(evt.keyCode === 49){
-    }
-}
-document.addEventListener("keydown", keydown); 
-*/
 
 // allow zoom-in/zoom-out with mouse clickwheel
 function zoom(event){

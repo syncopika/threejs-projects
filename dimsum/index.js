@@ -1,6 +1,6 @@
 // dimsum
 
-const container = document.getElementById("container");
+const container = document.getElementById('container');
 
 const fov = 55;
 const camera = new THREE.PerspectiveCamera(fov, container.clientWidth / container.clientHeight, 0.01, 2000);
@@ -61,15 +61,14 @@ const destinationPositions = []; // end positions when moving models
 let currDishIdx = 0;
 let isMoving = false;
 let itemSelected = false;
-const position = new THREE.Vector3(0, 0, 15); // position for current dish
 
 function getModel(modelFilePath, pos){
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve) => {
     loader.load(
       modelFilePath,
       function(gltf){
         gltf.scene.traverse((child) => {
-          if(child.type === "Mesh"){
+          if(child.type === 'Mesh'){
             // clone material because some meshes seem to share the same material otherwise
             child.material = child.material.clone();
           }
@@ -80,7 +79,7 @@ function getModel(modelFilePath, pos){
         resolve(gltf.scene);
       },
       // called while loading is progressing
-      function(xhr){
+      function(/*xhr*/){
         //console.log( (xhr.loaded / xhr.total * 100) + '% loaded' );
       },
       // called when loading has errors
@@ -128,7 +127,7 @@ function keydown(evt){
     //1 key
   }
 }
-document.addEventListener("keydown", keydown);
+document.addEventListener('keydown', keydown);
 
 let time = 0;
 function moveDishes(){
@@ -216,7 +215,7 @@ document.getElementById('right').addEventListener('click', () => {
 });
 
 function containsDimsumItem(mesh){
-  const validItems = ["siumai", "hagao", "chasiubao", "dantat"];
+  const validItems = ['siumai', 'hagao', 'chasiubao', 'dantat'];
   for(const x of validItems){
     if(mesh.name.includes(x)){
       return true;
@@ -247,7 +246,7 @@ renderer.domElement.addEventListener('mousedown', (evt) => {
 });
 
 function displaySelectedItemInfo(mesh){
-  document.getElementById('displayCard').style.display = "block";
+  document.getElementById('displayCard').style.display = 'block';
   scene2.children.forEach(x => { if(containsDimsumItem(x)){ scene2.remove(x);}});
   const container = document.getElementById('displayItemRenderer');
   if(container.children.length == 0){
@@ -256,7 +255,7 @@ function displaySelectedItemInfo(mesh){
   }
   const meshCopy = mesh.clone();
   //meshCopy.material = mesh.material.clone();
-  meshCopy.name2 = "selectedItem";
+  meshCopy.name2 = 'selectedItem';
   meshCopy.position.set(
     camera2.position.x,
     0.5,
@@ -268,21 +267,21 @@ function displaySelectedItemInfo(mesh){
   const header = document.getElementById('displayCardHeader');
   const description = document.getElementById('displayCardDescription');
   if(mesh.name.includes('siumai')){
-    header.textContent = "siu mai (燒賣)";
-    description.textContent = "A dumpling whose filling consists of pork and shrimp. It is topped with crab roe or minced carrot sometimes.";
+    header.textContent = 'siu mai (燒賣)';
+    description.textContent = 'A dumpling whose filling consists of pork and shrimp. It is topped with crab roe or minced carrot sometimes.';
   }else if(mesh.name.includes('hagao')){
-    header.textContent = "ha gao (蝦餃)";
-    description.textContent = "A dumpling with a translucent wrapper and shrimp filling.";
+    header.textContent = 'ha gao (蝦餃)';
+    description.textContent = 'A dumpling with a translucent wrapper and shrimp filling.';
   }else if(mesh.name.includes('dantat')){
-    header.textContent = "dan ta (蛋撻)";
-    description.textContent = "An eggy custard tart with a flaky crust.";
+    header.textContent = 'dan ta (蛋撻)';
+    description.textContent = 'An eggy custard tart with a flaky crust.';
   }else if(mesh.name.includes('chasiubao')){
-    header.textContent = "cha siu bao (叉燒包)";
-    description.textContent = "A bun with a sweet, roasted pork filling.";
+    header.textContent = 'cha siu bao (叉燒包)';
+    description.textContent = 'A bun with a sweet, roasted pork filling.';
   }
 }
 document.getElementById('displayCardCloseBtn').addEventListener('click', () => {
-  const currCard = document.getElementById('displayCard').style.display = "none";
+  document.getElementById('displayCard').style.display = 'none';
   itemSelected = false;
 });
 
@@ -294,7 +293,7 @@ function animate(){
     
   if(itemSelected){
     scene2.children.forEach(x => {
-      if(x.name2 === "selectedItem"){
+      if(x.name2 === 'selectedItem'){
         //t2 += 0.001;
         x.rotateOnAxis(rotationAxis, t2);
         //if(t2 > 1) t2 = 0;

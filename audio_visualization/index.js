@@ -2,19 +2,11 @@
 // https://developer.mozilla.org/en-US/docs/Web/API/Web_Audio_API/Visualizations_with_Web_Audio_API
 // https://github.com/syncopika/jsProjects/blob/master/audio_visualizer/audioVisualiser.html
 
-const container = document.getElementById("container");
+const container = document.getElementById('container');
 
 const fov = 60;
 const camera = new THREE.PerspectiveCamera(fov, container.clientWidth / container.clientHeight, 0.01, 1000);
 camera.position.set(0, 2, 15);
-
-//const raycaster = new THREE.Raycaster();
-const mouse = new THREE.Vector2();
-
-const loadingManager = new THREE.LoadingManager();
-setupLoadingManager(loadingManager);
-
-const loader = new THREE.GLTFLoader(loadingManager);
 
 const renderer = new THREE.WebGLRenderer({antialias: true});
 renderer.shadowMap.enabled = true;
@@ -35,15 +27,12 @@ scene.add(spotLight);
 
 const pointLight = new THREE.PointLight(0xffffff, 1, 0);
 pointLight.position.set(0, 15, 10);
-//pointLight.castShadow = true;
 scene.add(pointLight);
 
 const controls = new THREE.TrackballControls(camera, renderer.domElement);
 controls.rotateSpeed = 1.2;
 controls.zoomSpeed = 1.2;
 controls.panSpeed = 0.8;
-
-const clock = new THREE.Clock();
 
 // add a plane
 const planeGeometry = new THREE.PlaneGeometry(65, 65);
@@ -71,14 +60,13 @@ const freqBuffer = new Uint8Array(freqBufferLength);
 let audioSource;
 let audioFileUrl;
 let isPlaying = false;
-let isStopped = true;
 
 function loadAudioFile(url){
   //console.log("loading: " + url);
   audioSource = audioCtx.createBufferSource();  
 
   const req = new XMLHttpRequest();
-  req.open("GET", url, true);
+  req.open('GET', url, true);
   req.responseType = 'arraybuffer';
   req.onload = function(){
     audioCtx.decodeAudioData(req.response, (buffer) => {
@@ -175,23 +163,21 @@ function updateFreqDomainVisualization(audioDataBuffer){
 function play(){
   if(!isPlaying && audioSource){
     isPlaying = true;
-    isStopped = false;
     audioSource.start();
   }
 }
-document.getElementById("play").addEventListener("click", play);
+document.getElementById('play').addEventListener('click', play);
 
 function stop(){
   if(isPlaying && audioSource){
     isPlaying = false;
-    isStopped = true;
     audioSource.stop();
   }
     
   // reload since we can't restart buffer source
   if(audioFileUrl) loadAudioFile(audioFileUrl);
 }
-document.getElementById("stop").addEventListener("click", stop);
+document.getElementById('stop').addEventListener('click', stop);
 
 // enable audio file finding
 const openFile = (function(){    
@@ -207,7 +193,7 @@ const openFile = (function(){
       }
     }
        
-    fileInput.addEventListener("change", onFileChange, false);
+    fileInput.addEventListener('change', onFileChange, false);
     fileInput.click();
   }; 
 })();
@@ -221,7 +207,7 @@ function handleFile(file){
     
   const reader = new FileReader();
   reader.onload = (function(f){
-    return function(evt){
+    return function(){
       document.getElementById('audioFileName').textContent = f.name;
     };
   })(file);
@@ -230,7 +216,7 @@ function handleFile(file){
   loadAudioFile(audioFileUrl);
 }
 
-document.getElementById("importAudio").addEventListener("click", () => {
+document.getElementById('importAudio').addEventListener('click', () => {
   openFile(handleFile);
 });
 

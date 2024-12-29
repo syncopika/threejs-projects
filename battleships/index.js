@@ -8,11 +8,10 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { Water } from 'three/addons/objects/Water.js';
 import { Sky } from 'three/addons/objects/Sky.js';
 
-const container = document.getElementById("container");
+const container = document.getElementById('container');
 
 const WIDTH = container.clientWidth;
 const HEIGHT = container.clientHeight;
-const ASPECT = WIDTH / HEIGHT;
 const NEAR = 1;
 const FAR = 1000;
 const LEFT = WIDTH / -10;
@@ -87,7 +86,7 @@ renderer.domElement.addEventListener('mousedown', (evt) => {
             
       if(selected.object.name === 'enemy' || selected.object.name === 'obstacle'){
         if(currentPlayerUnit && selected.object.position.distanceTo(currentPlayerUnit.position) <= currentPlayerUnit.selectArea.geometry.parameters.radius + 5){
-          console.log("attacking...");
+          console.log('attacking...');
                     
           if(airstrikeOn){
             airstrike(planeModel.clone(), selected.object, scene);
@@ -308,7 +307,7 @@ function rotate(object, angle, targetVec, setIntervalName, resolve){
   const angleBetween = getAngleBetween(object, targetVec);
     
   if(angleBetween >= -limit && angleBetween <= limit){
-    console.log("finished rotating");
+    console.log('finished rotating');
     clearInterval(setIntervalName);
     wakeParts.forEach(part => {
       // clear out particles
@@ -316,7 +315,7 @@ function rotate(object, angle, targetVec, setIntervalName, resolve){
       part.update();
     });
     wakeParts = [];
-    resolve("done rotating");
+    resolve('done rotating');
   }else{
     object.rotateOnAxis(new THREE.Vector3(0, 1, 0), angle);
     if(wakeAnimationOn) wakeParts.push(new wakeAnimation(object));
@@ -348,7 +347,7 @@ function moveObj(objToMove, targetPos){
     
   obj.isMoving = true;
     
-  const rotatePromise = new Promise((resolve, reject) => {
+  const rotatePromise = new Promise((resolve) => {
     if(crossProductLength.y > 0){ // why y? I believe it's because from the orthographic camera POV, it's an XZ plane and Y is going in/out of the screen.
       // clockwise
       const rotateFunc = setInterval(
@@ -606,12 +605,12 @@ loadedModels.push(getModel('../models/spiky-thing.gltf', 'none', 'obstacle'));
 loadedModels.push(getModel('../models/f14.gltf', 'none', 'plane'));
 
 function getModel(modelFilePath, side, name){
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve) => {
     loader.load(
       modelFilePath,
       function(gltf){
         gltf.scene.traverse((child) => {
-          if(child.type === "Mesh"){
+          if(child.type === 'Mesh'){
         
             const material = child.material;
             const geometry = child.geometry;
@@ -639,7 +638,7 @@ function getModel(modelFilePath, side, name){
               const geometry = new THREE.CircleGeometry(17, 32);
               const material = new THREE.MeshBasicMaterial({color: 0xffff00, opacity: 0.4, transparent: true, side: THREE.DoubleSide});
               const circle = new THREE.Mesh(geometry, material);
-              circle.name = "selectArea";
+              circle.name = 'selectArea';
               circle.rotateX(Math.PI / 2);
                             
               obj.isMoving = false;
@@ -691,17 +690,17 @@ function update(){
   }
 
   scene.children.forEach(child => {
-    if(child.name.includes("particle")){
+    if(child.name.includes('particle')){
       child.position.add(child.direction);
     }
         
     // for airstrike
-    if(child.name.includes("plane")){
+    if(child.name.includes('plane')){
       child.position.add(child.direction);
             
       if(Math.abs(child.target.position.x - child.position.x) <= 1.5){
-        document.getElementById("container").className = "airstrikeShake";
-        setTimeout(() => { document.getElementById("container").className = ""; }, 1000);
+        document.getElementById('container').className = 'airstrikeShake';
+        setTimeout(() => { document.getElementById('container').className = ''; }, 1000);
         explosionEffect(child.target, scene, 60);
       }
     }
@@ -722,7 +721,7 @@ Promise.all(loadedModels).then((objects) => {
   console.log(objects);
     
   // place obstacles
-  const obstacleModel = objects.filter(x => x.name === "obstacle")[0];
+  const obstacleModel = objects.filter(x => x.name === 'obstacle')[0];
   for(let i = 0; i < 10; i++){
     const obstacle = obstacleModel.clone();
     placeObstacles(obstacle);
@@ -730,10 +729,10 @@ Promise.all(loadedModels).then((objects) => {
     
   objects.forEach((obj) => {
     obj.castShadow = true;
-    if(obj.side === "enemy"){
+    if(obj.side === 'enemy'){
       placeObject(obj);
       scene.add(obj);
-    }else if(obj.side === "player"){
+    }else if(obj.side === 'player'){
       placeObject(obj);
       scene.add(obj);
       currentPlayerUnit = obj;

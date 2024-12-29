@@ -1,6 +1,6 @@
-import { AnimationController } from "../libs/AnimationController.js";
+import { AnimationController } from '../libs/AnimationController.js';
 
-const container = document.getElementById("container");
+const container = document.getElementById('container');
 const fov = 60;
 const defaultCamera = new THREE.PerspectiveCamera(fov, container.clientWidth / container.clientHeight, 0.01, 1000);
 const keyboard = new THREEx.KeyboardState();
@@ -23,8 +23,8 @@ renderer.setSize(container.clientWidth, container.clientHeight);
 container.appendChild(renderer.domElement);
 
 // set up mobile keyboard
-document.getElementById("showKeyboard").addEventListener("click", () => {
-  new JSKeyboard(document.getElementById("mobileKeyboard"));
+document.getElementById('showKeyboard').addEventListener('click', () => {
+  new JSKeyboard(document.getElementById('mobileKeyboard'));
 });
 
 const camera = defaultCamera;
@@ -57,14 +57,14 @@ let currAction = null;
 let neckMarker = null;
 
 function getModel(modelFilePath, side, name){
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve) => {
     loader.load(
       modelFilePath,
       function(gltf){
-        if(gltf.animations.length > 0 && name === "p1"){
+        if(gltf.animations.length > 0 && name === 'p1'){
           const clips = {};
           gltf.animations.forEach((action) => {
-            let name = action.name.replace("1", "").toLowerCase();
+            let name = action.name.replace('1', '').toLowerCase();
             name = name.substring(0, name.length);
             
             // from libs/utils.js
@@ -80,26 +80,26 @@ function getModel(modelFilePath, side, name){
         // then resolve the thing outside the traverse.
         const carbine = [];
         gltf.scene.traverse((child) => {
-          if(child.type === "Mesh" || child.type === "SkinnedMesh"){
+          if(child.type === 'Mesh' || child.type === 'SkinnedMesh'){
             const obj = child;
 
-            if(name === "obj"){
+            if(name === 'obj'){
               obj.scale.x = child.scale.x * 1.1;
               obj.scale.y = child.scale.y * 1.1;
               obj.scale.z = child.scale.z * 1.1;
               carbine.push(obj);
             }else{
-              if(child.type === "SkinnedMesh"){
+              if(child.type === 'SkinnedMesh'){
                 obj.add(child.skeleton.bones[0]); // add pelvis to mesh as a child
                             
-                if(name !== "obj"){
+                if(name !== 'obj'){
                   obj.scale.x *= .3;
                   obj.scale.y *= .3;
                   obj.scale.z *= .3;
                 }
               }
                             
-              if(name === "bg"){
+              if(name === 'bg'){
                 obj.scale.x = child.scale.x * 10;
                 obj.scale.y = child.scale.y * 10;
                 obj.scale.z = child.scale.z * 10;
@@ -113,7 +113,7 @@ function getModel(modelFilePath, side, name){
         });
                 
         // for the carbine (or really any scene with multiple meshes)
-        if(name === "obj"){
+        if(name === 'obj'){
           const m4carbine = carbine[0];
           m4carbine.add(m4carbine.skeleton.bones[0]);
           m4carbine.name = name;
@@ -130,11 +130,11 @@ function getModel(modelFilePath, side, name){
       },
       // called while loading is progressing
       function(xhr){
-        console.log( (xhr.loaded / xhr.total * 100) + "% loaded" );
+        console.log( (xhr.loaded / xhr.total * 100) + '% loaded' );
       },
       // called when loading has errors
       function(error){
-        console.log("An error happened");
+        console.log('An error happened');
         console.log(error);
       }
     );
@@ -142,9 +142,9 @@ function getModel(modelFilePath, side, name){
 }
 
 // https://threejs.org/docs/#api/en/textures/Texture
-loadedModels.push(getModel("../models/oceanfloor.glb", "none", "bg"));
-loadedModels.push(getModel("../models/humanoid-rig.gltf", "player", "p1"));
-loadedModels.push(getModel("../models/m4carbine-final.gltf", "tool", "obj"));
+loadedModels.push(getModel('../models/oceanfloor.glb', 'none', 'bg'));
+loadedModels.push(getModel('../models/humanoid-rig.gltf', 'player', 'p1'));
+loadedModels.push(getModel('../models/m4carbine-final.gltf', 'tool', 'obj'));
 
 let thePlayer = null;
 let tool = null;
@@ -154,13 +154,13 @@ let sideViewOn = false;
 
 Promise.all(loadedModels).then((objects) => {
   objects.forEach((mesh) => {
-    if(mesh.name === "bg"){
+    if(mesh.name === 'bg'){
       mesh.position.set(0, 0, 0);
       mesh.receiveShadow = true;
       terrain = mesh;
-    }else if(mesh.name === "npc"){
+    }else if(mesh.name === 'npc'){
       // npcs?
-    }else if(mesh.name === "obj"){
+    }else if(mesh.name === 'obj'){
       // tools that can be equipped
       mesh.castShadow = true;
       tool = mesh;
@@ -181,7 +181,7 @@ Promise.all(loadedModels).then((objects) => {
       const material = new THREE.MeshBasicMaterial({color: 0x00ff00});
       const head = new THREE.Mesh(cubeGeometry, material);
       
-      const neck = mesh.skeleton.bones.find(x => x.name === "Neck");
+      const neck = mesh.skeleton.bones.find(x => x.name === 'Neck');
       
       const cubeGeometry2 = new THREE.BoxGeometry(2.2, 2.2, 2.2);
       const material2 = new THREE.MeshBasicMaterial({color: 0x0000ff});
@@ -199,7 +199,7 @@ Promise.all(loadedModels).then((objects) => {
             
       animationMixer = new THREE.AnimationMixer(mesh);
       animationController = new AnimationController(thePlayer, animationMixer, animationClips, clock);
-      animationController.changeState("normal"); // set normal state by default for animations. see animation_state_map.json
+      animationController.changeState('normal'); // set normal state by default for animations. see animation_state_map.json
       
       mesh.position.set(0, 2.8, -10);
       mesh.rotateOnAxis(new THREE.Vector3(0, 1, 0), Math.PI);
@@ -212,7 +212,7 @@ Promise.all(loadedModels).then((objects) => {
             
       // add hand bone to equip tool with as a child of the player mesh
       for(const bone of thePlayer.skeleton.bones){
-        if(bone.name === "HandR001"){ // lol why is it like this??
+        if(bone.name === 'HandR001'){ // lol why is it like this??
           thePlayer.hand = bone; // set an arbitrary new property to access the hand bone
           break;
         }
@@ -226,11 +226,11 @@ Promise.all(loadedModels).then((objects) => {
 });
 
 // checkTerrainHeight comes from utils.js in /lib
-function adjustVerticalHeightBasedOnTerrain(thePlayer, raycaster, scene){
+function adjustVerticalHeightBasedOnTerrain(thePlayer, raycaster){
   // for now I"m hardcoding the expected height at level terrain 
   const baseline = 2.75;
   const head = getCenter(thePlayer.head);
-  const verticalDirection = checkTerrainHeight(head, raycaster, terrain, document.getElementById("height"));
+  const verticalDirection = checkTerrainHeight(head, raycaster, terrain, document.getElementById('height'));
     
   if(verticalDirection < 2.74){
     // go uphill so increase y
@@ -245,8 +245,8 @@ function adjustVerticalHeightBasedOnTerrain(thePlayer, raycaster, scene){
 
 function moveBasedOnAction(controller, thePlayer, speed, reverse){
   const action = controller.bottomAnimation.name;
-  if(action && (action.includes("walk") || action.includes("run"))){
-    if(action.includes("run")){
+  if(action && (action.includes('walk') || action.includes('run'))){
+    if(action.includes('run')){
       speed += 0.12;
     }
     if(reverse){
@@ -258,15 +258,15 @@ function moveBasedOnAction(controller, thePlayer, speed, reverse){
 }
 
 function keydown(evt){
-  if(evt.code === "ShiftLeft"){
+  if(evt.code === 'ShiftLeft'){
     // toggle between walk and run while moving
-    if(currAction === "walk"){
-      currAction = "run";
+    if(currAction === 'walk'){
+      currAction = 'run';
       animationController.setUpdateTimeDivisor(.12);
-      animationController.changeAction("run-arms", "top");
-      animationController.changeAction("run-legs", "bottom");
+      animationController.changeAction('run-arms', 'top');
+      animationController.changeAction('run-legs', 'bottom');
     }
-  }else if(evt.code === "KeyG"){
+  }else if(evt.code === 'KeyG'){
     // for toggling weapon/tool equip
     // https://stackoverflow.com/questions/19031198/three-js-attaching-object-to-bone
     // https://stackoverflow.com/questions/54270675/three-js-parenting-mesh-to-bone
@@ -286,18 +286,18 @@ function keydown(evt){
     // since I have the event listener for a "finished" action set up
     let timeScale = 1;
         
-    if(animationController.currState === "normal"){
+    if(animationController.currState === 'normal'){
       tool.visible = true;
-      animationController.changeState("equip"); // equip weapon
+      animationController.changeState('equip'); // equip weapon
     }else{
-      animationController.changeState("normal"); // go back to normal state
+      animationController.changeState('normal'); // go back to normal state
       timeScale = -1; // need to play equip animation backwards to put away weapon
     }
     
-    currAction = "drawgun";
+    currAction = 'drawgun';
     animationController.setUpdateTimeDivisor(.20);
-    animationController.changeAction("drawgun", "top", timeScale);
-  }else if(evt.code === "Digit1"){
+    animationController.changeAction('drawgun', 'top', timeScale);
+  }else if(evt.code === 'Digit1'){
     // toggle first-person view
     firstPersonViewOn = !firstPersonViewOn;
     sideViewOn = false;
@@ -314,7 +314,7 @@ function keydown(evt){
     }else{
       scene.add(camera);
     }
-  }else if(evt.code === "Digit2"){
+  }else if(evt.code === 'Digit2'){
     // toggle side view
     firstPersonViewOn = false;
     sideViewOn = !sideViewOn;
@@ -322,18 +322,18 @@ function keydown(evt){
 }
 
 function keyup(evt){
-  if(evt.code === "ShiftLeft"){
-    if(currAction === "run"){
-      currAction = "walk";
+  if(evt.code === 'ShiftLeft'){
+    if(currAction === 'run'){
+      currAction = 'walk';
       animationController.setUpdateTimeDivisor(.12);
-      animationController.changeAction("walk-arms", "top");
-      animationController.changeAction("walk-legs", "bottom");
+      animationController.changeAction('walk-arms', 'top');
+      animationController.changeAction('walk-legs', 'bottom');
     }
   }
 }
 
-document.addEventListener("keydown", keydown);
-document.addEventListener("keyup", keyup);
+document.addEventListener('keydown', keydown);
+document.addEventListener('keyup', keyup);
 
 
 function update(){
@@ -342,51 +342,51 @@ function update(){
   rotationAngle = (Math.PI / 2) * sec;
   let changeCameraView = false;
     
-  if(keyboard.pressed("z")){
+  if(keyboard.pressed('z')){
     changeCameraView = true;
   }
     
-  if(keyboard.pressed("w")){
+  if(keyboard.pressed('w')){
     // moving forwards
-    if(currAction !== "run"){
-      currAction = "walk";
+    if(currAction !== 'run'){
+      currAction = 'walk';
       animationController.setUpdateTimeDivisor(.10);
-      animationController.changeAction("walk-legs", "bottom");
+      animationController.changeAction('walk-legs', 'bottom');
     }
     moveBasedOnAction(animationController, thePlayer, moveDistance, false);   
-  }else if(keyboard.pressed("s")){
+  }else if(keyboard.pressed('s')){
     // moving backwards
-    if(currAction !== "run"){
-      currAction = "walk";
+    if(currAction !== 'run'){
+      currAction = 'walk';
       animationController.setUpdateTimeDivisor(.10);
-      animationController.changeAction("walk-legs", "bottom", -1);
+      animationController.changeAction('walk-legs', 'bottom', -1);
     }
     moveBasedOnAction(animationController, thePlayer, moveDistance, true);
-  }else if(!keyboard.pressed("w") && !keyboard.pressed("s")){
+  }else if(!keyboard.pressed('w') && !keyboard.pressed('s')){
     // for idle pose
-    if(currAction !== "drawgun"){
-      currAction = "idle";
+    if(currAction !== 'drawgun'){
+      currAction = 'idle';
       animationController.setUpdateTimeDivisor(.50);
-      animationController.changeAction("idle-arms", "top");
-      animationController.changeAction("idle-legs", "bottom");
+      animationController.changeAction('idle-arms', 'top');
+      animationController.changeAction('idle-legs', 'bottom');
     }
   }
     
-  if(keyboard.pressed("a")){
+  if(keyboard.pressed('a')){
     thePlayer.rotateOnAxis(new THREE.Vector3(0, 1, 0), rotationAngle);
   }
     
-  if(keyboard.pressed("d")){
+  if(keyboard.pressed('d')){
     thePlayer.rotateOnAxis(new THREE.Vector3(0, 1, 0), -rotationAngle);
   }
   
-  if(keyboard.pressed("q")){
-    animationController.changeAction("leftlean", "top");
-  }else if(keyboard.pressed("e")){
-    animationController.changeAction("rightlean", "top");
+  if(keyboard.pressed('q')){
+    animationController.changeAction('leftlean', 'top');
+  }else if(keyboard.pressed('e')){
+    animationController.changeAction('rightlean', 'top');
   }
     
-  adjustVerticalHeightBasedOnTerrain(thePlayer, raycaster, scene);
+  adjustVerticalHeightBasedOnTerrain(thePlayer, raycaster);
     
   // keep the current animation running
   animationController.update();
