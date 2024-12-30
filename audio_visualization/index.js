@@ -34,7 +34,7 @@ controls.rotateSpeed = 1.2;
 controls.zoomSpeed = 1.2;
 controls.panSpeed = 0.8;
 
-// add a plane
+/* add a plane
 const planeGeometry = new THREE.PlaneGeometry(65, 65);
 const planeMaterial = new THREE.MeshLambertMaterial({color: 0x055C9D});
 const plane = new THREE.Mesh(planeGeometry, planeMaterial);
@@ -44,6 +44,7 @@ plane.castShadow = true;
 plane.position.y = -3;
 plane.position.z = -10;
 scene.add(plane);
+*/
 
 // set up web audio stuff
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
