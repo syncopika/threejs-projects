@@ -471,7 +471,6 @@ function move(car, rotationAngle){
 
 function update(){
   sec = clock.getDelta();
-  moveDistance = 8 * sec;
   rotationAngle = (Math.PI / 2) * sec;
   let changeCameraView = false;
   const maxRad = 0.56; // max/min radians for wheel angle
