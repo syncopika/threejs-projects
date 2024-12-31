@@ -650,11 +650,11 @@ function getModel(modelFilePath, side, name){
       },
       // called while loading is progressing
       function(xhr){
-        console.log( (xhr.loaded / xhr.total * 100) + '% loaded' );
+        console.log((xhr.loaded / xhr.total * 100) + '% loaded');
       },
       // called when loading has errors
       function(error){
-        console.log( 'An error happened' );
+        console.log('An error happened');
         console.log(error);
       }
     );

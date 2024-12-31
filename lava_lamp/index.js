@@ -67,7 +67,7 @@ function getModel(modelFilePath){
       },
       // called while loading is progressing
       function(xhr){
-        console.log( (xhr.loaded / xhr.total * 100) + '% loaded' );
+        console.log((xhr.loaded / xhr.total * 100) + '% loaded');
       },
       // called when loading has errors
       function(error){
@@ -147,9 +147,9 @@ function updateCubes(object, time, numblobs, floor){
   const subtract = 12;
   const strength = 1.8 / ((Math.sqrt(numblobs) - 1) / 4 + 1);
 
-  for(let i = 0; i < numblobs; i ++ ){
+  for(let i = 0; i < numblobs; i ++){
     const ballx = Math.sin(i + 1.26 * time * (1.03 + 0.5 * Math.cos(0.21 * i))) * 0.27 + 0.5;
-    const bally = Math.abs(Math.cos( i + 1.12 * time * Math.cos(1.22 + 0.1424 * i))) * 0.77; // dip into the floor
+    const bally = Math.abs(Math.cos(i + 1.12 * time * Math.cos(1.22 + 0.1424 * i))) * 0.77; // dip into the floor
     const ballz = Math.cos(i + 1.32 * time * 0.1 * Math.sin((0.92 + 0.53 * i))) * 0.27 + 0.5;
     object.addBall(ballx, bally, ballz, strength, subtract);
   }

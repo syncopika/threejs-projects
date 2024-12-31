@@ -23,8 +23,8 @@ const hemiLight = new THREE.HemisphereLight(0xffffff, 0x444444);
 hemiLight.position.set(0, 200, 0);
 scene.add(hemiLight);
 
-const dirLight = new THREE.DirectionalLight( 0xffffff );
-dirLight.position.set( 0, 100, -10);
+const dirLight = new THREE.DirectionalLight(0xffffff);
+dirLight.position.set(0, 100, -10);
 scene.add(dirLight);
 
 // set up trackball control
@@ -94,7 +94,7 @@ function getModel(modelFilePath, name){
       },
       // called while loading is progressing
       function(xhr){
-        console.log( (xhr.loaded / xhr.total * 100) + '% loaded' );
+        console.log((xhr.loaded / xhr.total * 100) + '% loaded');
       },
       // called when loading has errors
       function(error){

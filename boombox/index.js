@@ -23,7 +23,6 @@ const controls = new THREE.TrackballControls(camera, renderer.domElement);
 controls.rotateSpeed = 3.2;
 controls.zoomSpeed = 1.2;
 controls.panSpeed = 0.8;
-console.log(controls);
 
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0xeeeeee);
@@ -194,7 +193,7 @@ function getModel(modelFilePath){
       },
       // called while loading is progressing
       function(xhr){
-        console.log((xhr.loaded / xhr.total * 100) + '% loaded' );
+        console.log((xhr.loaded / xhr.total * 100) + '% loaded');
       },
       // called when loading has errors
       function(error){
