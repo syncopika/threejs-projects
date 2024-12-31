@@ -4,8 +4,7 @@
 // I wasted way too much time trying to figure out why my cubes shared the same position and trying out all sorts of dumb stuff -__-
 // https://blender.stackexchange.com/questions/305802/why-2-objects-have-same-location-orientation-scale-and-origin-yet-theyre-disp
 
-const container = document.getElementById("container");
-//const keyboard = new THREEx.KeyboardState();
+const container = document.getElementById('container');
 
 const fov = 60;
 const camera = new THREE.PerspectiveCamera(fov, container.clientWidth / container.clientHeight, 0.01, 1000);
@@ -25,7 +24,7 @@ renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 renderer.setSize(container.clientWidth, container.clientHeight);    
 container.appendChild(renderer.domElement);
 
-const axesHelper = new THREE.AxesHelper(10);
+//const axesHelper = new THREE.AxesHelper(10);
 
 // TODO: allow user to pick a layer of the cube to rotate
 renderer.domElement.addEventListener('pointerdown', (evt) => {
@@ -36,7 +35,7 @@ renderer.domElement.addEventListener('pointerdown', (evt) => {
     
   const intersects = raycaster.intersectObjects(scene.children, true); // make sure it's recursive
     
-  const gotCube = intersects.filter(x => x.object.name.includes("Cube"));
+  const gotCube = intersects.filter(x => x.object.name.includes('Cube'));
   if(gotCube.length){
     const hit = gotCube[0];
     const cube = hit.object;
@@ -90,7 +89,7 @@ let direction; // positive 90 deg or negative 90 deg rotation
 let pause = false;
 
 function getModel(modelFilePath){
-  return new Promise((resolve, reject) => {
+  return new Promise(() => {
     loader.load(
       modelFilePath,
       async function(gltf){
@@ -104,7 +103,7 @@ function getModel(modelFilePath){
       },
       // called while loading is progressing
       function(xhr){
-        console.log( (xhr.loaded / xhr.total * 100) + '% loaded' );
+        console.log((xhr.loaded / xhr.total * 100) + '% loaded');
       },
       // called when loading has errors
       function(error){
@@ -134,7 +133,7 @@ function collectCubes(cube, raycastDir, selectedSoFar){
     raycaster.set(zOrigin, raycastDir);
   }
       
-  const intersects = raycaster.intersectObjects(scene.children, true).filter(hit => hit.object.name.includes("Cube"));
+  const intersects = raycaster.intersectObjects(scene.children, true).filter(hit => hit.object.name.includes('Cube'));
       
   if(intersects.length){
     //console.log(intersects);
@@ -145,16 +144,16 @@ function collectCubes(cube, raycastDir, selectedSoFar){
   }
 }
 
-function isCenterCube(cubeName){
+/*function isCenterCube(cubeName){
   return cubeName.includes('016') ||
            cubeName.includes('010') ||
            cubeName.includes('060') ||
            cubeName.includes('062') ||
            cubeName.includes('064') ||
            cubeName.includes('025');
-}
+}*/
 
-function getRandomLayer(){
+/*function getRandomLayer(){
   const layerCenters = [
     'Cube016',
     'Cube010',
@@ -164,7 +163,7 @@ function getRandomLayer(){
     'Cube025',
   ];
   return layerCenters[Math.floor(Math.random() * layerCenters.length)];
-}
+}*/
 
 function moveGroupChildrenToCubeScene(){
   // https://stackoverflow.com/questions/44836055/update-position-of-mesh-after-rotation-of-three-group
@@ -215,7 +214,7 @@ function selectCubeGroup(){
   // given a randomly selected cube
   // randomly choose which way to rotate
   if(cubeScene){
-    const cubes = Array.from(scene.children).filter(c => c.name.includes("Cube"));
+    const cubes = Array.from(scene.children).filter(c => c.name.includes('Cube'));
     //console.log('cube scene children length: ' + cubes.length);
     const selectedCube = cubes[Math.floor(Math.random() * cubes.length)];
     //selectedCube.add(axesHelper);
@@ -300,7 +299,7 @@ function animate(){
   update();
 }
 
-getModel("../models/rubikscube.gltf");
+getModel('../models/rubikscube.gltf');
 animate();
 
 document.getElementById('pause').addEventListener('click', (evt) => {

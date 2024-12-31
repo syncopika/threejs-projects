@@ -13,7 +13,7 @@ and some simple bounding boxes ought to suffice for my meshes
 edit: turns out raycasting is enough for collision detection with no boxes needed :)
 */
 
-const container = document.getElementById("container");
+const container = document.getElementById('container');
 
 const fov = 60;
 const camera = new THREE.PerspectiveCamera(fov, container.clientWidth / container.clientHeight, 0.01, 1000);
@@ -55,9 +55,6 @@ scene.add(hemiLight);
 //controls.panSpeed = 0.8;
 
 let theAbacus = null;
-const abacusBottomName = 'Cube011';
-const abacusMidName = 'Cube010';
-const abacusTopName = 'Cube012';
 
 const abacusColumns = {
   'ones': 'bead1',
@@ -145,10 +142,6 @@ function getObstacleDist(bead, raycaster, direction){
   return 0;
 }
 
-function isAtObstacleBoundary(bead, obstacle){
-  return bead.position.distanceTo(obstacle.position) < 0.3;
-}
-
 renderer.domElement.addEventListener('pointerdown', (evt) => {
   mouse.x = (evt.offsetX / evt.target.width) * 2 - 1;
   mouse.y = -(evt.offsetY / evt.target.height) * 2 + 1;
@@ -207,8 +200,8 @@ renderer.domElement.addEventListener('pointerup', (evt) => {
   }
 });
 
-function getModel(modelFilePath, name){
-  return new Promise((resolve, reject) => {
+function getModel(modelFilePath){
+  return new Promise((resolve) => {
     loader.load(
       modelFilePath,
       function(gltf){
@@ -216,7 +209,7 @@ function getModel(modelFilePath, name){
       },
       // called while loading is progressing
       function(xhr){
-        console.log( (xhr.loaded / xhr.total * 100) + '% loaded' );
+        console.log((xhr.loaded / xhr.total * 100) + '% loaded');
       },
       // called when loading has errors
       function(error){

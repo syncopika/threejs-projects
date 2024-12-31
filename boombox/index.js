@@ -7,9 +7,6 @@ const fov = 60;
 const camera = new THREE.PerspectiveCamera(fov, container.clientWidth / container.clientHeight, 0.01, 1000);
 camera.position.set(0, 4, 10);
 
-//const raycaster = new THREE.Raycaster();
-const mouse = new THREE.Vector2();
-
 const loadingManager = new THREE.LoadingManager();
 setupLoadingManager(loadingManager);
 
@@ -26,7 +23,6 @@ const controls = new THREE.TrackballControls(camera, renderer.domElement);
 controls.rotateSpeed = 3.2;
 controls.zoomSpeed = 1.2;
 controls.panSpeed = 0.8;
-console.log(controls);
 
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0xeeeeee);
@@ -43,8 +39,6 @@ const pointLight = new THREE.PointLight(0xffffff, 1, 0);
 pointLight.position.set(2, 10, 10);
 pointLight.castShadow = true;
 scene.add(pointLight);
-
-const clock = new THREE.Clock();
 
 let boomboxMesh = null;
 
@@ -70,12 +64,9 @@ const panner = new PannerNode(audioCtx, {
   orientationZ: -1,
 });
 
-let lowpassFreq = 0;
-
 let audioSource;
 let audioFileUrl;
 let isPlaying = false;
-let isStopped = true;
 
 function setMorphAction(boombox, actionName, amount){
   const targetInfluenceIndex = boombox.morphTargetDictionary[actionName];
@@ -113,7 +104,6 @@ function loadAudioFile(url){
 function play(){
   if(!isPlaying && audioSource){
     isPlaying = true;
-    isStopped = false;
     
     if(boomboxMesh){
       setMorphAction(boomboxMesh, 'play', 1.0);
@@ -130,7 +120,6 @@ document.getElementById('play').addEventListener('click', play);
 function stop(){
   if(isPlaying && audioSource){
     isPlaying = false;
-    isStopped = true;
     
     if(boomboxMesh){
       setMorphAction(boomboxMesh, 'play', 0.0);
@@ -181,7 +170,7 @@ function handleFile(file){
     
   const reader = new FileReader();
   reader.onload = (function(f){
-    return function(evt){
+    return function(){
       document.getElementById('audioFileName').textContent = f.name;
     };
   })(file);
@@ -195,8 +184,8 @@ document.getElementById('importAudio').addEventListener('click', () => {
 });
 
 
-function getModel(modelFilePath, name){
-  return new Promise((resolve, reject) => {
+function getModel(modelFilePath){
+  return new Promise((resolve) => {
     loader.load(
       modelFilePath,
       function(gltf){
@@ -204,7 +193,7 @@ function getModel(modelFilePath, name){
       },
       // called while loading is progressing
       function(xhr){
-        console.log( (xhr.loaded / xhr.total * 100) + '% loaded' );
+        console.log((xhr.loaded / xhr.total * 100) + '% loaded');
       },
       // called when loading has errors
       function(error){
@@ -215,7 +204,7 @@ function getModel(modelFilePath, name){
   });
 }
 
-getModel('../models/boombox.gltf', 'boombox').then(boombox => {
+getModel('../models/boombox.gltf').then(boombox => {
   boombox.position.z += 6;
   boombox.position.y += 1;
   boombox.rotateY(-Math.PI / 2);

@@ -1,10 +1,9 @@
 import { AnimationController } from '../libs/AnimationController.js';
 
-const container = document.getElementById("container");
+const container = document.getElementById('container');
 const fov = 60;
 const defaultCamera = new THREE.PerspectiveCamera(fov, container.clientWidth / container.clientHeight, 0.01, 1000);
 const keyboard = new THREEx.KeyboardState();
-const raycaster = new THREE.Raycaster();
 
 const loader = new THREE.GLTFLoader();
 
@@ -12,7 +11,7 @@ const renderer = new THREE.WebGLRenderer({antialias: true});
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 renderer.setSize(container.clientWidth, container.clientHeight); 
-renderer.domElement.id = "theCanvas";  
+renderer.domElement.id = 'theCanvas';  
 container.appendChild(renderer.domElement);
 
 // set up mobile keyboard
@@ -42,7 +41,7 @@ const crosshairImg = new Image();
 crosshairImg.onload = () => {
   ctx.drawImage(crosshairImg, 200, 130);
 };
-crosshairImg.src = "crosshairs.png";
+crosshairImg.src = 'crosshairs.png';
 
 container.appendChild(crosshairCanvas);
 
@@ -75,14 +74,9 @@ let currAction = null;
 
 let player = null;
 let tool = null;
-let terrain = null;
 let firstPersonViewOn = false;
 let sideViewOn = false;
 let neckMarker = null;
-//let playerBody;
-
-const mouseX = 0;
-const mouseY = 0;
 
 let cowProjectileMesh;
 
@@ -102,12 +96,11 @@ const plane = new THREE.Mesh(terrainGeometry, terrainMat);
 plane.receiveShadow = true;
 plane.castShadow = false;
 plane.rotateX(Math.PI / 2);
-plane.name = "ground";
+plane.name = 'ground';
 plane.translateY(0.6);
-terrain = plane;
 scene.add(plane);
 
-// debugging line for showing rifle line-of-sight
+/* debugging line for showing rifle line-of-sight
 function showDebuggingLine(pos, direction){
   const lineMaterial = new THREE.LineBasicMaterial({
     color: 0x0000ff
@@ -129,7 +122,7 @@ function showDebuggingLine(pos, direction){
   const line = new THREE.Line(geometry, lineMaterial);
   
   scene.add(line);
-}
+}*/
 
 const planeShape = new CANNON.Plane();
 const groundMat = new CANNON.Material();
@@ -155,9 +148,9 @@ function addCannonBox(mesh, width, height, length, x, y, z, mass=0){
     
   // detect collision
   // https://stackoverflow.com/questions/31750026/cannon-js-registering-collision-without-colliding
-  body.addEventListener("collide", (e) => {
+  body.addEventListener('collide', (e) => {
     const collidingObj = e.body.mesh;
-    if(collidingObj.name === "projectile"){
+    if(collidingObj.name === 'projectile'){
       const hitTarget = e.target.mesh;
             
       const hitMaterial = new THREE.MeshBasicMaterial({color: 0xff0000});
@@ -181,7 +174,7 @@ function generateProjectile(x, y, z){
     sphereMesh.receiveShadow = true;
     sphereMesh.castShadow = true;
     sphereMesh.position.set(x, y, z);
-    sphereMesh.name = "projectile";
+    sphereMesh.name = 'projectile';
     scene.add(sphereMesh);
 
     const sphereShape = new CANNON.Sphere(0.05);
@@ -200,7 +193,7 @@ function generateProjectile(x, y, z){
     cowMesh.receiveShadow = true;
     cowMesh.castShadow = true;
     cowMesh.position.set(x, y, z);
-    cowMesh.name = "projectile";
+    cowMesh.name = 'projectile';
     scene.add(cowMesh);
         
     const sphereShape = new CANNON.Sphere(1.2);
@@ -218,14 +211,14 @@ function generateProjectile(x, y, z){
 }
 
 function getModel(modelFilePath, name){
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve) => {
     loader.load(
       modelFilePath,
       function(gltf){
-        if(gltf.animations.length > 0 && name === "player"){
+        if(gltf.animations.length > 0 && name === 'player'){
           const clips = {};
           gltf.animations.forEach((action) => {
-            let name = action.name.replace("1", "").toLowerCase();
+            let name = action.name.replace('1', '').toLowerCase();
             name = name.substring(0, name.length);
             
             // from libs/utils.js
@@ -241,26 +234,26 @@ function getModel(modelFilePath, name){
         // then resolve the thing outside the traverse.
         const carbine = [];
         gltf.scene.traverse((child) => {
-          if(child.type === "Mesh" || child.type === "SkinnedMesh"){
+          if(child.type === 'Mesh' || child.type === 'SkinnedMesh'){
             const obj = child;
 
-            if(name === "obj"){
+            if(name === 'obj'){
               obj.scale.x = child.scale.x * 1.1;
               obj.scale.y = child.scale.y * 1.1;
               obj.scale.z = child.scale.z * 1.1;
               carbine.push(obj);
             }else{
-              if(child.type === "SkinnedMesh"){
+              if(child.type === 'SkinnedMesh'){
                 obj.add(child.skeleton.bones[0]); // add pelvis to mesh as a child
                             
-                if(name !== "obj"){
+                if(name !== 'obj'){
                   obj.scale.x *= .3;
                   obj.scale.y *= .3;
                   obj.scale.z *= .3;
                 }
               }
                             
-              if(name === "bg"){
+              if(name === 'bg'){
                 obj.scale.x = child.scale.x * 10;
                 obj.scale.y = child.scale.y * 10;
                 obj.scale.z = child.scale.z * 10;
@@ -274,7 +267,7 @@ function getModel(modelFilePath, name){
         });
                 
         // for the carbine (or really any scene with multiple meshes)
-        if(name === "obj"){
+        if(name === 'obj'){
           const m4carbine = carbine[0];
           m4carbine.add(m4carbine.skeleton.bones[0]);
           m4carbine.name = name;
@@ -300,7 +293,7 @@ function getModel(modelFilePath, name){
       },
       // called while loading is progressing
       function(xhr){
-        console.log( (xhr.loaded / xhr.total * 100) + '% loaded' );
+        console.log((xhr.loaded / xhr.total * 100) + '% loaded');
       },
       // called when loading has errors
       function(error){
@@ -324,16 +317,16 @@ getModel('../models/cow.gltf', 'cow').then(model => {
 
 Promise.all(loadedModels).then(objects => {
   objects.forEach(mesh => {
-    if(mesh.name === "npc"){
+    if(mesh.name === 'npc'){
       // npcs?
-    }else if(mesh.name === "obj"){
+    }else if(mesh.name === 'obj'){
       // tools that can be equipped
       mesh.castShadow = true;
       tool = mesh;
       tool.visible = false;
-    }else if(mesh.name === "target" || mesh.name.includes("box") || mesh.name === "barrel"){
+    }else if(mesh.name === 'target' || mesh.name.includes('box') || mesh.name === 'barrel'){
       mesh.castShadow = true;
-      if(mesh.name === "target"){
+      if(mesh.name === 'target'){
         mesh.position.set(10, mesh.position.y, -30);
         mesh.scale.x *= 4;
         mesh.scale.y *= 4;
@@ -361,7 +354,7 @@ Promise.all(loadedModels).then(objects => {
         cannonBodies.push(body);
       }
             
-      if(mesh.name === "box"){
+      if(mesh.name === 'box'){
         mesh.position.set(-10, mesh.position.y, -20);
         mesh.translateY(.05);
                 
@@ -377,7 +370,7 @@ Promise.all(loadedModels).then(objects => {
         ));
       }
             
-      if(mesh.name === "box2"){
+      if(mesh.name === 'box2'){
         mesh.position.set(-10, mesh.position.y, -20);
         mesh.translateY(2);
                 
@@ -393,7 +386,7 @@ Promise.all(loadedModels).then(objects => {
         ));
       }
             
-      if(mesh.name === "barrel"){
+      if(mesh.name === 'barrel'){
         mesh.position.set(1.1, mesh.position.y, 5);
                 
         const bbox = new THREE.Box3().setFromObject(mesh);
@@ -407,7 +400,7 @@ Promise.all(loadedModels).then(objects => {
           30
         ));
       }
-    }else if(mesh.name === "player"){
+    }else if(mesh.name === 'player'){
       mesh.castShadow = true;
       player = mesh;
 
@@ -428,7 +421,7 @@ Promise.all(loadedModels).then(objects => {
       mesh.head = head;
       head.position.set(0, 4, 0);
       
-      const neck = mesh.skeleton.bones.find(x => x.name === "Neck");
+      const neck = mesh.skeleton.bones.find(x => x.name === 'Neck');
       
       const cubeGeometry2 = new THREE.BoxGeometry(2.2, 2.2, 2.2);
       const material2 = new THREE.MeshBasicMaterial({color: 0x0000ff});
@@ -439,18 +432,18 @@ Promise.all(loadedModels).then(objects => {
             
       animationMixer = new THREE.AnimationMixer(mesh);
       animationController = new AnimationController(player, animationMixer, animationClips, clock);
-      animationController.changeState("normal"); // set normal state by default for animations. see animation_state_map.json
+      animationController.changeState('normal'); // set normal state by default for animations. see animation_state_map.json
 
       mesh.position.set(0, 1.4, -10);
       mesh.rotateOnAxis(new THREE.Vector3(0, 1, 0), Math.PI);
             
       // add hand bone to equip tool with as a child of the player mesh
       for(const bone of player.skeleton.bones){
-        if(bone.name === "HandR001"){
+        if(bone.name === 'HandR001'){
           player.hand = bone; // set an arbitrary new property to access the hand bone
         }
         
-        if(bone.name === "Chest"){
+        if(bone.name === 'Chest'){
           player.chest = bone;
           player.head.quaternion.copy(bone.quaternion); // make sure head mesh follows chest bone rotation
         }
@@ -468,8 +461,8 @@ Promise.all(loadedModels).then(objects => {
 
 function moveBasedOnAction(controller, player, speed, reverse){
   const action = controller.bottomAnimation.name;
-  if(action && (action.includes("walk") || action.includes("run"))){
-    if(action.includes("run")){
+  if(action && (action.includes('walk') || action.includes('run'))){
+    if(action.includes('run')){
       speed += 0.10;
     }
     if(reverse){
@@ -502,14 +495,14 @@ function checkCollision(moveDistance, isReverse){
 }
 
 function keydown(evt){
-  if(evt.code === "ShiftLeft"){
+  if(evt.code === 'ShiftLeft'){
     // toggle between walk and run while moving
-    if(currAction === "walk"){
-      currAction = "run";
-      animationController.changeAction("run-arms", "top");
-      animationController.changeAction("run-legs", "bottom");
+    if(currAction === 'walk'){
+      currAction = 'run';
+      animationController.changeAction('run-arms', 'top');
+      animationController.changeAction('run-legs', 'bottom');
     }
-  }else if(evt.code === "KeyG"){
+  }else if(evt.code === 'KeyG'){
     // for toggling weapon/tool equip
     // https://stackoverflow.com/questions/19031198/three-js-attaching-object-to-bone
     // https://stackoverflow.com/questions/54270675/three-js-parenting-mesh-to-bone
@@ -529,17 +522,17 @@ function keydown(evt){
     // since I have the event listener for a "finished" action set up
     let timeScale = 1;
         
-    if(animationController.currState === "normal"){
+    if(animationController.currState === 'normal'){
       tool.visible = true;
-      animationController.changeState("equip"); // equip weapon
+      animationController.changeState('equip'); // equip weapon
     }else{
-      animationController.changeState("normal"); // go back to normal state
+      animationController.changeState('normal'); // go back to normal state
       timeScale = -1; // need to play equip animation backwards to put away weapon
     }
     animationController.setUpdateTimeDivisor(.0025); // controls speed of animation
-    currAction = "drawgun";
-    animationController.changeAction("drawgun", "top", timeScale);
-  }else if(evt.key === "1"){
+    currAction = 'drawgun';
+    animationController.changeAction('drawgun', 'top', timeScale);
+  }else if(evt.key === '1'){
     // toggle first-person view
     firstPersonViewOn = !firstPersonViewOn;
     sideViewOn = false;
@@ -556,7 +549,7 @@ function keydown(evt){
     }else{
       scene.add(camera);
     }
-  }else if(evt.key === "2"){
+  }else if(evt.key === '2'){
     // toggle side view
     firstPersonViewOn = false;
     sideViewOn = !sideViewOn;
@@ -564,20 +557,20 @@ function keydown(evt){
 }
 
 function keyup(evt){
-  if(evt.code === "ShiftLeft"){
-    if(currAction === "run"){
-      currAction = "walk";
+  if(evt.code === 'ShiftLeft'){
+    if(currAction === 'run'){
+      currAction = 'walk';
       animationController.setUpdateTimeDivisor(.12);
-      animationController.changeAction("walk-arms", "top");
-      animationController.changeAction("walk-legs", "bottom");
+      animationController.changeAction('walk-arms', 'top');
+      animationController.changeAction('walk-legs', 'bottom');
     }
   }
 }
 
-document.addEventListener("keydown", keydown);
-document.addEventListener("keyup", keyup);
-document.getElementById("theCanvas").parentNode.addEventListener("pointerdown", (evt) => {
-  if(animationController && animationController.currState !== "normal"){
+document.addEventListener('keydown', keydown);
+document.addEventListener('keyup', keyup);
+document.getElementById('theCanvas').parentNode.addEventListener('pointerdown', (evt) => {
+  if(animationController && animationController.currState !== 'normal'){
     evt.preventDefault();
     
     /* for debugging: place a marker at cameraForward to confirm
@@ -608,7 +601,7 @@ document.getElementById("theCanvas").parentNode.addEventListener("pointerdown", 
     forwardVec.multiplyScalar(impulseVal);
     
     const posVec = new THREE.Vector3();
-    const projectileSrcPos = tool.projectileSrc.getWorldPosition(posVec);
+    tool.projectileSrc.getWorldPosition(posVec);
     const sphere = generateProjectile(posVec.x, posVec.y, posVec.z);
     sphere.sphereBody.applyImpulse(new CANNON.Vec3(forwardVec.x, forwardVec.y, forwardVec.z), sphere.sphereBody.position);
     
@@ -617,7 +610,7 @@ document.getElementById("theCanvas").parentNode.addEventListener("pointerdown", 
 });
 
 // https://stackoverflow.com/questions/48131322/three-js-first-person-camera-rotation
-document.getElementById("theCanvas").parentNode.addEventListener("mousemove", (evt) => {
+document.getElementById('theCanvas').parentNode.addEventListener('mousemove', (evt) => {
   document.body.style.cursor = 'none';
   evt.preventDefault();
 
@@ -646,54 +639,54 @@ function update(){
   rotationAngle = (Math.PI / 2) * sec;
   let changeCameraView = false;
     
-  if(keyboard.pressed("z")){
+  if(keyboard.pressed('z')){
     changeCameraView = true;
   }
     
-  if(keyboard.pressed("w")){
+  if(keyboard.pressed('w')){
     // moving forwards
     animationController.setUpdateTimeDivisor(.008);
-    if(currAction !== "run"){
-      currAction = "walk";
-      animationController.changeAction("walk-legs", "bottom");
+    if(currAction !== 'run'){
+      currAction = 'walk';
+      animationController.changeAction('walk-legs', 'bottom');
     }
     if(!checkCollision(moveDistance, false)){
       moveBasedOnAction(animationController, player, moveDistance, false);
     }
-  }else if(keyboard.pressed("s")){
+  }else if(keyboard.pressed('s')){
     // moving backwards
     animationController.setUpdateTimeDivisor(.008);
-    if(currAction !== "run"){
-      currAction = "walk";
-      animationController.changeAction("walk-legs", "bottom", -1);
+    if(currAction !== 'run'){
+      currAction = 'walk';
+      animationController.changeAction('walk-legs', 'bottom', -1);
     }
     if(!checkCollision(moveDistance, true)){
       moveBasedOnAction(animationController, player, moveDistance, true);
     }
-  }else if(!keyboard.pressed("w") && !keyboard.pressed("s")){
+  }else if(!keyboard.pressed('w') && !keyboard.pressed('s')){
     // for idle pose
-    if(currAction !== "drawgun"){
-      currAction = "idle";
+    if(currAction !== 'drawgun'){
+      currAction = 'idle';
       animationController.setUpdateTimeDivisor(.05);
-      animationController.changeAction("idle-arms", "top");
-      animationController.changeAction("idle-legs", "bottom");
+      animationController.changeAction('idle-arms', 'top');
+      animationController.changeAction('idle-legs', 'bottom');
     }
   }
   
-  if(keyboard.pressed("a")){
+  if(keyboard.pressed('a')){
     player.rotateOnAxis(new THREE.Vector3(0, 1, 0), rotationAngle);
   }
     
-  if(keyboard.pressed("d")){
+  if(keyboard.pressed('d')){
     player.rotateOnAxis(new THREE.Vector3(0, 1, 0), -rotationAngle);
   }
   
-  if(keyboard.pressed("q")){
-    animationController.changeAction("leftlean", "top");
-    currAction = "leftlean";
-  }else if(keyboard.pressed("e")){
-    animationController.changeAction("rightlean", "top");
-    currAction = "rightlean";
+  if(keyboard.pressed('q')){
+    animationController.changeAction('leftlean', 'top');
+    currAction = 'leftlean';
+  }else if(keyboard.pressed('e')){
+    animationController.changeAction('rightlean', 'top');
+    currAction = 'rightlean';
   }
   
   // make sure to update controller animations
@@ -776,7 +769,7 @@ function animate(){
     const bMesh = bBody.mesh;
         
     // for now only have boxes be able to move on projectile impact
-    if(bMesh.name.includes("box")){
+    if(bMesh.name.includes('box')){
       bMesh.position.set(bBody.position.x, bBody.position.y, bBody.position.z);    
       bMesh.quaternion.set(
         bBody.quaternion.x,

@@ -1,12 +1,12 @@
 // snowboarding
 import { AnimationController } from './AnimationController.js';
 
-const container = document.getElementById("container");
+const container = document.getElementById('container');
 
 const fov = 60;
 const camera = new THREE.PerspectiveCamera(fov, container.clientWidth / container.clientHeight, 0.01, 2000);
 camera.position.set(0, 4, 10);
-const mouse = new THREE.Vector2();
+
 const keyboard = new THREEx.KeyboardState();
 
 const loadingManager = new THREE.LoadingManager();
@@ -71,11 +71,11 @@ let currJumpHeight = 0;    // amount of jump height based on curr time and sin w
 const jumpMaxY = 2.0;
 
 function getModel(modelFilePath, side, name){
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve) => {
     loader.load(
       modelFilePath,
       function(gltf){
-        if(gltf.animations.length > 0 && name === "p1"){
+        if(gltf.animations.length > 0 && name === 'p1'){
           const clips = {};
           gltf.animations.forEach((action) => {
             let name = action['name'].toLowerCase();
@@ -87,16 +87,16 @@ function getModel(modelFilePath, side, name){
         }
                 
         gltf.scene.traverse((child) => {
-          if(child.type === "Mesh" || child.type === "SkinnedMesh"){
+          if(child.type === 'Mesh' || child.type === 'SkinnedMesh'){
             const obj = child;
             obj.name = name;
 
-            if(name === "obj"){
+            if(name === 'obj'){
               boardMesh = obj;
               boardMesh.castShadow = true;
               resolve(obj);
             }else{
-              if(child.type === "SkinnedMesh"){
+              if(child.type === 'SkinnedMesh'){
                 obj.add(child.skeleton.bones[0]); // seems like this is necessary to get the whole player mesh to show
                 //console.log(child.skeleton.bones);
                 obj.boardAttachmentBone = child.skeleton.bones[14];
@@ -112,7 +112,7 @@ function getModel(modelFilePath, side, name){
       },
       // called while loading is progressing
       function(xhr){
-        console.log( (xhr.loaded / xhr.total * 100) + '% loaded' );
+        console.log((xhr.loaded / xhr.total * 100) + '% loaded');
       },
       // called when loading has errors
       function(error){
@@ -284,8 +284,8 @@ function keyup(evt){
   }
 }
 
-document.addEventListener("keydown", keydown);
-document.addEventListener("keyup", keyup);
+document.addEventListener('keydown', keydown);
+document.addEventListener('keyup', keyup);
 
 
 function doRaycast(playerMesh, raycaster){
@@ -298,7 +298,7 @@ function doRaycast(playerMesh, raycaster){
   for(let i = 0; i < intersects.length; i++){
     if(intersects[i].object.name === 'hill' || intersects[i].object.name === 'plane' || intersects[i].object.name === 'rock'){
       const currPos = intersects[i].point; // point where the raycast hit
-            
+      
       // check if player is still in the air after jumping + making the full arc (like when jumping off the top of a big hill)
       // if yes, we manually decrease their y position TODO: can we make this look nicer? like follow a more realistic curve
       isStillInAir = isStillJumping(playerMesh, raycaster);
@@ -313,22 +313,22 @@ function doRaycast(playerMesh, raycaster){
       }
 
       /*
-            console.log("curr pos");
-            console.log(playerMesh.position);
+      console.log("curr pos");
+      console.log(playerMesh.position);
 
-            console.log("next vector");
-            console.log(nextVec);
-            */
-            
+      console.log("next vector");
+      console.log(nextVec);
+      */
+      
       // only rotate if moving and not in flight
-      if(keyboard.pressed("W") && !isJumping && !isStillInAir){
+      if(keyboard.pressed('W') && !isJumping && !isStillInAir){
         const nextVec = new THREE.Vector3(currPos.x - playerMesh.position.x, nextY - playerMesh.position.y, currPos.z - playerMesh.position.z);
         nextVec.normalize();
-                
+        
         const forward = new THREE.Vector3(0, 0, 1);
-                
+        
         const angleTo = forward.angleTo(nextVec);
-            
+        
         const crossProductLength = forward.cross(nextVec);
                 
         if(crossProductLength.x > 0){
@@ -361,6 +361,7 @@ function isStillJumping(playerMesh, raycaster){
       break;
     }
   }
+  
   return false;
 }
 
@@ -368,7 +369,7 @@ function update(){
   const delta = clock.getDelta();
   moveClock.getDelta(); // start moveClock
     
-  if(playerMesh && !keyboard.pressed("shift")){
+  if(playerMesh && !keyboard.pressed('shift')){
     const relCameraOffset = new THREE.Vector3(0, 2, -10);
 
     const cameraOffset = relCameraOffset.applyMatrix4(playerMesh.matrixWorld);
@@ -377,7 +378,7 @@ function update(){
     camera.position.z = cameraOffset.z;
 
     camera.lookAt(playerMesh.position);
-  }else if(keyboard.pressed("shift")){
+  }else if(keyboard.pressed('shift')){
     const relCameraOffset = new THREE.Vector3(0, 2, 10);
 
     const cameraOffset = relCameraOffset.applyMatrix4(playerMesh.matrixWorld);
@@ -387,18 +388,18 @@ function update(){
 
     camera.lookAt(playerMesh.position);
   }
-    
-  if(keyboard.pressed("A")){
+  
+  if(keyboard.pressed('A')){
     animationController.changeAction('turnleft');
     playerMesh.rotateY(Math.PI / 40);
   }
     
-  if(keyboard.pressed("D")){
+  if(keyboard.pressed('D')){
     animationController.changeAction('turnright');
     playerMesh.rotateY(-Math.PI / 40);
   }
     
-  if(keyboard.pressed("W")){
+  if(keyboard.pressed('W')){
     if(animationController.currAction === '' || animationController.currAction === 'idle') animationController.changeAction('moving');
         
     if(!isMoving){
@@ -418,7 +419,7 @@ function update(){
       }
     }
   }
-    
+  
   if(playerMesh) doRaycast(playerMesh, raycaster);
     
   if(isJumping){
@@ -429,7 +430,7 @@ function update(){
     }else{
       time = 0;
       animationController.changeAction('moving');
-      console.log("jump ended");
+      console.log('jump ended');
             
       isJumping = false;
     }
@@ -466,7 +467,7 @@ function update(){
     
   // when user stops pressing w, reset clock
   // so player will incrementally speed up again on next w press
-  if(isMoving && !keyboard.pressed("W")){
+  if(isMoving && !keyboard.pressed('W')){
     moveClock.stop(); // reset
     isMoving = false;
   }

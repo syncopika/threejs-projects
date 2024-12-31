@@ -1,5 +1,5 @@
 
-const el = document.getElementById("container");
+const el = document.getElementById('container');
 const fov = 60;
 const defaultCamera = new THREE.PerspectiveCamera(fov, el.clientWidth / el.clientHeight, 0.01, 1000);
 const keyboard = new THREEx.KeyboardState();
@@ -108,7 +108,7 @@ function keydown(evt){
   }
 }
 
-document.addEventListener("keydown", keydown);
+document.addEventListener('keydown', keydown);
 
 
 function update(){
@@ -117,29 +117,29 @@ function update(){
   rotationAngle = (Math.PI / 2) * sec;
   let changeCameraView = false;
     
-  if(keyboard.pressed("z")){
+  if(keyboard.pressed('z')){
     changeCameraView = true;
   }
     
-  if(keyboard.pressed("W")){
+  if(keyboard.pressed('W')){
     // moving forwards
     thePlayer.translateZ(moveDistance);
         
-  }else if(keyboard.pressed("S")){
+  }else if(keyboard.pressed('S')){
     // moving backwards
     thePlayer.translateZ(-moveDistance);
   }
     
-  if(keyboard.pressed("J")){
+  if(keyboard.pressed('J')){
     // for jumping
   }
     
-  if(keyboard.pressed("A")){
+  if(keyboard.pressed('A')){
     const axis = new THREE.Vector3(0, 1, 0);
     thePlayer.rotateOnAxis(axis, rotationAngle);
   }
     
-  if(keyboard.pressed("D")){
+  if(keyboard.pressed('D')){
     const axis = new THREE.Vector3(0, 1, 0);
     thePlayer.rotateOnAxis(axis, -rotationAngle);
   }

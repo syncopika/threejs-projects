@@ -19,7 +19,7 @@ class MarkerManager {
     this.camera = camera; // the camera the user will use to move around with
     this.paths = []; // list of Path objects
     this.selectedMarkers = [];
-    this.mode = "add"; // 'add' or 'select'
+    this.mode = 'add'; // 'add' or 'select'
     this.raycaster = new THREE.Raycaster();
     this.mouse = new THREE.Vector2();
         
@@ -31,7 +31,7 @@ class MarkerManager {
   }
     
   changeMode(){
-    this.mode = (this.mode === "add" ? "select" : "add");
+    this.mode = (this.mode === 'add' ? 'select' : 'add');
   }
 
   // add a new marker to the path
@@ -148,7 +148,7 @@ class MarkerManager {
     this.raycaster.setFromCamera(this.mouse, this.camera);
     const intersects = this.raycaster.intersectObjects(this.scene.children);
     for(let i = 0; i < intersects.length; i++){
-      if(intersects[i].object.objectType && intersects[i].object.objectType === "marker"){
+      if(intersects[i].object.objectType && intersects[i].object.objectType === 'marker'){
         return intersects[i];
       }
     }
@@ -159,7 +159,7 @@ class MarkerManager {
     const geo = new THREE.BoxGeometry(2,2,2);
     const mat = new THREE.MeshBasicMaterial({color: 0x00ff00});
     const cube = new THREE.Mesh(geo, mat);
-    cube.objectType = "marker";
+    cube.objectType = 'marker';
     return cube;
   }
     
@@ -177,7 +177,7 @@ class MarkerManager {
     const posX = (x1 * target.width) / target.clientWidth;
     const posY = (y1 * target.height) / target.clientHeight;
 
-    const gl = target.getContext("webgl2"); // might be webgl in other browsers (not chrome)?
+    const gl = target.getContext('webgl2'); // might be webgl in other browsers (not chrome)?
     const x = (posX / gl.canvas.width) * 2 - 1;
     const y = (posY / gl.canvas.height) * -2 + 1;
         
@@ -212,12 +212,6 @@ class MarkerManager {
   createPath(markerStart, markerEnd, linkMesh, target=null){
     const path = new Path(markerStart, markerEnd, linkMesh, target);
     this.paths.push(path);
-  }
-    
-  removePath(startMarker, endMarker){
-    // go through existing paths in this.paths
-    // find the one that has the matching start and end markers
-    // remove the path link/linkMesh (set to null?)
   }
     
   // ride() will be passed to requestAnimationFrame(), which will
@@ -268,7 +262,7 @@ class MarkerManager {
     if(this.currPathIndex === this.paths.length){
       // we're done with traversing the path
       // reset stuff
-      console.log("we're done");
+      console.log('we\'re done');
       this.currPathIndex = 0;
       this.startPos = null;
       cancelAnimationFrame(this.reqAnimFrameId);
@@ -294,13 +288,14 @@ class MarkerManager {
   }
 }
 
+/*
 class UIManager {
   constructor(){}
 
   // update UI with new changes
   // i.e. for customizing path properties, markers, etc.
   updateUI(){}
-}
+}*/
 
 function setupSceneLights(scene){
   const hemiLight = new THREE.HemisphereLight(0xffffff);
@@ -351,19 +346,15 @@ function setupDemoMesh(scene){
 
 
 //////////////////////////////////////////////////////// start
-let addMarker = true;
 let selectMarker = false;
 
-const container = document.getElementById("container");
+const container = document.getElementById('container');
 const fov = 60;
 
 const camera = new THREE.PerspectiveCamera(fov, container.clientWidth / container.clientHeight, 0.01, 1000);
 camera.position.set(0,5,15);
 
 const keyboard = new THREEx.KeyboardState();
-const raycaster = new THREE.Raycaster();
-const loadingManager = new THREE.LoadingManager();
-const loader = new THREE.GLTFLoader(loadingManager);
 
 // set up mobile keyboard
 document.getElementById('showKeyboard').addEventListener('click', () => {
@@ -393,9 +384,9 @@ const markerManager = new MarkerManager(scene, camera);
 const radius = 5;
 let t = 0;
 
-renderer.domElement.addEventListener("click", (evt) => {
+renderer.domElement.addEventListener('click', (evt) => {
   const coords = markerManager.getCoordsOnMouseClick(evt);
-  if(markerManager.mode === "add"){
+  if(markerManager.mode === 'add'){
     const cube = markerManager.createMarker();
     markerManager.addMarker(cube, coords.x, coords.y);
   }else{
@@ -415,14 +406,13 @@ renderer.domElement.addEventListener("click", (evt) => {
 });
 
 document.getElementById('addMarker').addEventListener('click', (evt) => {
-  addMarker = true;
   selectMarker = false;
-  evt.target.style.border = "3px solid green";
-  document.getElementById('selectMarker').style.border = "none";
+  evt.target.style.border = '3px solid green';
+  document.getElementById('selectMarker').style.border = 'none';
   markerManager.changeMode();
 });
 
-document.getElementById('removeMarker').addEventListener('click', (evt) => {
+document.getElementById('removeMarker').addEventListener('click', () => {
   if(selectMarker){
     markerManager.removeMarkers(markerManager.selectedMarkers);
   }
@@ -430,43 +420,42 @@ document.getElementById('removeMarker').addEventListener('click', (evt) => {
 
 document.getElementById('selectMarker').addEventListener('click', (evt) => {
   selectMarker = true;
-  addMarker = false;
-  evt.target.style.border = "3px solid green";
-  document.getElementById('addMarker').style.border = "none";
+  evt.target.style.border = '3px solid green';
+  document.getElementById('addMarker').style.border = 'none';
   markerManager.changeMode();
 });
 
-document.getElementById('createPath').addEventListener('click', (evt) => {
-  if(markerManager.mode === "select"){
+document.getElementById('createPath').addEventListener('click', () => {
+  if(markerManager.mode === 'select'){
     // take all selected markers and create a path between them in the order they are in
     //console.log(targetObj);
     markerManager.connectMarkers(markerManager.selectedMarkers, targetObj);
   }
 });
 
-document.getElementById('ridePath').addEventListener('click', (evt) => {
+document.getElementById('ridePath').addEventListener('click', () => {
   markerManager.ridePath();
 });
 
-document.getElementById('toggleMarkerVisibility').addEventListener('click', (evt) => {
+document.getElementById('toggleMarkerVisibility').addEventListener('click', () => {
   markerManager.toggleMarkers();
 });
 
-document.getElementById('togglePathVisibility').addEventListener('click', (evt) => {
+document.getElementById('togglePathVisibility').addEventListener('click', () => {
   markerManager.togglePaths();
 });
 
 document.getElementById('setTarget').addEventListener('click', (evt) => {
-  if(evt.target.textContent.trim() === "unset target"){
+  if(evt.target.textContent.trim() === 'unset target'){
     markerManager.paths.forEach((path) => {
       path.target = null;
     });
-    evt.target.textContent = "set target";
+    evt.target.textContent = 'set target';
   }else{
     markerManager.paths.forEach((path) => {
       path.target = targetObj;
     });
-    evt.target.textContent = "unset target";
+    evt.target.textContent = 'unset target';
   }
 });
 
@@ -476,41 +465,39 @@ function update(){
   rotationAngle = (Math.PI / 2) * sec;
   t += 0.008;
     
-  const changeCameraView = false;
-    
-  if(keyboard.pressed("W")){
+  if(keyboard.pressed('W')){
     // moving forwards
     camera.translateZ(-moveDistance);
         
-  }else if(keyboard.pressed("S")){
+  }else if(keyboard.pressed('S')){
     // moving backwards
     camera.translateZ(moveDistance);
   }
     
-  if(keyboard.pressed("up")){
+  if(keyboard.pressed('up')){
     // up arrow (rotate x)
     // need to prevent default (i.e. scrolling)
     // clamp also?
     camera.rotateX(rotationAngle);
   }
     
-  if(keyboard.pressed("down")){
+  if(keyboard.pressed('down')){
     camera.rotateX(-rotationAngle);
   }
     
-  if(keyboard.pressed("A")){
+  if(keyboard.pressed('A')){
     camera.rotateOnAxis(new THREE.Vector3(0, 1, 0), rotationAngle);
   }
     
-  if(keyboard.pressed("D")){
+  if(keyboard.pressed('D')){
     camera.rotateOnAxis(new THREE.Vector3(0, 1, 0), -rotationAngle);
   }
     
-  if(keyboard.pressed("Q")){
+  if(keyboard.pressed('Q')){
     camera.rotateOnAxis(new THREE.Vector3(0, 0, 1), rotationAngle);
   }
     
-  if(keyboard.pressed("E")){
+  if(keyboard.pressed('E')){
     camera.rotateOnAxis(new THREE.Vector3(0, 0, 1), -rotationAngle);
   }
     

@@ -1,14 +1,22 @@
 // new project template
-
-const container = document.getElementById("container");
-//const keyboard = new THREEx.KeyboardState();
+const container = document.getElementById('container');
 
 const fov = 60;
 const camera = new THREE.PerspectiveCamera(fov, container.clientWidth / container.clientHeight, 0.01, 1000);
 camera.position.set(0, 4, 10);
 
+// optional stuff
+//const keyboard = new THREEx.KeyboardState();
 //const raycaster = new THREE.Raycaster();
-const mouse = new THREE.Vector2();
+//const mouse = new THREE.Vector2();
+//const clock = new THREE.Clock();
+
+/* set up trackball control if needed
+const controls = new THREE.TrackballControls(camera, renderer.domElement);
+controls.rotateSpeed = 3.2;
+controls.zoomSpeed = 1.2;
+controls.panSpeed = 0.8;
+*/
 
 const loadingManager = new THREE.LoadingManager();
 setupLoadingManager(loadingManager);
@@ -41,8 +49,6 @@ scene.add(spotLight);
 //hemiLight.position.set(0, 10, 0);
 //scene.add(hemiLight);
 
-const clock = new THREE.Clock();
-
 // add a plane and a sphere
 const planeGeometry = new THREE.PlaneGeometry(25, 25);
 const planeMaterial = new THREE.MeshLambertMaterial({color: 0x055C9D});
@@ -62,6 +68,26 @@ sphere.position.y = 4;
 sphere.position.z = 0;
 scene.add(sphere);
 
+function getModel(modelFilePath){
+  return new Promise((resolve) => {
+    loader.load(
+      modelFilePath,
+      function(gltf){
+        resolve(gltf.scene);
+      },
+      // called while loading is progressing
+      function(xhr){
+        console.log((xhr.loaded / xhr.total * 100) + '% loaded');
+      },
+      // called when loading has errors
+      function(error){
+        console.log('An error happened');
+        console.log(error);
+      }
+    );
+  });
+}
+
 function update(){
   // move stuff around, etc.
 }
@@ -77,10 +103,11 @@ function keydown(evt){
     // r key
   }
 }
-document.addEventListener("keydown", keydown);
+document.addEventListener('keydown', keydown);
 
 
 function animate(){
+  //controls.update(); // update trackball control
   requestAnimationFrame(animate);
   renderer.render(scene, camera);
   update();

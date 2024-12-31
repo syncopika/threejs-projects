@@ -3,7 +3,7 @@
 // also Ronen Ness' partykals.js in ../libs
 
 // https://github.com/donmccurdy/three-gltf-viewer/blob/master/src/viewer.js
-const container = document.getElementById("container");
+const container = document.getElementById('container');
 const fov = 60;
 const camera = new THREE.PerspectiveCamera(fov, container.clientWidth / container.clientHeight, 0.1, 5000);
 const keyboard = new THREEx.KeyboardState();
@@ -66,10 +66,6 @@ const state = {
   'particleSystems': []
 };
 
-function setUpSkyBox(){
-    
-}
-
 function updateStateHtml(state){
   const altitude = document.getElementById('altitude');
   const speed = document.getElementById('speed');
@@ -114,7 +110,7 @@ function engineFlameParticles(state, obj){
         colorize: true,
         startColor: new Partykals.Randomizers.ColorsRandomizer(new THREE.Color(0.3, 0.2, 0), new THREE.Color(0.3, 0.4, 0.3)),
         endColor: new THREE.Color(0, 0, 0),
-        blending: "additive",
+        blending: 'additive',
         worldPosition: false,
       },
       system: {
@@ -138,21 +134,21 @@ function getSpeed(timeDelta){
 }
 
 function getModel(modelFilePath, type, name){
-  return new Promise((resolve, reject) => {
+  return new Promise(() => {
     loader.load(
       modelFilePath,
       function(gltf){
         gltf.scene.traverse((child) => {
-          if(child.type === "Mesh"){
+          if(child.type === 'Mesh'){
                     
             const material = child.material;
             const geometry = child.geometry;
             const obj = new THREE.Mesh(geometry, material);
                         
-            if(name === "bg"){
+            if(name === 'bg'){
             }
                         
-            if(type === "player"){
+            if(type === 'player'){
               obj.scale.x = 0.98;
               obj.scale.y = 0.98;
               obj.scale.z = 0.98;
@@ -166,7 +162,7 @@ function getModel(modelFilePath, type, name){
       },
       // called while loading is progressing
       function(xhr){
-        console.log( (xhr.loaded / xhr.total * 100) + '% loaded' );
+        console.log((xhr.loaded / xhr.total * 100) + '% loaded');
       },
       // called when loading has errors
       function(error){
@@ -183,7 +179,7 @@ loadedModels.push(getModel('../models/f-35.gltf', 'player', 'f35'));
 loadedModels.push(getModel('../models/airbase.gltf', 'airbase', 'bg'));
 
 function processMesh(mesh){
-  if(mesh.type === "player"){
+  if(mesh.type === 'player'){
     const meshName = mesh.name;
         
     // the local axis of the imported mesh is a bit weird and not consistent with the world axis. so, to fix that,
@@ -207,7 +203,7 @@ function processMesh(mesh){
         
     aircraftOptions[meshName] = mesh;
         
-    if(meshName === "f18"){
+    if(meshName === 'f18'){
       thePlayer = mesh;
             
       // save current position and rotation of the group and the aircraft mesh itself
@@ -246,10 +242,10 @@ function processMesh(mesh){
     since that function may run more then once a second, a key press might be registered
     multiple times, which makes it unreliable)
 */
-document.addEventListener("keydown", (evt) => {
+document.addEventListener('keydown', (evt) => {
   if(evt.keyCode === 20){
     // caps lock
-    console.log("mode changed!");
+    console.log('mode changed!');
     if(state['mode'] === 'taxi'){
       state['mode'] = 'takeoff';
       state['phase'] = 1;
@@ -258,7 +254,7 @@ document.addEventListener("keydown", (evt) => {
     }else if(state['mode'] === 'flying'){
             
       // something for landing?
-      console.log("mode changed to landing!");
+      console.log('mode changed to landing!');
       state['mode'] = 'landing';
 
       // reset rotation
@@ -310,7 +306,7 @@ document.addEventListener("keydown", (evt) => {
   }
 });
 
-document.addEventListener("keyup", (evt) => {
+document.addEventListener('keyup', (evt) => {
   if(evt.keyCode === 87){
     // 'w' key
     if(state['mode'] !== 'landing'){
@@ -339,11 +335,11 @@ function update(){
   state['altitude'] = thePlayer.position.y;
   updateStateHtml(state);
     
-  if(keyboard.pressed("shift")){
+  if(keyboard.pressed('shift')){
     changeCameraView = true;
   }
     
-  if(keyboard.pressed("W")){
+  if(keyboard.pressed('W')){
     // note that this gets called several times with one key press!
     // I think it's because update() in requestAnimationFrames gets called quite a few times per second
     state['isMoving'] = true;
@@ -402,7 +398,7 @@ function update(){
         thePlayer.translateY(-0.3);
         moveDistance = 1.2;
       }else{
-        console.log("touchdown");
+        console.log('touchdown');
         thePlayer.position.y = 0.0;
         resetState(state);
       }
@@ -447,7 +443,7 @@ function update(){
       resetState(state);
     }
   }else if(state['mode'] === 'landing'){
-    console.log("landing!");
+    console.log('landing!');
     if(state['altitude'] > 0.0){
       // gradually get closer to the ground. plane should be aligned with ground ideally
       thePlayer.translateY(-0.3);
@@ -458,21 +454,21 @@ function update(){
     }
   }
     
-  if(keyboard.pressed("S") && state['mode'] === 'taxi'){
+  if(keyboard.pressed('S') && state['mode'] === 'taxi'){
     thePlayer.translateZ(moveDistance);
   }
     
-  if(keyboard.pressed("A") && state['mode'] !== 'landing'){
+  if(keyboard.pressed('A') && state['mode'] !== 'landing'){
     const axis = new THREE.Vector3(0, 1, 0);
     thePlayer.rotateOnAxis(axis, rotationAngle);
   }
     
-  if(keyboard.pressed("D") && state['mode'] !== 'landing'){
+  if(keyboard.pressed('D') && state['mode'] !== 'landing'){
     const axis = new THREE.Vector3(0, 1, 0);
     thePlayer.rotateOnAxis(axis, -rotationAngle);
   }
     
-  if(keyboard.pressed("Q") && thePlayer.position.y > 6.0 && state['mode'] !== 'landing'){
+  if(keyboard.pressed('Q') && thePlayer.position.y > 6.0 && state['mode'] !== 'landing'){
     // https://stackoverflow.com/questions/28848863/threejs-how-to-rotate-around-objects-own-center-instead-of-world-center
     // notice we're not rotating about the group mesh, but the child 
     // mesh of the group, which is actually the jet mesh!
@@ -482,13 +478,13 @@ function update(){
     thePlayer.children[0].rotateOnAxis(axis, -rotationAngle);
   }
     
-  if(keyboard.pressed("E") && thePlayer.position.y > 6.0 && state['mode'] !== 'landing'){
+  if(keyboard.pressed('E') && thePlayer.position.y > 6.0 && state['mode'] !== 'landing'){
     const axis = new THREE.Vector3(0, 0, 1);
     thePlayer.children[0].rotateOnAxis(axis, rotationAngle);
   }
     
   // check altitude
-  if(keyboard.pressed("up") && moveDistance >= 1.8 && state['mode'] !== 'landing'){
+  if(keyboard.pressed('up') && moveDistance >= 1.8 && state['mode'] !== 'landing'){
     // rotate up (note that we're rotating on the mesh's axis. its axes might be configured weird)
     // the forward vector for the mesh might be backwards and perpendicular to the front of the sub
     // up arrow key
@@ -497,7 +493,7 @@ function update(){
   }
     
   // check altitude
-  if(keyboard.pressed("down") && moveDistance >= 1.8 && state['mode'] !== 'landing'){
+  if(keyboard.pressed('down') && moveDistance >= 1.8 && state['mode'] !== 'landing'){
     // down arrow key
     // CLAMP ANGLE?
     const axis = new THREE.Vector3(1, 0, 0);
@@ -507,7 +503,7 @@ function update(){
   // check for collision
   const hasCollision = checkCollision(thePlayer.children[0], raycaster, scene);
   if(hasCollision || thePlayer.position.y < -1.0){
-    console.log("collision!");
+    console.log('collision!');
     thePlayer.children[0].material = thePlayer.hitMaterial;
         
     // crash - reset everything 

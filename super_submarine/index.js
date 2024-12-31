@@ -12,7 +12,7 @@ function checkGoalObjectHit(source, dir, raycaster, scene){
 
     const target = intersects[i];
 
-    if(target.object.name === "goalObject" || target.object.name === "goalObject2"){
+    if(target.object.name === 'goalObject' || target.object.name === 'goalObject2'){
       // dangerous capsule
       const inRange = source.distanceTo(target.point) > 7.0 && source.distanceTo(target.point) < 12.0;
       if(inRange){
@@ -30,14 +30,14 @@ function createSpotlight(){
 }
 
 function createCongratsMsg(msg, progressBar){
-  congratsMsg = document.createElement("h3");
-  congratsMsg.style.position = "absolute";
+  congratsMsg = document.createElement('h3');
+  congratsMsg.style.position = 'absolute';
   congratsMsg.style.top = progressBar.style.top;
   congratsMsg.style.left = progressBar.style.left;
-  congratsMsg.style.fontFamily = "monospace";
-  congratsMsg.style.color = "#fff";
+  congratsMsg.style.fontFamily = 'monospace';
+  congratsMsg.style.color = '#fff';
   congratsMsg.textContent = msg;    
-  congratsMsg.style.display = "block";
+  congratsMsg.style.display = 'block';
   return congratsMsg;
 }
 
@@ -68,7 +68,7 @@ function createJellyfishGroup(mesh){
 
 // https://github.com/evanw/webgl-water
 // https://github.com/donmccurdy/three-gltf-viewer/blob/master/src/viewer.js
-const container = document.getElementById("container");
+const container = document.getElementById('container');
 const fov = 60;
 const camera = new THREE.PerspectiveCamera(fov, container.clientWidth / container.clientHeight, 0.01, 1000);
 camera.position.set(0,2,0);
@@ -88,18 +88,18 @@ document.getElementById('showKeyboard').addEventListener('click', () => {
 
 setupLoadingManager(loadingManager);
 loadingManager.onLoad = () => {
-  document.getElementById("container").removeChild(
-    document.getElementById("loadingBarContainer")
+  document.getElementById('container').removeChild(
+    document.getElementById('loadingBarContainer')
   );
     
   // add the player's health bar 
   createHealthBar();
     
   // set up the progress bar to be used for disarming the dangerous capsule 
-  createProgressBarContainer("disarm");
+  createProgressBarContainer('disarm');
     
   // set up progress bar for recovering sunken ship
-  createProgressBarContainer("sunkenShip");
+  createProgressBarContainer('sunkenShip');
 };
 
 const loader = new THREE.GLTFLoader(loadingManager);
@@ -113,15 +113,15 @@ container.appendChild(renderer.domElement);
 // for disarming the dangerous capsule
 setupGoalObjectMessage(
   document.getElementsByTagName('canvas')[0],
-  "disarmMessage",
-  "hold space to disarm the dangerous capsule"
+  'disarmMessage',
+  'hold space to disarm the dangerous capsule'
 );
 
 // for recovering the sunken ship
 setupGoalObjectMessage(
   document.getElementsByTagName('canvas')[0],
-  "sunkenShipMessage",
-  "hold space to recover important parts of the sunken ship"
+  'sunkenShipMessage',
+  'hold space to recover important parts of the sunken ship'
 );
 
 const scene = new THREE.Scene();
@@ -162,21 +162,21 @@ let oceanfloor = null;
 const loadedModels = [];
 
 function getModel(modelFilePath, side, name){
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve) => {
     loader.load(
       modelFilePath,
       function(gltf){
         gltf.scene.traverse((child) => {
           let obj;
                         
-          if(child.type === "SkinnedMesh"){
+          if(child.type === 'SkinnedMesh'){
             obj = child;
                         
             // why does my skinnedmesh require a different set of initial rotations to get things looking the same as with a regular mesh!?
             obj.rotateOnAxis(new THREE.Vector3(-1,0,0), Math.PI / 2);
             obj.rotateOnAxis(new THREE.Vector3(0,1,0), Math.PI); // turn around 180 deg.
                             
-            if(side === "whaleshark"){
+            if(side === 'whaleshark'){
               // whale shark
               // https://stackoverflow.com/questions/46317927/what-is-the-correct-way-to-bind-a-skeleton-to-a-skinnedmesh-in-three-js
               obj.add(child.skeleton.bones[0]);
@@ -186,7 +186,7 @@ function getModel(modelFilePath, side, name){
               obj.scale.z = child.scale.z * 20;
                             
               whaleSharkClips = gltf.animations;
-            }else if(side === "jellyfish"){
+            }else if(side === 'jellyfish'){
               // don't have a root bone for jellyfish :(
               child.skeleton.bones.forEach((bone) => {
                 obj.add(bone);
@@ -194,7 +194,7 @@ function getModel(modelFilePath, side, name){
 
               jfishClips = gltf.animations;
             }
-          }else if(child.type === "Mesh"){
+          }else if(child.type === 'Mesh'){
             obj = child;
             obj.scale.x = child.scale.x * 20;
             obj.scale.y = child.scale.y * 20;
@@ -211,7 +211,7 @@ function getModel(modelFilePath, side, name){
       },
       // called while loading is progressing
       function(xhr){
-        console.log( (xhr.loaded / xhr.total * 100) + '% loaded' );
+        console.log((xhr.loaded / xhr.total * 100) + '% loaded');
       },
       // called when loading has errors
       function(error){
@@ -232,14 +232,14 @@ loadedModels.push(getModel('../models/smallship-damaged.gltf', 'none', 'goalObje
 
 Promise.all(loadedModels).then((objects) => {
   objects.forEach((mesh) => {
-    if(mesh.name === "p2"){
+    if(mesh.name === 'p2'){
       // battleship
       mesh.position.set(-15, 25, -50);
       mesh.scale.x *= 3;
       mesh.scale.y *= 3;
       mesh.scale.z *= 3;
       mesh.castShadow = true;
-    }else if(mesh.name === "bg"){
+    }else if(mesh.name === 'bg'){
       // ocean floor
       oceanfloor = mesh;
       oceanfloor.receiveShadow = true;
@@ -276,7 +276,7 @@ Promise.all(loadedModels).then((objects) => {
       meshMirror.add(water);
       meshMirror.rotation.x = -Math.PI * 0.5;
       meshMirror.position.y = 28;
-      meshMirror.name = "water";
+      meshMirror.name = 'water';
       meshMirror.castShadow = true;
             
       scene.add(meshMirror);
@@ -284,8 +284,8 @@ Promise.all(loadedModels).then((objects) => {
       // can't get rendering working right now but the mesh itself looks good I think.
       // water.render();
         
-    }else if(mesh.name === "npc"){
-      if(mesh.side === "whaleshark"){
+    }else if(mesh.name === 'npc'){
+      if(mesh.side === 'whaleshark'){
         // whale shark
         mesh.castShadow = true;
         mesh.receiveShadow = true;
@@ -297,14 +297,14 @@ Promise.all(loadedModels).then((objects) => {
 
         whaleShark = mesh;
         whaleShark.matrixAutoUpdate = false;
-      }else if(mesh.side === "jellyfish"){
+      }else if(mesh.side === 'jellyfish'){
         jfishAnimation = new THREE.AnimationMixer(mesh);
         mesh = createJellyfishGroup(mesh);
         jellyfishGroup = mesh;
         jellyfishGroup.position.z = 120;
         jellyfishGroup.position.x -= 80;
       }
-    }else if(mesh.name === "goalObject"){
+    }else if(mesh.name === 'goalObject'){
       mesh.position.set(-100, -18.2, -100);
       mesh.rotation.y = Math.PI / 6;
       mesh.scale.x /= 2;
@@ -313,7 +313,7 @@ Promise.all(loadedModels).then((objects) => {
 
       capsuleToDisarm = mesh;
       capsuleToDisarm.disarmed = false;
-    }else if(mesh.name === "goalObject2"){
+    }else if(mesh.name === 'goalObject2'){
       mesh.position.set(75, -20, -60);
       mesh.scale.x /= 3;
       mesh.scale.y /= 3;
@@ -361,9 +361,9 @@ Promise.all(loadedModels).then((objects) => {
       scene.add(spotlightTarget);
       spotlight.target = spotlightTarget;
             
-      keyboard.domElement.addEventListener("keydown", (evt) => {
+      keyboard.domElement.addEventListener('keydown', (evt) => {
         // this is supposed to turn on headlights for the sub?
-        if(keyboard.eventMatches(evt, "X")){
+        if(keyboard.eventMatches(evt, 'X')){
           // we do this stuff here instead of update because on keyup, the state of key X in the keyboard object gets reset to false, 
           // which we don't want (since we're trying to set a state)
 
@@ -378,7 +378,7 @@ Promise.all(loadedModels).then((objects) => {
             // hide capsule disarm message if it was showing
             toggleMessage(
               document.getElementsByTagName('canvas')[0], 
-              document.getElementById("disarmMessage"), 
+              document.getElementById('disarmMessage'), 
               false
             );
           }
@@ -394,7 +394,6 @@ Promise.all(loadedModels).then((objects) => {
 
 
 let lastTime = clock.getDelta();
-const hitSurface = false; // if the sub reaches the surface of the water
 function update(){
   sec = clock.getDelta();
   moveDistance = 20 * sec;
@@ -459,12 +458,12 @@ function update(){
     jellyfishGroup.position.z -= 0.03;
   }
     
-  if(keyboard.pressed("shift")){
+  if(keyboard.pressed('shift')){
     changeCameraView = true;
   }
     
   let isMoving = false;
-  if(keyboard.pressed("W")){
+  if(keyboard.pressed('W')){
     // note that this gets called several times with one key press!
     // I think it's because update() in requestAnimationFrames gets called quite a few times per second
     if(!(thePlayer.position.y >= 27 && thePlayer.rotation.x >= .45)){
@@ -481,7 +480,7 @@ function update(){
     }
   }
     
-  if(keyboard.pressed("S")){
+  if(keyboard.pressed('S')){
     if(thePlayer.position.y <= 24){
       thePlayer.translateZ(moveDistance);
       isMoving = true;
@@ -491,28 +490,28 @@ function update(){
     }
   }
     
-  if(keyboard.pressed("A")){
+  if(keyboard.pressed('A')){
     // rotate the sub and the camera appropriately
     thePlayer.rotateOnAxis(new THREE.Vector3(0, 1, 0), rotationAngle);
     isMoving = true;
   }
     
-  if(keyboard.pressed("D")){
+  if(keyboard.pressed('D')){
     thePlayer.rotateOnAxis(new THREE.Vector3(0, 1, 0), -rotationAngle);
     isMoving = true;
   }
     
-  if(keyboard.pressed("Q")){
+  if(keyboard.pressed('Q')){
     thePlayer.rotateOnAxis(new THREE.Vector3(0, 0, 1), rotationAngle);
     isMoving = true;
   }
     
-  if(keyboard.pressed("E")){
+  if(keyboard.pressed('E')){
     thePlayer.rotateOnAxis(new THREE.Vector3(0, 0, 1), -rotationAngle);
     isMoving = true;
   }
     
-  if(keyboard.pressed("up")){
+  if(keyboard.pressed('up')){
     // rotate up (note that we're rotating on the mesh's axis. its axes might be configured weird)
     // the forward vector for the mesh might be backwards and perpendicular to the front of the sub
     // up arrow key
@@ -522,7 +521,7 @@ function update(){
     }
   }
     
-  if(keyboard.pressed("down")){
+  if(keyboard.pressed('down')){
     // down arrow key
     thePlayer.rotateOnAxis(new THREE.Vector3(1, 0, 0), -rotationAngle);
     isMoving = true;
@@ -560,21 +559,21 @@ function update(){
     const dir = (new THREE.Vector3(target.x - source.x, target.y - source.y, target.z - source.z)).normalize();
     const goalObjectHit = checkGoalObjectHit(source, dir, raycaster, scene);
     if(goalObjectHit){
-      if(goalObjectHit.name === "goalObject"){
+      if(goalObjectHit.name === 'goalObject'){
         const capsuleHit = goalObjectHit;
         if(!capsuleHit.disarmed){
           toggleMessage(
             document.getElementsByTagName('canvas')[0], 
-            document.getElementById("disarmMessage"), 
+            document.getElementById('disarmMessage'), 
             true
           );
                     
-          const disarmProgress = document.getElementById("disarmBarContainer");
+          const disarmProgress = document.getElementById('disarmBarContainer');
           const progressBar = disarmProgress.children[0];
           let congratsMsg;
                     
-          if(keyboard.pressed("space")){
-            disarmProgress.style.display = "block";
+          if(keyboard.pressed('space')){
+            disarmProgress.style.display = 'block';
             const currWidth = parseInt(progressBar.style.width);
             const fullWidth = parseInt(disarmProgress.style.width);
 
@@ -585,55 +584,55 @@ function update(){
             const currTime = clock.getElapsedTime();
             if(currWidth < fullWidth && (currTime - lastTime) > 0.5){
               const newWidth = Math.min(currWidth + 50, fullWidth);
-              progressBar.style.width = newWidth + "px";
+              progressBar.style.width = newWidth + 'px';
               lastTime = currTime;
             }else if(currWidth >= fullWidth){
               // disarm successful!
               lastTime = 0;
-              disarmProgress.style.display = "none";
+              disarmProgress.style.display = 'none';
               capsuleHit.disarmed = true;
                             
               toggleMessage(
                 document.getElementsByTagName('canvas')[0], 
-                document.getElementById("disarmMessage"), 
+                document.getElementById('disarmMessage'), 
                 false
               );
 
-              congratsMsg = createCongratsMsg("nice! you disarmed the dangerous capsule!", disarmProgress);
+              congratsMsg = createCongratsMsg('nice! you disarmed the dangerous capsule!', disarmProgress);
               disarmProgress.parentNode.appendChild(congratsMsg);
                             
               setTimeout(function(){
-                congratsMsg.style.display = "none";
+                congratsMsg.style.display = 'none';
               }, 2000); // show congrats msg for only 2 sec
             }
           }else{
-            disarmProgress.style.display = "none";
-            progressBar.style.width = "0px"; // reset to 0 width
+            disarmProgress.style.display = 'none';
+            progressBar.style.width = '0px'; // reset to 0 width
             lastTime = 0;
           }
         }else{
           // hide message
           toggleMessage(
             document.getElementsByTagName('canvas')[0], 
-            document.getElementById("disarmMessage"), 
+            document.getElementById('disarmMessage'), 
             false
           );
         }
-      }else if(goalObjectHit.name === "goalObject2"){
+      }else if(goalObjectHit.name === 'goalObject2'){
         //console.log("sunken ship located!");
         if(!sunkenShip.recovered){
           toggleMessage(
             document.getElementsByTagName('canvas')[0], 
-            document.getElementById("sunkenShipMessage"), 
+            document.getElementById('sunkenShipMessage'), 
             true
           );
                     
-          const recoverProgress = document.getElementById("sunkenShipBarContainer");
+          const recoverProgress = document.getElementById('sunkenShipBarContainer');
           const progressBar = recoverProgress.children[0];
           let congratsMsg;
                     
-          if(keyboard.pressed("space")){
-            recoverProgress.style.display = "block";
+          if(keyboard.pressed('space')){
+            recoverProgress.style.display = 'block';
             const currWidth = parseInt(progressBar.style.width);
             const fullWidth = parseInt(recoverProgress.style.width);
 
@@ -644,35 +643,35 @@ function update(){
             const currTime = clock.getElapsedTime();
             if(currWidth < fullWidth && (currTime - lastTime) > 0.5){
               const newWidth = Math.min(currWidth + 50, fullWidth);
-              progressBar.style.width = newWidth + "px";
+              progressBar.style.width = newWidth + 'px';
               lastTime = currTime;
             }else if(currWidth >= fullWidth){
               lastTime = 0;
-              recoverProgress.style.display = "none";
+              recoverProgress.style.display = 'none';
               sunkenShip.recovered = true;
                             
               toggleMessage(
                 document.getElementsByTagName('canvas')[0], 
-                document.getElementById("sunkenShipMessage"), 
+                document.getElementById('sunkenShipMessage'), 
                 false
               );
                             
-              congratsMsg = createCongratsMsg("great, you recovered the sunken ship!", recoverProgress);
+              congratsMsg = createCongratsMsg('great, you recovered the sunken ship!', recoverProgress);
               recoverProgress.parentNode.appendChild(congratsMsg);
                             
               setTimeout(function(){
-                congratsMsg.style.display = "none";
+                congratsMsg.style.display = 'none';
               }, 2000); // show congrats msg for only 2 sec
             }
           }else{
-            recoverProgress.style.display = "none";
-            progressBar.style.width = "0px"; // reset to 0 width
+            recoverProgress.style.display = 'none';
+            progressBar.style.width = '0px'; // reset to 0 width
             lastTime = 0;
           }
         }else{
           toggleMessage(
             document.getElementsByTagName('canvas')[0], 
-            document.getElementById("sunkenShipMessage"), 
+            document.getElementById('sunkenShipMessage'), 
             false
           );
         }
@@ -683,12 +682,12 @@ function update(){
       // also turn off any text when spotlight is turned off.
       toggleMessage(
         document.getElementsByTagName('canvas')[0], 
-        document.getElementById("disarmMessage"), 
+        document.getElementById('disarmMessage'), 
         false
       );
       toggleMessage(
         document.getElementsByTagName('canvas')[0], 
-        document.getElementById("sunkenShipMessage"), 
+        document.getElementById('sunkenShipMessage'), 
         false
       );
     }
@@ -697,7 +696,7 @@ function update(){
   // check for collision?
   // check top, left, right, bottom, front, back? 
   const hasCollision = checkCollision(thePlayer.children[0], raycaster, scene); // this function is from utils.js
-  if(!thePlayer.isCollided && hasCollision && hasCollision.name !== "water"){
+  if(!thePlayer.isCollided && hasCollision && hasCollision.name !== 'water'){
     thePlayer.children[0].material = thePlayer.hitMaterial;
 
     // decrement player health
@@ -705,8 +704,7 @@ function update(){
     thePlayer.isCollided = true;
 
     if(thePlayer.health >= 0){
-      const currHealthBarVal = parseInt(document.getElementById("healthBar").style.width);
-      document.getElementById("healthBar").style.width = (200*(thePlayer.health/100)) + "px"; // 200 == default width of the health bar in px
+      document.getElementById('healthBar').style.width = (200*(thePlayer.health/100)) + 'px'; // 200 == default width of the health bar in px
     }else{
       // player dead? or just respawn?
       //document.getElementById("disarmMessage").textContent = "hmm you've appeared to lost too much health so the mothership is calling you back.";
