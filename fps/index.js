@@ -79,6 +79,9 @@ let sideViewOn = false;
 let neckMarker = null;
 let isPlayerVisible = true;
 
+const tools = {};
+let currTool = 'rifle';
+
 let cowProjectileMesh;
 
 const cannonBodies = [];
@@ -233,16 +236,16 @@ function getModel(modelFilePath, name){
         // if a scene has multiple meshes you want (like for the m4 carbine),
         // do the traversal and attach the magazine mesh as a child or something to the m4 mesh.
         // then resolve the thing outside the traverse.
-        const carbine = [];
+        const toolComponents = [];
         gltf.scene.traverse((child) => {
           if(child.type === 'Mesh' || child.type === 'SkinnedMesh'){
             const obj = child;
 
-            if(name === 'obj'){
+            if(name.indexOf('tool') === 0){
               obj.scale.x = child.scale.x * 1.1;
               obj.scale.y = child.scale.y * 1.1;
               obj.scale.z = child.scale.z * 1.1;
-              carbine.push(obj);
+              toolComponents.push(obj);
             }else{
               if(child.type === 'SkinnedMesh'){
                 obj.add(child.skeleton.bones[0]); // add pelvis to mesh as a child
@@ -268,32 +271,36 @@ function getModel(modelFilePath, name){
         });
                 
         // for the carbine (or really any scene with multiple meshes)
-        if(name === 'obj'){
-          const m4carbine = carbine[0];
-          m4carbine.add(m4carbine.skeleton.bones[0]);
-          m4carbine.name = name;
-                    
-          const magazine = carbine[1];
-          m4carbine.magazine = magazine;
-          m4carbine.skeleton.bones[1].add(magazine); // add magazine to the mag bone
-          //console.log(m4carbine.skeleton.bones[1]);
-          
-          magazine.rotateX(-Math.PI/2);
-          
-          // add a marker to the rifle barrel to indicate where the projectiles should originate from
-          const cubeGeometry = new THREE.CubeGeometry(0.2, 0.2, 0.2);
-          const normalMaterial = new THREE.MeshStandardMaterial({color: 0x055C9D, wireframe: true}); //{opacity: 0.0, transparent: true});
-          const cubeMesh = new THREE.Mesh(cubeGeometry, normalMaterial);
-          m4carbine.add(cubeMesh);
-          m4carbine.projectileSrc = cubeMesh;
-          cubeMesh.rotateY(-Math.PI/2);
-          cubeMesh.position.set(-3.5, 0.2, 0);
+        if(name.indexOf('tool') === 0){
+            const toolMain = toolComponents[0];
+            toolMain.add(toolMain.skeleton.bones[0]);
+            toolMain.name = name;
+            
+            // FYI this is pretty specific to weapons that have magazines
+            const magazine = toolComponents[1];
+            toolMain.magazine = magazine;
+            toolMain.skeleton.bones[1].add(magazine); // add magazine to the mag bone
+            
+            // add a marker to the rifle barrel to indicate where the projectiles should originate from
+            const cubeGeometry = new THREE.CubeGeometry(0.2, 0.2, 0.2);
+            const normalMaterial = new THREE.MeshStandardMaterial({color: 0x055C9D, wireframe: true}); //{opacity: 0.0, transparent: true});
+            const cubeMesh = new THREE.Mesh(cubeGeometry, normalMaterial);
+            toolMain.add(cubeMesh);
+            toolMain.projectileSrc = cubeMesh;
+            cubeMesh.rotateY(-Math.PI/2);
+            cubeMesh.position.set(-3.5, 0.2, 0);
 
-          m4carbine.rotateOnAxis(new THREE.Vector3(0,1,0), Math.PI/2);
-          m4carbine.rotateOnAxis(new THREE.Vector3(0,0,-1), Math.PI/2);
+            toolMain.rotateOnAxis(new THREE.Vector3(0,1,0), Math.PI/2);
+            toolMain.rotateOnAxis(new THREE.Vector3(0,0,-1), Math.PI/2);
+            
+            if(name.includes('rifle')){
+              tools['rifle'] = toolMain;
+            }else{
+              tools['smg'] = toolMain;
+            }
 
-          resolve(m4carbine);
-        }
+            resolve(toolMain);
+          }
       },
       // called while loading is progressing
       function(xhr){
@@ -309,7 +316,8 @@ function getModel(modelFilePath, name){
 }
 
 loadedModels.push(getModel('../models/humanoid-rig.gltf', 'player'));
-loadedModels.push(getModel('sten-mkII.gltf', 'obj'));
+loadedModels.push(getModel('../models/m4carbine-final.gltf', 'tool-rifle'));
+loadedModels.push(getModel('../models/sten-mkII.gltf', 'tool-smg'));
 loadedModels.push(getModel('../models/target.gltf', 'target'));
 loadedModels.push(getModel('../models/box.gltf', 'box'));
 loadedModels.push(getModel('../models/box.gltf', 'box2'));
@@ -323,7 +331,7 @@ Promise.all(loadedModels).then(objects => {
   objects.forEach(mesh => {
     if(mesh.name === 'npc'){
       // npcs?
-    }else if(mesh.name === 'obj'){
+    }else if(mesh.name.indexOf('tool') === 0 && mesh.name.includes('rifle')){
       // tools that can be equipped
       mesh.castShadow = true;
       tool = mesh;
@@ -481,7 +489,7 @@ function checkCollision(moveDistance, isReverse){
   for(const body of cannonBodies){
     const bodyPos = body.planeBody.position;
     const destPos = new THREE.Vector3();
-        
+    
     // get forward vector of player
     player.getWorldDirection(destPos);
     destPos.multiplyScalar((isReverse ? -moveDistance : moveDistance));
@@ -521,7 +529,7 @@ function keydown(evt){
         
     // adjust location of tool 
     tool.position.set(0, 0.2, -0.3); // the coordinate system is a bit out of whack for the weapon...
-        
+    
     // the weapon-draw/hide animation should lead directly to the corresponding idle animation
     // since I have the event listener for a "finished" action set up
     let timeScale = 1;
@@ -554,12 +562,32 @@ function keydown(evt){
       scene.add(camera);
     }
   }else if(evt.key === '2'){
-    // toggle side view
-    firstPersonViewOn = false;
-    sideViewOn = !sideViewOn;
+    // toggle side view (only in 3rd person)
+    if(!firstPersonViewOn){
+      sideViewOn = !sideViewOn;
+    }
   }else if(evt.key === '3'){
     // toggle player visibility
     isPlayerVisible = !isPlayerVisible;
+  }else if(evt.key === '4'){
+    // TODO: bug - issue with visibility toggling.
+    // if user switches weapon going from unequipped -> equipped,
+    // the previous weapon will be invisible when trying to switch weapon
+    // while equipped
+    // how can we assure the correct weapon's visibility will be on when equipped?
+    const handBone = player.hand;
+    if(currTool === 'rifle'){
+      handBone.clear();
+      tool = tools['smg'];
+      handBone.add(tool);
+      currTool = 'smg';
+      animationController.addObject(tool); // assuming smg hasn't been added to animation controller yet
+    }else{
+      handBone.clear();
+      tool = tools['rifle'];
+      handBone.add(tool);
+      currTool = 'rifle';
+    }
   }
 }
 
