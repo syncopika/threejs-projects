@@ -73,7 +73,9 @@ class AnimationController {
   }
     
   addObject(obj){
-    this.objects.push(obj);
+    if(!this.objects.includes(obj)){
+      this.objects.push(obj);
+    }
   }
 
   setUpdateTimeDivisor(num){
