@@ -77,6 +77,7 @@ let tool = null;
 let firstPersonViewOn = false;
 let sideViewOn = false;
 let neckMarker = null;
+let isPlayerVisible = true;
 
 let cowProjectileMesh;
 
@@ -275,6 +276,9 @@ function getModel(modelFilePath, name){
           const magazine = carbine[1];
           m4carbine.magazine = magazine;
           m4carbine.skeleton.bones[1].add(magazine); // add magazine to the mag bone
+          //console.log(m4carbine.skeleton.bones[1]);
+          
+          magazine.rotateX(-Math.PI/2);
           
           // add a marker to the rifle barrel to indicate where the projectiles should originate from
           const cubeGeometry = new THREE.CubeGeometry(0.2, 0.2, 0.2);
@@ -305,7 +309,7 @@ function getModel(modelFilePath, name){
 }
 
 loadedModels.push(getModel('../models/humanoid-rig.gltf', 'player'));
-loadedModels.push(getModel('../models/m4carbine-final.gltf', 'obj'));
+loadedModels.push(getModel('sten-mkII.gltf', 'obj'));
 loadedModels.push(getModel('../models/target.gltf', 'target'));
 loadedModels.push(getModel('../models/box.gltf', 'box'));
 loadedModels.push(getModel('../models/box.gltf', 'box2'));
@@ -553,6 +557,9 @@ function keydown(evt){
     // toggle side view
     firstPersonViewOn = false;
     sideViewOn = !sideViewOn;
+  }else if(evt.key === '3'){
+    // toggle player visibility
+    isPlayerVisible = !isPlayerVisible;
   }
 }
 
@@ -719,9 +726,7 @@ function update(){
   if(!firstPersonViewOn){
     crosshairCanvas.style.display = 'none';
     document.body.style.cursor = 'default';
-        
-    player.material.visible = true;
-        
+      
     const cameraOffset = relCameraOffset.applyMatrix4(player.matrixWorld);
     
     camera.position.x = cameraOffset.x;
@@ -729,6 +734,12 @@ function update(){
     camera.position.z = cameraOffset.z;
     
     camera.lookAt(player.position);
+  }
+  
+  if(!isPlayerVisible){
+    player.material.visible = false;
+  }else{
+    player.material.visible = true;
   }
 }
 
