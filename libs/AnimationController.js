@@ -1,6 +1,7 @@
 // this is a good idea: https://gist.github.com/rtpHarry/2d41811d04825935039dfc075116d0ad
 // should have functions just for playing clips forwards and backwards
 
+// this is kinda specific for the humanoid character -__-
 class AnimationController {
 
   mixer; // animation mixer
