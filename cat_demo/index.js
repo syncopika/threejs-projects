@@ -184,6 +184,17 @@ Promise.all(loadedModels).then((objects) => {
         mesh.children[0].children[1].material.color = new THREE.Color(0xcccccc);
         mesh.children[0].children[1].material.needsUpdate = true;
         
+        // give the cat a green circle to indicate it's an active playable character?
+        // https://stackoverflow.com/questions/69404468/circle-with-only-border-in-threejs
+        const points = new THREE.BufferGeometry().setFromPoints(
+          new THREE.Path().absarc(0, 0, 1.6, 0, Math.PI * 2).getSpacedPoints(25)
+        );
+        const lineMat = new THREE.LineBasicMaterial({color: 0x32cd32});
+        const ring = new THREE.Line(points, lineMat);
+        ring.rotateY(Math.PI / 2);
+        ring.position.x += 1.3;
+        mesh.children[0].children[1].add(ring);
+        
         theCat = mesh;
         console.log(mesh);
         scene.add(mesh);
