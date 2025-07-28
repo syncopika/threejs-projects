@@ -6,7 +6,7 @@ const camera = new THREE.PerspectiveCamera(fov, container.clientWidth / containe
 
 // optional stuff
 //const keyboard = new THREEx.KeyboardState();
-//const raycaster = new THREE.Raycaster();
+const raycaster = new THREE.Raycaster();
 //const mouse = new THREE.Vector2();
 
 /* set up trackball control if needed
@@ -132,6 +132,24 @@ loadedModels.push(getModel('../models/cat.gltf', 'cat'));
 loadedModels.push(getModel('../models/cat-food-dish.gltf', 'food-dish'));
 loadedModels.push(getModel('../models/cat-water-dish.gltf', 'water-dish'));
 
+function createRing(radius){
+  // https://stackoverflow.com/questions/69404468/circle-with-only-border-in-threejs
+  const points = new THREE.BufferGeometry().setFromPoints(
+    new THREE.Path().absarc(0, 0, radius, 0, Math.PI * 2).getSpacedPoints(25)
+  );
+  const lineMat = new THREE.LineBasicMaterial({color: 0x32cd32});
+  const ring = new THREE.Line(points, lineMat);
+  ring.rotateY(Math.PI / 2);
+  ring.position.x += 1.3;
+  return ring;
+}
+
+function createBox(){
+  const cubeGeometry = new THREE.BoxGeometry(0.7, 1.7, 0.7);
+  const material = new THREE.MeshBasicMaterial({transparent: true, opacity: 0.0});
+  return new THREE.Mesh(cubeGeometry, material);
+}
+
 // TODO: fix forward vector on model in Blender?
 function getCatForwardVector(){
   if(!theCat){
@@ -185,14 +203,7 @@ Promise.all(loadedModels).then((objects) => {
         mesh.children[0].children[1].material.needsUpdate = true;
         
         // give the cat a green circle to indicate it's an active playable character?
-        // https://stackoverflow.com/questions/69404468/circle-with-only-border-in-threejs
-        const points = new THREE.BufferGeometry().setFromPoints(
-          new THREE.Path().absarc(0, 0, 1.6, 0, Math.PI * 2).getSpacedPoints(25)
-        );
-        const lineMat = new THREE.LineBasicMaterial({color: 0x32cd32});
-        const ring = new THREE.Line(points, lineMat);
-        ring.rotateY(Math.PI / 2);
-        ring.position.x += 1.3;
+        const ring = createRing(1.6);
         mesh.children[0].children[1].add(ring);
         
         theCat = mesh;
@@ -205,19 +216,33 @@ Promise.all(loadedModels).then((objects) => {
         
         animate();
       }else if(mesh.name === 'food-dish'){
-        scene.add(mesh);
-        mesh.children[0].castShadow = true;
-        mesh.children[0].receiveShadow = true;
-        mesh.translateZ(5);
-        mesh.translateX(10);
-        mesh.translateY(-0.6);
+        const foodDish = mesh.children[0];
+        foodDish.castShadow = true;
+        foodDish.receiveShadow = true;
+        
+        // put the dish in a cube for easier raycast hit
+        const box = createBox();
+        box.add(foodDish);
+        
+        box.translateZ(5);
+        box.translateX(10);
+        box.translateY(-0.6);
+        
+        scene.add(box);
       }else if(mesh.name === 'water-dish'){
-        scene.add(mesh);
-        mesh.children[0].castShadow = true;
-        mesh.children[0].receiveShadow = true;
-        mesh.translateZ(7);
-        mesh.translateX(10);
-        mesh.translateY(-0.6);
+        const waterDish = mesh.children[0];
+        waterDish.castShadow = true;
+        waterDish.receiveShadow = true;
+        
+        // put the dish in a cube for easier raycast hit
+        const box = createBox();
+        box.add(waterDish);
+        
+        box.translateZ(7);
+        box.translateX(10);
+        box.translateY(-0.6);
+        
+        scene.add(box);
       }
   });
 });
@@ -226,12 +251,13 @@ Promise.all(loadedModels).then((objects) => {
 let isWalking = false;
 let isEating = false;
 let isSittingIdle = false;
+let isNearFoodOrWater = false;
 function keydown(evt){
   if(evt.keyCode === 32){
     // spacebar
     if(!isWalking){
-      // allow eating/drinking
-      if(!isEating){
+      // allow eating/drinking only if near food/water
+      if(!isEating && isNearFoodOrWater){
         animationHandler.playClipName('Eating', false, true);
         isEating = true;
       }else{
@@ -334,6 +360,42 @@ function update(){
   if(animationHandler){
     const sec = animationHandler.clock.getDelta();
     animationHandler.mixer.update(sec);
+  }
+  
+  // raycast for detecting things
+  if(theCat){
+    const catMeshPos = new THREE.Vector3();
+    theCat.children[0].children[1].getWorldPosition(catMeshPos); // the actual position of the cat mesh unfortunately is in local space since it's nested. we need world space
+    catMeshPos.y = 0;
+    
+    // set catForward at some point ahead of the cat
+    const catForward = getCatForwardVector();
+    catForward.multiplyScalar(-2.2);
+    catForward.add(catMeshPos);
+    
+    // drawing lines for debugging
+    //const origin = new THREE.Vector3(catMeshPos.x, 0, catMeshPos.z);
+    //const line = drawVector(origin, catForward, 0x0000ff);
+    //scene.add(line);
+    
+    const dir = getCatForwardVector();
+    raycaster.set(catForward, dir);
+    
+    const intersects = raycaster.intersectObjects(scene.children, true);
+    
+    if(intersects.length > 0){
+      if(intersects[0].object.type == 'Line' || intersects[0].object.type == 'SkinnedMesh'){
+        isNearFoodOrWater = false;
+      }else if(intersects[0].object.type === 'Mesh'){
+        //console.log(intersects[0]);
+        // should only be food or water currently
+        isNearFoodOrWater = true;
+      }else{
+        isNearFoodOrWater = false;
+      }
+    }else{
+      isNearFoodOrWater = false;
+    }
   }
 }
 

@@ -66,7 +66,7 @@ function drawVector(pt1, pt2, color){
 }
 
 // draw the forward vector of an object as a line in the scene
-function drawForwardVector(mesh){
+function drawForwardVector(mesh, scene){
 	let forwardVec = getForward(mesh);
 	
 	// create a vector

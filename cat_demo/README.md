@@ -1,5 +1,5 @@
-# new_project_template  
+# cat_demo  
     
-Talk about your new project.    
+This is a demo featuring a cat model I made in Blender.    
     
-![show a gif or screenshot here!]()    
+![cat demo gif](27-07-2025_163535.gif)    
