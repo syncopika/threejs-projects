@@ -38,7 +38,9 @@ const clock = new THREE.Clock();
 let sec = clock.getDelta();
 let rotationAngle = (Math.PI / 2) * sec;
 
-const moveClock = new THREE.Clock(); // this clock is specifically for handling car acceleration
+// everytime the w key is pressed, create a new clock, call getDelta, checked elapsed time
+// when w is held down, don't keep creating new clocks. on key up, set clock var to null
+let moveClock = null; // this clock is specifically for handling car acceleration
 
 const loadedModels = [];
 
@@ -418,10 +420,9 @@ function keydown(evt){
 document.addEventListener('keydown', keydown);
 
 function keyup(event){
-   if(event.keyCode === 87){
-    // w key
-    // reset clock's elapsedTime
-    moveClock.start();
+   if(event.keyCode === 87 || event.keyCode === 83){
+    // w key or s key
+    moveClock = null;
    }
 }
 document.addEventListener('keyup', keyup);
@@ -478,19 +479,20 @@ function move(car, rotationAngle){
   }
 
   // accelerate the car over time (but cap the max speed)
-  if(Math.sin(moveClock.elapsedTime) > 0.95){
+  if(moveClock && Math.sin(moveClock.elapsedTime) > 0.95){
     moveClock.stop();
   }
   
   const forward = new THREE.Vector3();
   forward.copy(wheelForward);
-  forward.multiplyScalar(Math.sin(moveClock.elapsedTime));
+  
+  if(moveClock) forward.multiplyScalar(Math.sin(moveClock.elapsedTime));
   
   car.position.add(forward);
 }
 
 function update(){
-  moveClock.getDelta();
+  if(moveClock) moveClock.getDelta();
   sec = clock.getDelta();
   rotationAngle = (Math.PI / 2) * sec;
   let changeCameraView = false;
@@ -501,8 +503,14 @@ function update(){
   }
     
   if(keyboard.pressed('W')){
+    if(!moveClock){
+      moveClock = new THREE.Clock();
+    }
     move(thePlayer, -rotationAngle);
   }else if(keyboard.pressed('S')){
+    if(!moveClock){
+      moveClock = new THREE.Clock();
+    }
     move(thePlayer, rotationAngle);
   }
     
