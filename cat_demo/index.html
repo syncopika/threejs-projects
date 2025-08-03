@@ -6,6 +6,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r120/three.min.js" integrity="sha512-kgjZw3xjgSUDy9lTU085y+UCVPz3lhxAtdOVkcO4O2dKl2VSBcNsQ9uMg/sXIM4SoOmCiYfyFO/n1/3GSXZtSg==" crossorigin="anonymous"></script>
     <script src="../libs/utils.js"></script>
     <script src="../libs/GLTFLoader.js"></script>
+    <script src="../libs/JSKeyboard.js"></script>
     <script src="../libs/threex.keyboardstate.js"></script>
 
     <style>
@@ -20,6 +21,10 @@
         text-align: center;
         margin: 0 auto;
       }
+      
+      button {
+        margin-top: 20px;
+      }
     </style>
   </head>
 
@@ -28,7 +33,7 @@
 
     <div id='container'>
     </div>
-    
+    <div id='mobileKeyboard'></div>
     <p> meow meow meow! </p>
     <p> press w,s to move forward and backward. a,d to rotate left and right. shift to change camera position, i.e. behind the cat or in front of the cat. spacebar to eat/drink.</p>
     <div>
@@ -36,6 +41,7 @@
       <!-- <label for='flatShading'>flat shading:</label><input type='checkbox' id='flatShading' /> -->
       <label for='shadow'>show shadow:</label><input type='checkbox' id='shadow' checked />
     </div>
+    <button id='showKeyboard'>show keyboard (if mobile)</button>
   </body>
 
   <script type="module" src="index.js">

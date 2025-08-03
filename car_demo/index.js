@@ -38,6 +38,10 @@ const clock = new THREE.Clock();
 let sec = clock.getDelta();
 let rotationAngle = (Math.PI / 2) * sec;
 
+// everytime the w key is pressed, create a new clock, call getDelta, checked elapsed time
+// when w is held down, don't keep creating new clocks. on key up, set clock var to null
+let moveClock = null; // this clock is specifically for handling car acceleration
+
 const loadedModels = [];
 
 function getModel(modelFilePath, name){
@@ -170,6 +174,8 @@ Promise.all(loadedModels).then((objects) => {
         }else{
           // car body
           thePlayer.body = child;
+          //child.material.flatShading = true;
+          //child.material.needsUpdate = true;
           thePlayer.add(carAxesHelper);
         }
       });
@@ -220,7 +226,7 @@ Promise.all(loadedModels).then((objects) => {
 
       thePlayer.castShadow = true;
       scene.add(thePlayer);
-            
+      
       animate();
     }
   });
@@ -415,6 +421,14 @@ function keydown(evt){
 }
 document.addEventListener('keydown', keydown);
 
+function keyup(event){
+   if(event.keyCode === 87 || event.keyCode === 83){
+    // w key or s key
+    moveClock = null;
+   }
+}
+document.addEventListener('keyup', keyup);
+
 
 // use this when turning the wheel to determine if the angle at which the car should
 // follow should be negative or positive (carForward.angleTo(wheelForward) always returns a positive angle)
@@ -425,7 +439,7 @@ function move(car, rotationAngle){
   adjustForwardRotation(car, terrain);
     
   car.wheels.forEach((wheel) => {
-    wheel.rotateZ(rotationAngle*5);
+    wheel.rotateZ(rotationAngle * 5);
   });
     
   const wheelForward = getForward(car.frontWheels[0]);
@@ -448,9 +462,9 @@ function move(car, rotationAngle){
   const angleToWheel = carForward.angleTo(wheelForward);
   if(angleToWheel >= 0.16){
     // the following strategy seems to work well enough. one issue is that I'm rotating the whole car,
-    // which means even the front wheels, which are already at an angle. this causes some unrealistic behavior
-    // in certain cases.
+    // which means even the front wheels, which are already at an angle. this causes some unrealistic behavior in certain cases.
     // https://asawicki.info/Mirror/Car%20Physics%20for%20Games/Car%20Physics%20for%20Games.html
+    // this is also a really good read: https://wassimulator.com/blog/programming/programming_vehicles_in_games.html
 
     // step 1: calculate radius of circle determined by angle of front wheels
     const leftFront = thePlayer.frontWheels.filter((wheel) => wheel.name === 'left')[0];
@@ -462,14 +476,24 @@ function move(car, rotationAngle){
     // step 2: use radius and car velocity to calculate angular velocity
     const angVelocity = (wheelForward.length() / circleRadius) * -1;
 
-    car.rotateY((angVelocity * lastDirection));
+    car.rotateY(angVelocity * lastDirection);
   }
 
-  car.position.add(wheelForward);
+  // accelerate the car over time (but cap the max speed)
+  if(moveClock && Math.sin(moveClock.elapsedTime) > 0.99){
+    moveClock.stop();
+  }
+  
+  const forward = new THREE.Vector3();
+  forward.copy(wheelForward);
+  
+  if(moveClock) forward.multiplyScalar(Math.sin(moveClock.elapsedTime));
+  
+  car.position.add(forward);
 }
 
-
 function update(){
+  if(moveClock) moveClock.getDelta();
   sec = clock.getDelta();
   rotationAngle = (Math.PI / 2) * sec;
   let changeCameraView = false;
@@ -480,8 +504,14 @@ function update(){
   }
     
   if(keyboard.pressed('W')){
+    if(!moveClock){
+      moveClock = new THREE.Clock();
+    }
     move(thePlayer, -rotationAngle);
   }else if(keyboard.pressed('S')){
+    if(!moveClock){
+      moveClock = new THREE.Clock();
+    }
     move(thePlayer, rotationAngle);
   }
     
@@ -506,7 +536,6 @@ function update(){
     thePlayer.frontWheels.forEach((wheel) => {
       if(wheel.rotation.y >= -maxRad && wheel.rotation.y <= maxRad){
         wheel.rotateOnWorldAxis(new THREE.Vector3(0, 1, 0), -rotationAngle/1.4);
-                
         if(Math.abs(wheel.rotation.y) > maxRad){
           wheel.rotation.y = wheel.rotation.y < 0 ? -maxRad + 0.01 : maxRad - 0.01;
         }
