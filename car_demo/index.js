@@ -174,6 +174,8 @@ Promise.all(loadedModels).then((objects) => {
         }else{
           // car body
           thePlayer.body = child;
+          //child.material.flatShading = true;
+          //child.material.needsUpdate = true;
           thePlayer.add(carAxesHelper);
         }
       });
@@ -437,7 +439,7 @@ function move(car, rotationAngle){
   adjustForwardRotation(car, terrain);
     
   car.wheels.forEach((wheel) => {
-    wheel.rotateZ(rotationAngle*5);
+    wheel.rotateZ(rotationAngle * 5);
   });
     
   const wheelForward = getForward(car.frontWheels[0]);
@@ -460,8 +462,7 @@ function move(car, rotationAngle){
   const angleToWheel = carForward.angleTo(wheelForward);
   if(angleToWheel >= 0.16){
     // the following strategy seems to work well enough. one issue is that I'm rotating the whole car,
-    // which means even the front wheels, which are already at an angle. this causes some unrealistic behavior
-    // in certain cases.
+    // which means even the front wheels, which are already at an angle. this causes some unrealistic behavior in certain cases.
     // https://asawicki.info/Mirror/Car%20Physics%20for%20Games/Car%20Physics%20for%20Games.html
     // this is also a really good read: https://wassimulator.com/blog/programming/programming_vehicles_in_games.html
 
@@ -475,11 +476,11 @@ function move(car, rotationAngle){
     // step 2: use radius and car velocity to calculate angular velocity
     const angVelocity = (wheelForward.length() / circleRadius) * -1;
 
-    car.rotateY((angVelocity * lastDirection));
+    car.rotateY(angVelocity * lastDirection);
   }
 
   // accelerate the car over time (but cap the max speed)
-  if(moveClock && Math.sin(moveClock.elapsedTime) > 0.95){
+  if(moveClock && Math.sin(moveClock.elapsedTime) > 0.99){
     moveClock.stop();
   }
   
@@ -535,7 +536,6 @@ function update(){
     thePlayer.frontWheels.forEach((wheel) => {
       if(wheel.rotation.y >= -maxRad && wheel.rotation.y <= maxRad){
         wheel.rotateOnWorldAxis(new THREE.Vector3(0, 1, 0), -rotationAngle/1.4);
-                
         if(Math.abs(wheel.rotation.y) > maxRad){
           wheel.rotation.y = wheel.rotation.y < 0 ? -maxRad + 0.01 : maxRad - 0.01;
         }
