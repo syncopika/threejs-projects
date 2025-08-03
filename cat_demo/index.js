@@ -16,6 +16,11 @@ controls.zoomSpeed = 1.2;
 controls.panSpeed = 0.8;
 */
 
+// set up mobile keyboard
+document.getElementById('showKeyboard').addEventListener('click', () => {
+  new JSKeyboard(document.getElementById('mobileKeyboard'));
+});
+
 const loadingManager = new THREE.LoadingManager();
 setupLoadingManager(loadingManager);
 

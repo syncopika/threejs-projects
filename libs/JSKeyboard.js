@@ -34,6 +34,7 @@ class JSKeyboard {
       '2': 50,
       'CapsLock': 20,
       'Space': 32,
+      'Shift': 16,
     };
     
     Object.keys(keys).forEach(key => {
