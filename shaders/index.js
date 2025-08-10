@@ -1,5 +1,6 @@
 let currModel = null;
 let currModelTexture = null;
+let currShader = 'jet';
 let animationReqId;
 
 const loader = new THREE.GLTFLoader();
@@ -35,6 +36,26 @@ const controls = new THREE.TrackballControls(camera, renderer.domElement);
 controls.rotateSpeed = 1.2;
 controls.zoomSpeed = 1.2;
 controls.panSpeed = 0.8;
+
+// post-processing
+const renderTarget = new THREE.WebGLRenderTarget(
+  container.clientWidth, 
+  container.clientHeight,
+  {
+    depthBuffer: true,
+    depthTexture: new THREE.DepthTexture(
+      container.clientWidth,
+      container.clientHeight,
+      THREE.FloatType,
+    )
+  },
+);
+
+const composer = new THREE.EffectComposer(renderer);
+composer.setSize(container.clientWidth, container.clientHeight);
+
+const renderScene = new THREE.RenderPass(scene, camera);
+composer.addPass(renderScene);
 
 getModel('../models/f-16.gltf', 'f-16');
 
@@ -99,19 +120,33 @@ function processMesh(mesh){
 function update(){
   animationReqId = requestAnimationFrame(update);
   controls.update();
+  
+  // TODO: this part might be causing the outline shader to not work properly?
+  if(currShader === 'outline'){
+    if(renderer.getRenderTarget() === null){
+      renderer.setRenderTarget(renderTarget);
+    }
+  }else{
+    if(renderer.getRenderTarget() !== null){
+      renderer.setRenderTarget(null);
+    }
+  }
     
   // update time uniform variable
   if(currModel && currModel.material.uniforms && currModel.material.uniforms.u_time){
     currModel.material.uniforms.u_time.value += 0.01;
     //currModel.rotateOnAxis(new THREE.Vector3(0, 1, 0), 0.01);
   }
-    
+  
   renderer.render(scene, camera);
+  
+  if(renderer.getRenderTarget() !== null){
+    composer.render();
+  }
 }
 
 // model selection
 document.getElementById('selectModel').addEventListener('change', async (evt) => {
-    
   if(animationReqId){
     cancelAnimationFrame(animationReqId);
   }
@@ -122,28 +157,39 @@ document.getElementById('selectModel').addEventListener('change', async (evt) =>
   currModelTexture = null;
     
   if(['whale-shark-camo', 'f-18'].indexOf(evt.target.value) > -1){
+    currShader = 'not-outline';
     await getModel(`../models/${evt.target.value}.glb`, evt.target.value);
     camera.position.z = cameraZPos;
   }else if(evt.target.value === 'scene1'){
     // this one changes the camera's z-position a bit
+    currShader = 'scene1';
     currModel = createSceneSquares();
     processMesh(currModel);
   }else if(evt.target.value === 'scene2'){
+    currShader = 'scene2';
     currModel = createRaymarchShader();
     processMesh(currModel);
     camera.position.z = cameraZPos;
   }else if(evt.target.value === 'ripple'){
+    currShader = 'ripple';
     currModel = updateRipple();
     processMesh(currModel);
     currModel.rotation.x = -Math.PI / 2;
     camera.position.z = cameraZPos;
   }else if(evt.target.value === 'toon'){
+    currShader = 'toon';
     await getModel('../models/f-16.gltf', 'f-16');
     createToonShader();
   }else if(evt.target.value === 'glass'){
+    currShader = 'glass';
     await getModel('../models/f14.gltf', 'f-14');
     createGlassShader();
+  }else if(evt.target.value === 'outline'){
+    currShader = 'outline';
+    await getModel('../models/f-16.gltf', 'f-16');
+    createOutlineShader();
   }else{
+    currShader = 'not-outline';
     await getModel(`../models/${evt.target.value}.gltf`, evt.target.value);
     camera.position.z = cameraZPos;
   }
@@ -175,7 +221,6 @@ function showShaderCode(vertexCode, fragCode, container){
   container.replaceChildren(vh, v, br, fh, f);
 }
 
-
 function updateJetModel(){
   const vertexShader = jetModelShader.vertexShader;
   const fragShader = jetModelShader.fragShader;
@@ -201,7 +246,6 @@ function updateJetModel(){
     
   currModel.material = newShaderMaterial;
 }
-
 
 function randomRange(min, max){
   return Math.random() * (max - min) + min;
@@ -488,3 +532,34 @@ function createGlassShader(){
   currModel.material = newShaderMaterial;
 }
 
+// outline shader
+function createOutlineShader(){
+  const vertexShader = outlineShader.vertexShader;
+  const fragShader = outlineShader.fragShader;
+  showShaderCode(vertexShader, fragShader, document.getElementById('shader'));
+  
+  const uniforms = {};
+  if(renderTarget){
+    uniforms.depthTexture = {
+      value: renderTarget.depthTexture,
+    };
+    uniforms.diffuse = {
+      value: renderTarget.texture,
+    };
+    uniforms.resolution = {
+      value: new THREE.Vector2(container.clientWidth, container.clientHeight),
+    };
+  }
+  
+  const newShader = new THREE.ShaderMaterial({
+    uniforms: uniforms,
+    vertexShader: vertexShader,
+    fragmentShader: fragShader,
+    side: THREE.DoubleSide,
+    depthTest: true,
+  });
+  
+  // https://pmndrs.github.io/postprocessing/public/docs/class/src/passes/ShaderPass.js~ShaderPass.html
+  const customPass = new THREE.ShaderPass(newShader);
+  composer.addPass(customPass);
+}
