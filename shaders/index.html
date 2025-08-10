@@ -3,6 +3,10 @@
   <head>
     <title>shader demo</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r120/three.min.js" integrity="sha512-kgjZw3xjgSUDy9lTU085y+UCVPz3lhxAtdOVkcO4O2dKl2VSBcNsQ9uMg/sXIM4SoOmCiYfyFO/n1/3GSXZtSg==" crossorigin="anonymous"></script>
+    <script src="https://unpkg.com/three@0.120.1/examples/js/shaders/CopyShader.js"></script>
+    <script src="https://unpkg.com/three@0.120.1/examples/js/postprocessing/EffectComposer.js"></script>
+    <script src="https://unpkg.com/three@0.120.1/examples/js/postprocessing/RenderPass.js"></script>
+    <script src="https://unpkg.com/three@0.120.1/examples/js/postprocessing/ShaderPass.js"></script>
     <script src='../libs/GLTFLoader.js'></script>
     <script src='../libs/TrackballControls.js'></script>
     <script src='shaders/jetModelShader.js'></script>
@@ -13,6 +17,7 @@
     <script src='shaders/rippleShader.js'></script>
     <script src='shaders/toonShader.js'></script>
     <script src='shaders/glassShader.js'></script>
+    <script src='shaders/outlineShader.js'></script>
   </head>
   
   <style>
@@ -79,6 +84,7 @@
           <option value="ripple">ripple</option>
           <option value="toon">toon</option>
           <option value="glass">glass</option>
+          <option value="outline">outline</option>
         </select>
       </ul>
     </div>
