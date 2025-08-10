@@ -551,16 +551,15 @@ function createOutlineShader(){
     };
   }
   
-  const newShader = {
+  const newShader = new THREE.ShaderMaterial({
     uniforms: uniforms,
     vertexShader: vertexShader,
     fragmentShader: fragShader,
     side: THREE.DoubleSide,
     depthTest: true,
-  };
+  });
   
+  // https://pmndrs.github.io/postprocessing/public/docs/class/src/passes/ShaderPass.js~ShaderPass.html
   const customPass = new THREE.ShaderPass(newShader);
-  console.log(customPass);
-  customPass.renderToScreen = true;
   composer.addPass(customPass);
 }
