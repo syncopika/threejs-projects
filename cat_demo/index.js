@@ -63,7 +63,7 @@ const planeMaterial = new THREE.MeshLambertMaterial({color: 0xdddddd}); //0x055C
 const plane = new THREE.Mesh(planeGeometry, planeMaterial);
 plane.rotateX(-Math.PI / 2);
 plane.receiveShadow = true;
-plane.translateZ(-0.63);
+plane.translateZ(-0.66);
 scene.add(plane);
 
 const loadedModels = [];
@@ -142,10 +142,11 @@ function createRing(radius){
   const points = new THREE.BufferGeometry().setFromPoints(
     new THREE.Path().absarc(0, 0, radius, 0, Math.PI * 2).getSpacedPoints(25)
   );
-  const lineMat = new THREE.LineBasicMaterial({color: 0x32cd32});
+  const lineMat = new THREE.LineBasicMaterial({});
   const ring = new THREE.Line(points, lineMat);
   ring.rotateY(Math.PI / 2);
   ring.position.x += 1.3;
+  ring.position.y += 0.2;
   return ring;
 }
 
@@ -177,7 +178,7 @@ function updateCameraPos(){
 
   // get position slightly behind cat
   catForward.multiplyScalar(6);
-  catForward.y += 4;
+  catForward.y += 2.5;
 
   if(!cameraInFront){
     camera.position.set(
@@ -257,6 +258,7 @@ let isWalking = false;
 let isEating = false;
 let isSittingIdle = false;
 let isNearFoodOrWater = false;
+
 function keydown(evt){
   if(evt.keyCode === 32){
     // spacebar
@@ -352,13 +354,13 @@ document.getElementById('shadow').addEventListener('change', (evt) => {
   }
 });
 
-/*
+
 document.getElementById('flatShading').addEventListener('change', (evt) => {
   if(theCat){
-    // TODO: not currently working?? need to check normals in Blender maybe (might need to invert normals)
     theCat.children[0].children[1].material.flatShading = evt.target.checked;
+    theCat.children[0].children[1].material.needsUpdate = true;
   }
-});*/
+});
 
 function update(){
   // move stuff around, etc.
@@ -391,8 +393,9 @@ function update(){
     if(intersects.length > 0){
       if(intersects[0].object.type == 'Line' || intersects[0].object.type == 'SkinnedMesh'){
         isNearFoodOrWater = false;
-      }else if(intersects[0].object.type === 'Mesh'){
-        //console.log(intersects[0]);
+      }else if(intersects[0].object.type === 'Mesh' && intersects[0].distance >= 0.3 && intersects[0].distance < 0.5){
+        console.log(intersects[0]);
+        console.log(theCat);
         // should only be food or water currently
         isNearFoodOrWater = true;
       }else{
@@ -400,6 +403,16 @@ function update(){
       }
     }else{
       isNearFoodOrWater = false;
+    }
+    
+    if(isNearFoodOrWater){
+        const ring = theCat.children[0].children[1].children[0];
+        ring.material.color.setHex(0x32cd32);
+        ring.material.needsUpdate = true;
+    }else{
+        const ring = theCat.children[0].children[1].children[0];
+        ring.material.color.setHex(0xffffff);
+        ring.material.needsUpdate = true;
     }
   }
 }

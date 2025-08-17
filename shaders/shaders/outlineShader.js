@@ -27,14 +27,21 @@ const outlineShader = {
         uniform sampler2D diffuse;
         uniform sampler2D depthTexture;
 
-        float getDiffuseValueAtPoint(int x, int y) {
-			vec2 point = vec2(x, y);
-			vec2 texel = vec2(1.0 / resolution.x, 1.0 / resolution.y);
-			vec4 color = texture2D(diffuse, vUv + texel * point); // TODO: explain vUv + texel * point. I think part of it is texel * point would get us the actual texel coordinates that we want to analyze? maybe?
-			return color.r; // TODO: explain why we only need/care about one color channel. maybe since we're doing an edge detection filter, all channels should probably be the same value? but also, there's no grayscaling or binarization going on?
+        float getDiffuseValueAtPoint(int x, int y){
+          vec2 point = vec2(x, y);
+          vec2 texel = vec2(1.0 / resolution.x, 1.0 / resolution.y);
+
+          // TODO: explain vUv + texel * point. 
+          // I think part of it is texel * point would get us the actual texel coordinates that we want to analyze? maybe?
+          vec4 color = texture2D(diffuse, vUv + texel * point);
+
+          // TODO: explain why we only need/care about one color channel. 
+          // maybe since we're doing an edge detection filter, all channels should probably be the same value? 
+          // but also, there's no grayscaling or binarization going on?
+          return color.r;
         }
 
-        float combinedSobelValue() {
+        float combinedSobelValue(){
             // kernel definition (in glsl matrices are filled in column-major order)
             const mat3 Gx = mat3(-1, -2, -1, 0, 0, 0, 1, 2, 1);// x direction kernel
             const mat3 Gy = mat3(-1, 0, 1, -2, 0, 2, -1, 0, 1);// y direction kernel

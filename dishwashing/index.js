@@ -236,7 +236,9 @@ function detectSpongeToPlateContact(){
       //console.log(distFromSponge);
             
       // contact made so start counting duration
-      durationSoFar += clock.getDelta();
+      durationSoFar += (clock.getElapsedTime() / 100);
+      
+      //console.log(`durationSoFar: ${durationSoFar}, durationTillClean: ${durationTillClean}`);
             
       if(!lastSpongePos){
         lastSpongePos = sponge.position;
@@ -282,7 +284,6 @@ function keydown(evt){
 }
 
 document.addEventListener('keydown', keydown);
-document.addEventListener('keyup', keyup);
 
 // allow objects in renderer to be 'clickable'
 renderer.domElement.addEventListener('mousedown', (evt) => {
