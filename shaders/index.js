@@ -121,8 +121,8 @@ function update(){
   animationReqId = requestAnimationFrame(update);
   controls.update();
   
-  // TODO: this part might be causing the outline shader to not work properly?
-  if(currShader === 'outline'){
+  if(currShader === 'outline' ||
+     currShader === 'pixel'){
     if(renderer.getRenderTarget() === null){
       renderer.setRenderTarget(renderTarget);
     }
@@ -185,9 +185,18 @@ document.getElementById('selectModel').addEventListener('change', async (evt) =>
     await getModel('../models/f14.gltf', 'f-14');
     createGlassShader();
   }else if(evt.target.value === 'outline'){
+    // since this is a post-processing shader, remove current pass if any
+    // so we don't inadvertently keep stacking pass shaders whenever we switch shaders
+    removeOptionalPassShaders(composer);
     currShader = 'outline';
     await getModel('../models/f-16.gltf', 'f-16');
     createOutlineShader();
+  }else if(evt.target.value === 'pixel'){
+    // same thing like above.
+    removeOptionalPassShaders(composer);
+    currShader = 'pixel';
+    await getModel('../models/f14.gltf', 'f-14');
+    createPixelShader();
   }else{
     currShader = 'not-outline';
     await getModel(`../models/${evt.target.value}.gltf`, evt.target.value);
@@ -249,6 +258,15 @@ function updateJetModel(){
 
 function randomRange(min, max){
   return Math.random() * (max - min) + min;
+}
+
+function removeOptionalPassShaders(composer){
+  for(let i = 1; i < composer.passes.length; i++){
+    // remove any pass other than the first one (render pass)
+    // this will allow us to "reset" things when we switch post-processing shaders
+    const pass = composer.passes[i];
+    composer.removePass(pass);
+  }
 }
 
 // make a bunch of squares with shaders
@@ -560,6 +578,37 @@ function createOutlineShader(){
   });
   
   // https://pmndrs.github.io/postprocessing/public/docs/class/src/passes/ShaderPass.js~ShaderPass.html
+  const customPass = new THREE.ShaderPass(newShader);
+  composer.addPass(customPass);
+}
+
+// pixel shader
+function createPixelShader(){
+  const vertexShader = pixelShader.vertexShader;
+  const fragShader = pixelShader.fragShader;
+  showShaderCode(vertexShader, fragShader, document.getElementById('shader'));
+  
+  const uniforms = {};
+  if(renderTarget){
+    uniforms.depthTexture = {
+      value: renderTarget.depthTexture,
+    };
+    uniforms.diffuse = {
+      value: renderTarget.texture,
+    };
+    uniforms.resolution = {
+      value: new THREE.Vector2(container.clientWidth, container.clientHeight),
+    };
+  }
+  
+  const newShader = new THREE.ShaderMaterial({
+    uniforms: uniforms,
+    vertexShader: vertexShader,
+    fragmentShader: fragShader,
+    side: THREE.DoubleSide,
+    depthTest: true,
+  });
+  
   const customPass = new THREE.ShaderPass(newShader);
   composer.addPass(customPass);
 }
