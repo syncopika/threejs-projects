@@ -22,6 +22,7 @@ const pixelShader = {
         uniform sampler2D depthTexture;
         
         void main() {
+          /*
           vec2 desiredPixelSize = vec2(8, 8); // 8 x 8 pixel size
           vec2 normalizedPixelSize = desiredPixelSize / resolution;
           vec2 uvPixel = normalizedPixelSize * floor(vUv / normalizedPixelSize);
@@ -60,6 +61,14 @@ const pixelShader = {
           }else{
             color = vec4(1.0, 1.0, 1.0, 1.0); //vec4(0.7, 0.74, 0.73, 1.0);
           }
+          */
+          
+          //vec2 texel = vec2(1.0 / resolution.x, 1.0 / resolution.y);
+          vec4 color = texture2D(diffuse, vUv);
+          
+          color.r = 1. - color.r;
+          color.g = 1. - color.g;
+          color.b = 1. - color.b;
 
           gl_FragColor = color;
         }

@@ -47,6 +47,7 @@ const glassShader = {
             
             vec4 txColor = vec4(1, 1, 1, 1) * diffuseColor * diffuseIntensity; // change color here
             
+            /*
             if(intensity > 0.95){
                 gl_FragColor = vec4(1, 1, 1, alpha) * vec4(txColor.rgba);
             }else if(intensity > 0.5){
@@ -58,6 +59,13 @@ const glassShader = {
             }
             
             gl_FragColor = mix(txColor, gl_FragColor, fresnel);
+            */
+            
+            vec4 color = texture2D(img, vUv);
+            color.r = 1. - color.r;
+            color.g = 1. - color.g;
+            color.b = 1. - color.b;
+            gl_FragColor = color;
         }
     `,
 };
