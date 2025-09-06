@@ -71,7 +71,7 @@ function getModel(modelFilePath, name){
             const obj = new THREE.Mesh(geometry, material);            
             obj.rotateOnAxis(new THREE.Vector3(0,1,0), -Math.PI/4);
             obj.name = name;
-                        
+            
             if(name === 'whale-shark-camo'){
               obj.scale.set(1.8, 1.8, 1.8);
               obj.position.set(5, 0, 0);
@@ -79,18 +79,20 @@ function getModel(modelFilePath, name){
             }else{
               obj.position.set(0, 0, 0);
             }
-                        
+            
             currModel = obj;
             currModelTexture = obj.material.map ? obj.material.map.image : null;
-                        
+            
             if(name === 'whale-shark-camo'){
+              // TODO: move this under model selection? ~ lines 160
               updateWhaleShark();
             }else if(name === 'f-18'){
+              // TODO: move this under model selection? ~ lines 160
               updateJetModel2();
             }else if(name === 'f-16'){
               updateJetModel();
-            }            
-                        
+            }
+            
             processMesh(obj);
             resolve(true);
           }
@@ -121,7 +123,7 @@ function update(){
   animationReqId = requestAnimationFrame(update);
   controls.update();
   
-  if(currShader === 'outline' ||
+  if(currShader === 'outline-pp' ||
      currShader === 'pixel'){
     if(renderer.getRenderTarget() === null){
       renderer.setRenderTarget(renderTarget);
@@ -157,7 +159,7 @@ document.getElementById('selectModel').addEventListener('change', async (evt) =>
   currModelTexture = null;
     
   if(['whale-shark-camo', 'f-18'].indexOf(evt.target.value) > -1){
-    currShader = 'not-outline';
+    currShader = 'none';
     await getModel(`../models/${evt.target.value}.glb`, evt.target.value);
     camera.position.z = cameraZPos;
   }else if(evt.target.value === 'scene1'){
@@ -184,13 +186,17 @@ document.getElementById('selectModel').addEventListener('change', async (evt) =>
     currShader = 'glass';
     await getModel('../models/f14.gltf', 'f-14');
     createGlassShader();
-  }else if(evt.target.value === 'outline'){
+  }else if(evt.target.value === 'outline-pp'){
     // since this is a post-processing shader, remove current pass if any
     // so we don't inadvertently keep stacking pass shaders whenever we switch shaders
     removeOptionalPassShaders(composer);
+    currShader = 'outline-pp';
+    await getModel('../models/f-16.gltf', 'f-16');
+    createOutlinePostProcessingShader();
+  }else if(evt.target.value === 'outline'){
     currShader = 'outline';
     await getModel('../models/f-16.gltf', 'f-16');
-    createOutlineShader();
+    createOutlineShader();    
   }else if(evt.target.value === 'pixel'){
     // same thing like above.
     removeOptionalPassShaders(composer);
@@ -198,7 +204,7 @@ document.getElementById('selectModel').addEventListener('change', async (evt) =>
     await getModel('../models/f14.gltf', 'f-14');
     createPixelShader();
   }else{
-    currShader = 'not-outline';
+    currShader = 'none';
     await getModel(`../models/${evt.target.value}.gltf`, evt.target.value);
     camera.position.z = cameraZPos;
   }
@@ -550,10 +556,10 @@ function createGlassShader(){
   currModel.material = newShaderMaterial;
 }
 
-// outline shader
-function createOutlineShader(){
-  const vertexShader = outlineShader.vertexShader;
-  const fragShader = outlineShader.fragShader;
+// outline shader (post-processing)
+function createOutlinePostProcessingShader(){
+  const vertexShader = outlineShaderPostProcessing.vertexShader;
+  const fragShader = outlineShaderPostProcessing.fragShader;
   showShaderCode(vertexShader, fragShader, document.getElementById('shader'));
   
   const uniforms = {};
@@ -581,6 +587,37 @@ function createOutlineShader(){
   const customPass = new THREE.ShaderPass(newShader);
   composer.addPass(customPass);
 }
+
+// outline shader (model-based)
+function createOutlineShader(){
+  const vertexShader = outlineShader.vertexShader;
+  const fragShader = outlineShader.fragShader;
+  showShaderCode(vertexShader, fragShader, document.getElementById('shader'));
+  
+  const uniforms = {};
+  if(currModelTexture){
+    const textureUrl = getTextureImageUrl(currModelTexture);
+    const texture = textureLoader.load(textureUrl);
+    texture.flipY = false; // this part is important!
+    uniforms.diffuse = {
+      type: 't', 
+      value: texture,
+    };
+  }
+  
+  // https://stackoverflow.com/questions/59392774/point-cloud-texture-alpha-blending-threejs
+  const newShaderMaterial = new THREE.ShaderMaterial({
+    uniforms: uniforms,
+    vertexShader: vertexShader,
+    fragmentShader: fragShader,
+    side: THREE.DoubleSide,
+    transparent: true,
+    depthTest: false,
+  });
+  
+  currModel.material = newShaderMaterial;
+}
+
 
 // pixel shader
 function createPixelShader(){
