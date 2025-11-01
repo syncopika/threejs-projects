@@ -44,17 +44,17 @@ let boomboxMesh = null;
 
 const audioCtx = new AudioContext();
 const listener = audioCtx.listener;
-const biquadFilter = audioCtx.createBiquadFilter();
-biquadFilter.type = 'lowpass';
+const lowpassFilter = audioCtx.createBiquadFilter();
+lowpassFilter.type = 'lowpass';
 const analyser = audioCtx.createAnalyser(); // default fft size is 2048
 const bufferLength = analyser.frequencyBinCount;
 const buffer = new Uint8Array(bufferLength);
 const panner = new PannerNode(audioCtx, {
-  panningModel: 'HRTF',
-  coneInnerAngle: 60,
-  coneOuterAngle: 90,
+  panningModel: 'equalpower',
+  coneInnerAngle: 360,
+  coneOuterAngle: 360,
   coneOuterGain: 0.5,
-  rollOffFactor: 5,
+  rollOffFactor: 4,
   refDistance: 5,
   positionX: 0,
   positionY: 0,
@@ -94,7 +94,7 @@ function loadAudioFile(url){
       audioSource.connect(analyser);
       audioSource
         .connect(panner)
-        .connect(biquadFilter)
+        .connect(lowpassFilter)
         .connect(audioCtx.destination);
     });
   };
@@ -138,8 +138,8 @@ document.getElementById('stop').addEventListener('click', stop);
 
 document.getElementById('lowpassSlider').addEventListener('input', (evt) => {
   const val = parseInt(evt.target.value);
-  if(boomboxMesh) setMorphAction(boomboxMesh, 'move-filter', Math.min(val / 10000, 1.0));
-  biquadFilter.frequency.setValueAtTime(val, audioCtx.currentTime);
+  //if(boomboxMesh) setMorphAction(boomboxMesh, 'move-filter', Math.min(val / 10000, 1.0));
+  lowpassFilter.frequency.setValueAtTime(val, audioCtx.currentTime);
 });
 
 // enable audio file finding
@@ -205,8 +205,6 @@ function getModel(modelFilePath){
 }
 
 getModel('../models/boombox.gltf').then(boombox => {
-  boombox.position.z += 6;
-  boombox.position.y += 1;
   boombox.rotateY(-Math.PI / 2);
   scene.add(boombox);
   console.log(boombox);
@@ -215,7 +213,7 @@ getModel('../models/boombox.gltf').then(boombox => {
   listener.positionY.value = boombox.position.y; //camera.position.y;
   listener.positionZ.value = boombox.position.z; //camera.position.z;
   
-  boomboxMesh = boombox.children[3];
+  boomboxMesh = boombox.children[5];
   
   // load demo audio
   audioFileUrl = '../models/080415pianobgm3popver-edit-steinway.ogg';
