@@ -492,9 +492,9 @@ function keyup(evt){
   if(evt.key === 'Shift'){
     // evaluate the current valves that are down and play corresponding note
     let valveCombo = '';
-    valveCombo += valves[1].morphTargetInfluences[0] > 0 ? '1' : '';
-    valveCombo += valves[2].morphTargetInfluences[0] > 0 ? '2' : '';
-    valveCombo += valves[3].morphTargetInfluences[0] > 0 ? '3' : '';
+    valveCombo += valves[1]?.morphTargetInfluences[0] > 0 ? '1' : '';
+    valveCombo += valves[2]?.morphTargetInfluences[0] > 0 ? '2' : '';
+    valveCombo += valves[3]?.morphTargetInfluences[0] > 0 ? '3' : '';
     if(valveCombo === '') valveCombo = '0';
         
     const note = valveToNoteComboMap[valveCombo];
@@ -530,9 +530,30 @@ document.getElementById('playExample').addEventListener('click', () => {
   }
 });
 
+// create a gain node to use for pitch autocorrelation
+const newGainNode = audioCtx.createGain();
+newGainNode.connect(audioCtx.destination);
+
+let newOscNode;
+
 function playAudio(){
   if(!isPlaying && audioSource){
     isPlaying = true;
+    
+    // turn on gain node if wanting to play sine wave with autocorrelated pitch
+    const playAutocorrelatedPitch = document.getElementById('playAutocorrelatedFreq').checked;
+    if(playAutocorrelatedPitch && newGainNode){
+      console.log('turning on gain node');
+      newGainNode.gain.setValueAtTime(0.3, audioCtx.currentTime);
+      
+      // create a new osc node
+      newOscNode = audioCtx.createOscillator();
+      newOscNode.type = "sine";
+      newOscNode.connect(newGainNode);
+      newOscNode.frequency.setValueAtTime(0, audioCtx.currentTime);
+      newOscNode.start();
+    }
+    
     audioSource.start();
     syncTrumpetToAudio();
   }
@@ -543,7 +564,17 @@ function stopAudio(){
   if(isPlaying && audioSource){
     isPlaying = false;
     audioSource.stop();
-        
+    
+    // turn off gain node if wanting to play sine wave with autocorrelated pitch
+    const playAutocorrelatedPitch = document.getElementById('playAutocorrelatedFreq').checked;
+    if(playAutocorrelatedPitch && newGainNode){
+      console.log('turning off gain node');
+      newGainNode.gain.setValueAtTime(0, audioCtx.currentTime);
+      
+      newOscNode.stop();
+      newOscNode = null;
+    }
+    
     window.cancelAnimationFrame(animationFrameReqId);
   }
     
@@ -627,6 +658,12 @@ function syncTrumpetToAudio(){
     const note = ['c', 'cs', 'd', 'ds', 'e', 'f', 'fs', 'g', 'gs', 'a', 'as', 'b'][(noteFromPitch(freq)+2)%12];
     document.getElementById('currentNote').textContent = 'curr note (Bb concert pitch): ' + note.replace('s', '#');
     setValves(note);
+    
+    // if flag to play the auto-correlated pitch is set, set the oscillator node to that pitch
+    const playAutocorrelatedPitch = document.getElementById('playAutocorrelatedFreq').checked;
+    if(playAutocorrelatedPitch && newOscNode){
+      newOscNode.frequency.setValueAtTime(freq, audioCtx.currentTime);
+    }
   }
   animationFrameReqId = window.requestAnimationFrame(syncTrumpetToAudio);
 }

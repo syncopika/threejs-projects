@@ -57,10 +57,13 @@
     <button id='playExample'>play</button>
     
     <div id='importAudioSection'>
-      <label> import audio and sync the trumpet with it: </label>
+      <label> import audio and sync the trumpet with it via pitch autocorrelation: </label>
       <button id='importAudio'> import </button>
       <button id='play'>play</button>
       <button id='stop'>stop</button>
+      <div>
+        <label>also play sound for the autocorrelated pitch (sine wave)?</label><input id='playAutocorrelatedFreq' type='checkbox' />
+      </div>
       <p id='currentNote'></p>
     </div>
   </body>
