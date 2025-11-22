@@ -22,7 +22,7 @@ renderer.setSize(container.clientWidth, container.clientHeight);
 container.appendChild(renderer.domElement);
 
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0xeeeeee);
+scene.background = new THREE.Color(0xdddddd);
 scene.add(camera);
 
 const pointLight = new THREE.PointLight(0xffffff, 2.8, 0);
@@ -35,7 +35,7 @@ const renderer2 = new THREE.WebGLRenderer({antialias: true});
 const camera2 = camera.clone();
 camera2.translateZ(-50);
 const scene2 = new THREE.Scene();
-scene2.background = new THREE.Color(0xeeeeee);
+scene2.background = new THREE.Color(0xbbbbbb);
 scene2.add(camera2);
 const ptlight2 = pointLight.clone();
 ptlight2.translateZ(-10);

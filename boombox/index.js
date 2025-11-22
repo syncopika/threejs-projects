@@ -66,7 +66,9 @@ const panner = new PannerNode(audioCtx, {
 
 let audioSource;
 let audioFileUrl;
+let audioSrcReady = false;
 let isPlaying = false;
+let isPaused = false;
 
 function setMorphAction(boombox, actionName, amount){
   const targetInfluenceIndex = boombox.morphTargetDictionary[actionName];
@@ -83,6 +85,7 @@ function updateTimeDomainVisualization(audioDataBuffer){
 
 function loadAudioFile(url){
   //console.log('loading: ' + url);
+  audioSrcReady = false;
   audioSource = audioCtx.createBufferSource();  
 
   const req = new XMLHttpRequest();
@@ -96,13 +99,15 @@ function loadAudioFile(url){
         .connect(panner)
         .connect(lowpassFilter)
         .connect(audioCtx.destination);
+        
+     audioSrcReady = true;
     });
   };
   req.send();
 }
 
-function play(){
-  if(!isPlaying && audioSource){
+async function play(){
+  if(!isPlaying && audioSrcReady){
     isPlaying = true;
     
     if(boomboxMesh){
@@ -112,15 +117,35 @@ function play(){
       setMorphAction(boomboxMesh, 'move-speakers', 0.0);
     }
     
-    audioSource.start();
+    console.log('starting');
+    await audioCtx.resume();
+    if(!isPaused) audioSource.start(); // don't need to call this when playing from a paused state
+
+    isPaused = false;
   }
 }
 document.getElementById('play').addEventListener('click', play);
 
-function stop(){
+function pause(){
   if(isPlaying && audioSource){
     isPlaying = false;
     
+    if(boomboxMesh){
+      setMorphAction(boomboxMesh, 'play', 0.0);
+      setMorphAction(boomboxMesh, 'stop', 0.0);
+      setMorphAction(boomboxMesh, 'pause', 1.0);
+      setMorphAction(boomboxMesh, 'move-speakers', 0.0);
+    }
+    
+    audioCtx.suspend();
+    
+    isPaused = true;
+  }
+}
+document.getElementById('pause').addEventListener('click', pause);
+
+function stop(){
+  if(audioSource){
     if(boomboxMesh){
       setMorphAction(boomboxMesh, 'play', 0.0);
       setMorphAction(boomboxMesh, 'stop', 1.0);
@@ -128,7 +153,13 @@ function stop(){
       setMorphAction(boomboxMesh, 'move-speakers', 0.0);
     }
     
-    audioSource.stop();
+    //if(isPlaying || isPaused){
+      audioSource.stop();
+      audioCtx.suspend();
+    //}
+    
+    isPlaying = false;
+    isPaused = false;
   }
     
   // reload since we can't restart buffer source
@@ -145,7 +176,7 @@ document.getElementById('lowpassSlider').addEventListener('input', (evt) => {
 // enable audio file finding
 const openFile = (function(){    
   return function(handleFileFunc){
-    if(isPlaying) return;
+    if(isPlaying || isPaused) return;
        
     const fileInput = document.getElementById('fileInput');
        
