@@ -567,10 +567,9 @@ function stopAudio(){
     
     // turn off gain node if wanting to play sine wave with autocorrelated pitch
     const playAutocorrelatedPitch = document.getElementById('playAutocorrelatedFreq').checked;
-    if(playAutocorrelatedPitch && newGainNode){
+    if(playAutocorrelatedPitch && newGainNode && newOscNode){
       console.log('turning off gain node');
       newGainNode.gain.setValueAtTime(0, audioCtx.currentTime);
-      
       newOscNode.stop();
       newOscNode = null;
     }
@@ -662,7 +661,10 @@ function syncTrumpetToAudio(){
     // if flag to play the auto-correlated pitch is set, set the oscillator node to that pitch
     const playAutocorrelatedPitch = document.getElementById('playAutocorrelatedFreq').checked;
     if(playAutocorrelatedPitch && newOscNode){
+      newGainNode.gain.setValueAtTime(0.3, audioCtx.currentTime);
       newOscNode.frequency.setValueAtTime(freq, audioCtx.currentTime);
+    }else if(!playAutocorrelatedPitch && newGainNode){
+      newGainNode.gain.setValueAtTime(0, audioCtx.currentTime);
     }
   }
   animationFrameReqId = window.requestAnimationFrame(syncTrumpetToAudio);
