@@ -57,7 +57,11 @@ composer.setSize(container.clientWidth, container.clientHeight);
 const renderScene = new THREE.RenderPass(scene, camera);
 composer.addPass(renderScene);
 
-getModel('../models/f-16.gltf', 'f-16');
+async function initialDemo(){
+  await getModel('../models/f-16.gltf', 'f-16');
+  updateJetModel();
+}
+initialDemo();
 
 function getModel(modelFilePath, name){
   return new Promise((resolve) => {
@@ -82,16 +86,6 @@ function getModel(modelFilePath, name){
             
             currModel = obj;
             currModelTexture = obj.material.map ? obj.material.map.image : null;
-            
-            if(name === 'whale-shark-camo'){
-              // TODO: move this under model selection? ~ lines 160
-              updateWhaleShark();
-            }else if(name === 'f-18'){
-              // TODO: move this under model selection? ~ lines 160
-              updateJetModel2();
-            }else if(name === 'f-16'){
-              updateJetModel();
-            }
             
             processMesh(obj);
             resolve(true);
@@ -162,6 +156,14 @@ document.getElementById('selectModel').addEventListener('change', async (evt) =>
     currShader = 'none';
     await getModel(`../models/${evt.target.value}.glb`, evt.target.value);
     camera.position.z = cameraZPos;
+    if(evt.target.value === 'f-18'){
+      updateJetModel2();
+    }else if(evt.target.value === 'whale-shark-camo'){
+      updateWhaleShark();
+    }
+  }else if(evt.target.value === 'f-16'){
+    await getModel('../models/f-16.gltf', 'f-16');
+    updateJetModel();
   }else if(evt.target.value === 'scene1'){
     // this one changes the camera's z-position a bit
     currShader = 'scene1';
@@ -203,6 +205,11 @@ document.getElementById('selectModel').addEventListener('change', async (evt) =>
     currShader = 'pixel';
     await getModel('../models/f14.gltf', 'f-14');
     createPixelShader();
+  }else if(evt.target.value === 'water'){
+    currShader = 'water';
+    await getModel('../models/f-18.glb', 'f-18');
+    camera.position.z = cameraZPos;
+    createWaterShader();
   }else{
     currShader = 'none';
     await getModel(`../models/${evt.target.value}.gltf`, evt.target.value);
@@ -618,8 +625,7 @@ function createOutlineShader(){
   currModel.material = newShaderMaterial;
 }
 
-
-// pixel shader
+// pixel shader (post-processing)
 function createPixelShader(){
   const vertexShader = pixelShader.vertexShader;
   const fragShader = pixelShader.fragShader;
@@ -648,4 +654,35 @@ function createPixelShader(){
   
   const customPass = new THREE.ShaderPass(newShader);
   composer.addPass(customPass);
+}
+
+// water shader
+function createWaterShader(){
+  const vertexShader = waterShader.vertexShader;
+  const fragShader = waterShader.fragShader;
+  showShaderCode(vertexShader, fragShader, document.getElementById('shader'));
+  
+  const uniforms = {
+    u_time: {type: 'f', value: 0.0},
+  };
+  
+  if(currModelTexture){
+    const textureUrl = getTextureImageUrl(currModelTexture);
+    const texture = textureLoader.load(textureUrl);
+    texture.flipY = false; // this part is important!
+    uniforms.diffuse = {
+      type: 't', 
+      value: texture,
+    };
+  }
+  
+  const newShaderMaterial = new THREE.ShaderMaterial({
+    uniforms: uniforms,
+    vertexShader: vertexShader,
+    fragmentShader: fragShader,
+    side: THREE.DoubleSide,
+    depthTest: true, // if this is set to false, you can get some transparent faces on the model which is kinda interesting! :D
+  });
+  
+  currModel.material = newShaderMaterial;
 }

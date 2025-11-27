@@ -169,7 +169,7 @@ function play(piece){
       const end = start + note.length/1000;
       gainNode.gain.setTargetAtTime(1.5, start, 0.0045);
       gainNode.gain.setTargetAtTime(0.0, (end - .0025), 0.0070);
-            
+      
       newBufNode.start(start);
       newBufNode.stop(end);
             
@@ -530,6 +530,10 @@ document.getElementById('playExample').addEventListener('click', () => {
   }
 });
 
+// create a gain node to control volume for imported audio buffer source node
+const bufferSourceNodeGain = audioCtx.createGain();
+bufferSourceNodeGain.connect(audioCtx.destination);
+
 // create a gain node to use for pitch autocorrelation
 const newGainNode = audioCtx.createGain();
 newGainNode.connect(audioCtx.destination);
@@ -666,6 +670,13 @@ function syncTrumpetToAudio(){
     }else if(!playAutocorrelatedPitch && newGainNode){
       newGainNode.gain.setValueAtTime(0, audioCtx.currentTime);
     }
+    
+    const audioOff = document.getElementById('turnOffImportedAudio').checked;
+    if(!audioOff){
+      bufferSourceNodeGain.gain.setValueAtTime(1.0, audioCtx.currentTime);
+    }else{
+      bufferSourceNodeGain.gain.setValueAtTime(0, audioCtx.currentTime);
+    }
   }
   animationFrameReqId = window.requestAnimationFrame(syncTrumpetToAudio);
 }
@@ -680,7 +691,7 @@ function loadAudioFile(url){
     audioCtx.decodeAudioData(req.response, (buffer) => {
       if (!audioSource.buffer) audioSource.buffer = buffer;
       audioSource.connect(analyser);
-      audioSource.connect(audioCtx.destination);
+      audioSource.connect(bufferSourceNodeGain);
     });
   };
   req.send();

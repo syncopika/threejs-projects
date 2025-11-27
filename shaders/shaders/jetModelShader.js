@@ -48,8 +48,6 @@ const jetModelShader = {
         }
         
         void main() {
-            vec2 pt = gl_FragCoord.xy/u_resolution.xy;
-            
             vec4 txColor = texture2D(img, vUv);
             
             gl_FragColor = vec4(
