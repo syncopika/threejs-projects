@@ -1,5 +1,5 @@
 // need to use post-processing!
-// https://blog.maximeheckel.com/posts/post-processing-as-a-creative-medium/
+// from https://blog.maximeheckel.com/posts/post-processing-as-a-creative-medium/
 
 const pixelShader = {
   vertexShader: `
