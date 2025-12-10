@@ -250,6 +250,8 @@ function displaySelectedItemInfo(mesh){
   scene2.children.forEach(x => { if(containsDimsumItem(x)){ scene2.remove(x);}});
   const container = document.getElementById('displayItemRenderer');
   if(container.children.length == 0){
+    camera2.aspect = container.clientWidth / container.clientHeight;
+    camera2.updateProjectionMatrix();
     renderer2.setSize(container.clientWidth, container.clientHeight);    
     container.appendChild(renderer2.domElement);
   }
