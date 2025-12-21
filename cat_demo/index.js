@@ -40,20 +40,13 @@ renderer.domElement.addEventListener('mousedown', (evt) => {
     
   const intersects = raycaster.intersectObject(scene, true); // make sure it's recursive
   
-  if(intersects.length === 1){
-    // TODO: make sure it's the plane object
+  const selected = intersects.filter(x => x.object.name === 'ground');
+  if(selected.length === 1){
     console.log('setting point to move to');
-    moveToPosition = intersects[0].point;
+    moveToPosition = selected[0].point;
     moveToPosMarker.position.copy(moveToPosition);
-  }else{
-    console.log("intersects length is not 1");
-    return;
-  }
-  
-  const selected = intersects.filter(x => console.log(x));
-  if(selected.length > 0){
-    const s = selected[0];
-    console.log(s);
+    moveToPosMarker.visible = true;
+    setTimeout(() => {moveToPosMarker.visible = false}, 2000);
   }
 });
 
@@ -90,11 +83,13 @@ const plane = new THREE.Mesh(planeGeometry, terrainMat);
 plane.rotateX(-Math.PI / 2);
 plane.receiveShadow = true;
 plane.translateZ(-0.66);
+plane.name = 'ground';
 scene.add(plane);
 
 const moveToPosMarkerGeo = new THREE.BoxGeometry(0.7, 0.7, 0.7);
 const moveToPosMarkerMat = new THREE.MeshBasicMaterial({color: 0x00ff00});
 const moveToPosMarker = new THREE.Mesh(moveToPosMarkerGeo, moveToPosMarkerMat);
+moveToPosMarker.visible = false;
 scene.add(moveToPosMarker);
 
 const loadedModels = [];
@@ -361,7 +356,11 @@ function moveCatToPosition(){
 }
 
 function keydown(evt){
-  moveToPosition = null; // if cat was moving to a position, cancel it
+  if(evt.keyCode !== 16){
+    // if not shift key
+    moveToPosition = null; // if cat was moving to a position, cancel it
+  }
+  
   if(evt.keyCode === 32){
     // spacebar
     if(!isWalking){
@@ -499,8 +498,6 @@ function update(){
       if(intersects[0].object.type == 'Line' || intersects[0].object.type == 'SkinnedMesh'){
         isNearFoodOrWater = false;
       }else if(intersects[0].object.type === 'Mesh' && intersects[0].distance >= 0.3 && intersects[0].distance < 0.5){
-        console.log(intersects[0]);
-        console.log(theCat);
         // should only be food or water currently
         isNearFoodOrWater = true;
       }else{
