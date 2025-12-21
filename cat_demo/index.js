@@ -7,7 +7,7 @@ const camera = new THREE.PerspectiveCamera(fov, container.clientWidth / containe
 // optional stuff
 //const keyboard = new THREEx.KeyboardState();
 const raycaster = new THREE.Raycaster();
-//const mouse = new THREE.Vector2();
+const mouse = new THREE.Vector2();
 
 /* set up trackball control if needed
 const controls = new THREE.TrackballControls(camera, renderer.domElement);
@@ -32,39 +32,70 @@ renderer.shadowMap.type = THREE.BasicShadowMap;
 renderer.setSize(container.clientWidth, container.clientHeight);    
 container.appendChild(renderer.domElement);
 
+let moveToPosition = null;
+renderer.domElement.addEventListener('mousedown', (evt) => {    
+  mouse.x = (evt.offsetX / evt.target.width) * 2 - 1;
+  mouse.y = -(evt.offsetY / evt.target.height) * 2 + 1;
+  raycaster.setFromCamera(mouse, camera);
+    
+  const intersects = raycaster.intersectObject(scene, true); // make sure it's recursive
+  
+  if(intersects.length === 1){
+    // TODO: make sure it's the plane object
+    console.log('setting point to move to');
+    moveToPosition = intersects[0].point;
+    moveToPosMarker.position.copy(moveToPosition);
+  }else{
+    console.log("intersects length is not 1");
+    return;
+  }
+  
+  const selected = intersects.filter(x => console.log(x));
+  if(selected.length > 0){
+    const s = selected[0];
+    console.log(s);
+  }
+});
+
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0xeeeeee);
+scene.background = new THREE.Color(0xcccccc);
 scene.add(camera);
 
 const clock = new THREE.Clock();
 let lastTime = clock.getElapsedTime();
 
-/*
-const spotLight = new THREE.SpotLight(0xffffff);
-spotLight.position.set(0, 80, 0);
-spotLight.castShadow = true;
-spotLight.shadow.mapSize.width = 1024;
-spotLight.shadow.mapSize.height = 1024;
-scene.add(spotLight);
-*/
+//const spotLight = new THREE.SpotLight(0xffffff);
+//spotLight.position.set(0, 45, 0);
+//spotLight.castShadow = true;
+//spotLight.shadow.mapSize.width = 4096;
+//spotLight.shadow.mapSize.height = 4096;
+//scene.add(spotLight);
 
 const pointLight = new THREE.PointLight(0xffffff, 1, 0);
-pointLight.position.set(0, 25, 0);
+pointLight.position.set(0, 25, 10);
 pointLight.castShadow = true;
+//console.log(pointLight.shadow);
 scene.add(pointLight);
 
-//const hemiLight = new THREE.HemisphereLight(0xffffff);
-//hemiLight.position.set(0, 10, 0);
-//scene.add(hemiLight);
+const hemiLight = new THREE.HemisphereLight(0xaaaaaa);
+hemiLight.position.set(0, 30, 0);
+scene.add(hemiLight);
 
 // add a plane
 const planeGeometry = new THREE.PlaneGeometry(30, 30);
-const planeMaterial = new THREE.MeshLambertMaterial({color: 0xdddddd}); //0x055C9D});
-const plane = new THREE.Mesh(planeGeometry, planeMaterial);
+const texture = new THREE.TextureLoader().load('../models/grass2.jpg');
+const terrainMat = new THREE.MeshPhongMaterial({map: texture});
+//const planeMaterial = new THREE.MeshLambertMaterial({color: 0xdddddd}); //0x055C9D});
+const plane = new THREE.Mesh(planeGeometry, terrainMat);
 plane.rotateX(-Math.PI / 2);
 plane.receiveShadow = true;
 plane.translateZ(-0.66);
 scene.add(plane);
+
+const moveToPosMarkerGeo = new THREE.BoxGeometry(0.7, 0.7, 0.7);
+const moveToPosMarkerMat = new THREE.MeshBasicMaterial({color: 0x00ff00});
+const moveToPosMarker = new THREE.Mesh(moveToPosMarkerGeo, moveToPosMarkerMat);
+scene.add(moveToPosMarker);
 
 const loadedModels = [];
 
@@ -173,6 +204,10 @@ function getCatForwardVector(){
 
 let cameraInFront = false;
 function updateCameraPos(){
+  if(!theCat){
+    return;
+  }
+  
   // move camera behind cat
   const catForward = getCatForwardVector();
 
@@ -259,7 +294,62 @@ let isEating = false;
 let isSittingIdle = false;
 let isNearFoodOrWater = false;
 
+function moveCatToPosition(){
+  const catMeshPos = new THREE.Vector3();
+  theCat.children[0].children[1].getWorldPosition(catMeshPos); // the actual position of the cat mesh unfortunately is in local space since it's nested. we need world space
+    
+  const distToPos = catMeshPos.distanceTo(moveToPosition);
+  if(distToPos < 1.0){ // TODO: this needs to be finetuned
+    console.log("reached moveToPosition, done");
+    console.log(moveToPosition);
+    console.log(theCat.position);
+    moveToPosition = null;
+    if(isWalking){
+      animationHandler.playClipName('Idle1.001', true); // loop this clip
+      isWalking = false;
+    }
+  }else{
+    // https://github.com/syncopika/threejs-projects/blob/master/battleships/index.js#L338
+    // keep moving to moveToPosition
+    // rotate to face position to move to if needed
+    const posToMoveTo = catMeshPos.clone();
+    const vecToPos = catMeshPos.sub(moveToPosition).normalize(); // order of vectors when subtracting matters! although I'm a bit confused why subtracting the position I want to go to from the cat's current position gets us the vector we want it seems?
+    const catForward = getCatForwardVector().normalize();
+    const angleToPos = catForward.angleTo(vecToPos);
+    console.log(angleToPos);
+    const crossProduct = catForward.cross(vecToPos);
+    if(Math.abs(angleToPos) > 1){
+      if(crossProduct.y < 0){
+        theCat.rotateY(angleToPos);
+      }else{
+        theCat.rotateY(-angleToPos);
+      }
+    }
+    
+    // for debugging
+    //console.log(moveToPosition);
+    const origin = new THREE.Vector3(catMeshPos.x, 0, catMeshPos.z);
+    const line = drawVector(origin, moveToPosition, 0xff0000);
+    scene.add(line);
+    
+    // then move
+    const newForward = getCatForwardVector();
+    newForward.multiplyScalar(-0.02);
+    theCat.position.add(newForward);
+    
+    if(!isWalking){
+      animationHandler.playClipName('Walk', true);
+      isWalking = true;
+      isSittingIdle = false;
+      isEating = false;
+    }
+    
+    //updateCameraPos();
+  }
+}
+
 function keydown(evt){
+  moveToPosition = null; // if cat was moving to a position, cancel it
   if(evt.keyCode === 32){
     // spacebar
     if(!isWalking){
@@ -308,10 +398,6 @@ function keydown(evt){
     // d key
     theCat.rotateY(-.2);
     updateCameraPos();
-  }else if(evt.keyCode === 16){
-    // shift key
-    cameraInFront = !cameraInFront;
-    updateCameraPos();
   }
 }
 document.addEventListener('keydown', keydown);
@@ -335,7 +421,11 @@ function keyup(evt){
     // a key
   }else if(evt.keyCode === 68){
     // d key
-  }  
+  }else if(evt.keyCode === 16){
+    // shift key
+    cameraInFront = !cameraInFront;
+    updateCameraPos();
+  }
 }
 document.addEventListener('keyup', keyup);
 
@@ -354,7 +444,6 @@ document.getElementById('shadow').addEventListener('change', (evt) => {
   }
 });
 
-
 document.getElementById('flatShading').addEventListener('change', (evt) => {
   if(theCat){
     theCat.children[0].children[1].material.flatShading = evt.target.checked;
@@ -369,6 +458,10 @@ function update(){
     animationHandler.mixer.update(sec);
   }
   
+  if(theCat && moveToPosition){
+    moveCatToPosition();
+  }
+  
   // raycast for detecting things
   if(theCat){
     const catMeshPos = new THREE.Vector3();
@@ -381,9 +474,9 @@ function update(){
     catForward.add(catMeshPos);
     
     // drawing lines for debugging
-    //const origin = new THREE.Vector3(catMeshPos.x, 0, catMeshPos.z);
-    //const line = drawVector(origin, catForward, 0x0000ff);
-    //scene.add(line);
+    const origin = new THREE.Vector3(catMeshPos.x, 0, catMeshPos.z);
+    const line = drawVector(origin, catForward, 0x0000ff);
+    scene.add(line);
     
     const dir = getCatForwardVector();
     raycaster.set(catForward, dir);
@@ -409,10 +502,14 @@ function update(){
         const ring = theCat.children[0].children[1].children[0];
         ring.material.color.setHex(0x32cd32);
         ring.material.needsUpdate = true;
+        theCat.children[0].children[1].material.transparent = true;
+        theCat.children[0].children[1].material.opacity = 0.3;
     }else{
         const ring = theCat.children[0].children[1].children[0];
         ring.material.color.setHex(0xffffff);
         ring.material.needsUpdate = true;
+        //console.log(theCat.children[0].children[1]);
+        theCat.children[0].children[1].material.transparent = false;
     }
   }
 }
