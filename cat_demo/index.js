@@ -299,10 +299,10 @@ function moveCatToPosition(){
   theCat.children[0].children[1].getWorldPosition(catMeshPos); // the actual position of the cat mesh unfortunately is in local space since it's nested. we need world space
     
   const distToPos = catMeshPos.distanceTo(moveToPosition);
-  if(distToPos < 1.0){ // TODO: this needs to be finetuned
+  if(distToPos < 1.0){ // TODO: this needs to be finetuned?
     console.log("reached moveToPosition, done");
-    console.log(moveToPosition);
-    console.log(theCat.position);
+    //console.log(moveToPosition);
+    //console.log(theCat.position);
     moveToPosition = null;
     if(isWalking){
       animationHandler.playClipName('Idle1.001', true); // loop this clip
@@ -312,25 +312,37 @@ function moveCatToPosition(){
     // https://github.com/syncopika/threejs-projects/blob/master/battleships/index.js#L338
     // keep moving to moveToPosition
     // rotate to face position to move to if needed
+    
+    const posToMoveTo = moveToPosition.clone();
+    posToMoveTo.y = 0;
+    theCat.lookAt(posToMoveTo);
+    
+    // rotate another 90 deg since the inherent forward vector of the cat model is through its side lol -__-
+    theCat.rotateY(-Math.PI / 2);
+    
+    // below was me trying to manually figure out the rotation of the cat model towards the point to move to
+    // but ended up being kinda hard and the cat model kept rotating :/ (but it kinda worked). something to revisit though perhaps.
+    // using lookAt is much easier :)
+    /*
     const posToMoveTo = catMeshPos.clone();
     const vecToPos = catMeshPos.sub(moveToPosition).normalize(); // order of vectors when subtracting matters! although I'm a bit confused why subtracting the position I want to go to from the cat's current position gets us the vector we want it seems?
-    const catForward = getCatForwardVector().normalize();
+    const catForward = getCatForwardVector();
     const angleToPos = catForward.angleTo(vecToPos);
     console.log(angleToPos);
     const crossProduct = catForward.cross(vecToPos);
-    if(Math.abs(angleToPos) > 1){
+    if(Math.abs(angleToPos) > 1.0){
       if(crossProduct.y < 0){
         theCat.rotateY(angleToPos);
       }else{
         theCat.rotateY(-angleToPos);
       }
-    }
+    }*/
     
     // for debugging
     //console.log(moveToPosition);
-    const origin = new THREE.Vector3(catMeshPos.x, 0, catMeshPos.z);
-    const line = drawVector(origin, moveToPosition, 0xff0000);
-    scene.add(line);
+    //const origin = new THREE.Vector3(catMeshPos.x, 0, catMeshPos.z);
+    //const line = drawVector(origin, moveToPosition, 0xff0000);
+    //scene.add(line);
     
     // then move
     const newForward = getCatForwardVector();
@@ -344,7 +356,7 @@ function moveCatToPosition(){
       isEating = false;
     }
     
-    //updateCameraPos();
+    updateCameraPos();
   }
 }
 
@@ -474,9 +486,9 @@ function update(){
     catForward.add(catMeshPos);
     
     // drawing lines for debugging
-    const origin = new THREE.Vector3(catMeshPos.x, 0, catMeshPos.z);
-    const line = drawVector(origin, catForward, 0x0000ff);
-    scene.add(line);
+    //const origin = new THREE.Vector3(catMeshPos.x, 0, catMeshPos.z);
+    //const line = drawVector(origin, catForward, 0x0000ff);
+    //scene.add(line);
     
     const dir = getCatForwardVector();
     raycaster.set(catForward, dir);
