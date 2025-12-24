@@ -225,6 +225,31 @@ function updateCameraPos(){
   }
 }
 
+function updateCameraPosLerp(factor){
+  const catForward = getCatForwardVector();
+
+  // get position slightly behind cat
+  catForward.multiplyScalar(6);
+  catForward.y += 2.5;
+
+  let cameraDestPos;
+  if(!cameraInFront){
+    cameraDestPos = new THREE.Vector3(
+      theCat.position.x + catForward.x, 
+      theCat.position.y + catForward.y, 
+      theCat.position.z + catForward.z
+    );
+  }else{
+    cameraDestPos = new THREE.Vector3(
+      theCat.position.x - catForward.x, 
+      theCat.position.y + catForward.y, 
+      theCat.position.z - catForward.z
+    );  
+  }
+  
+  camera.position.lerp(cameraDestPos, factor);
+}
+
 let theCat = null;
 Promise.all(loadedModels).then((objects) => {
   objects.forEach((mesh) => {
@@ -289,7 +314,7 @@ let isEating = false;
 let isSittingIdle = false;
 let isNearFoodOrWater = false;
 
-function moveCatToPosition(){
+function moveCatToPosition(deltaTime){
   const catMeshPos = new THREE.Vector3();
   theCat.children[0].children[1].getWorldPosition(catMeshPos); // the actual position of the cat mesh unfortunately is in local space since it's nested. we need world space
     
@@ -351,7 +376,7 @@ function moveCatToPosition(){
       isEating = false;
     }
     
-    updateCameraPos();
+    updateCameraPosLerp(deltaTime);
   }
 }
 
@@ -470,7 +495,8 @@ function update(){
   }
   
   if(theCat && moveToPosition){
-    moveCatToPosition();
+    const deltaTime = clock.getDelta();
+    moveCatToPosition(deltaTime * 10.0);
   }
   
   // raycast for detecting things
@@ -531,6 +557,16 @@ function animate(){
     camera.lookAt(theCat.position);
   }
   
+  // here's something neat! see what happens when update() is called after the
+  // if-statement below. I think this is because there's a bit of conflict
+  // when calling clock.getDelta() and clock.getElapsedTime(). 
+  // calling getDelta() first before getElapsedTime() seems to get me pretty close to what I want. tricky! :D
+  // see also: https://github.com/mrdoob/three.js/issues/5696
+  //
+  // and I found this kinda helpful in making sense of getDelta() and its effect on any perceived slowness
+  // https://discourse.threejs.org/t/too-slow-animation/2379/7
+  update();
+  
   if(animationHandler){
     const currTime = clock.getElapsedTime();
     if(currTime - lastTime > 10 && !isWalking && !isSittingIdle){
@@ -539,8 +575,6 @@ function animate(){
       isSittingIdle = true;
     }
   }
-  
-  update();
   
   renderer.render(scene, camera);
 }
