@@ -92,6 +92,12 @@ const moveToPosMarker = new THREE.Mesh(moveToPosMarkerGeo, moveToPosMarkerMat);
 moveToPosMarker.visible = false;
 scene.add(moveToPosMarker);
 
+// cannon.js world
+// used for easy collision detection/physics
+// atm specifically for handling the cat reaching for the mug on the table
+const world = new CANNON.World();
+world.gravity.set(0, -9.82, 0);
+
 const loadedModels = [];
 
 function AnimationHandler(mesh, animations){
@@ -103,7 +109,10 @@ function AnimationHandler(mesh, animations){
   // chain some animations together, like transitioning from standing to sitting
   this.mixer.addEventListener('finished', (event) => {
     //console.log(event.action);
-    if(event.action._clip.name === 'SitDown'){
+    if(event.action._clip.name === 'SitDown' || 
+      event.action._clip.name === 'Beg' ||
+      event.action._clip.name === 'Stretching' ||
+      event.action._clip.name === 'Reach2'){
       this.playClipName('SittingIdle', true);
     }
   });
@@ -118,6 +127,8 @@ function AnimationHandler(mesh, animations){
     
     if(name === 'Walk' || name === 'Eating'){
       action.timeScale = 0.8;
+    }else if(name === 'Beg' || name === 'Stretching' || name === 'Reach2'){
+      action.timeScale = 1.0;
     }else{
       action.timeScale = 0.3;
     }
@@ -162,6 +173,7 @@ function getModel(modelFilePath, name){
 loadedModels.push(getModel('../models/cat.gltf', 'cat'));
 loadedModels.push(getModel('../models/cat-food-dish.gltf', 'food-dish'));
 loadedModels.push(getModel('../models/cat-water-dish.gltf', 'water-dish'));
+loadedModels.push(getModel('../models/table_and_mug.gltf', 'table_and_mug'));
 
 function createRing(radius){
   // https://stackoverflow.com/questions/69404468/circle-with-only-border-in-threejs
@@ -250,7 +262,54 @@ function updateCameraPosLerp(factor){
   camera.position.lerp(cameraDestPos, factor);
 }
 
+function getRightPawBone(mesh){
+  if(mesh === null){
+    return null;
+  }
+  if(mesh.name === 'Bone008'){
+    return mesh;
+  }
+  if(mesh.children){
+    for(let child of mesh.children){
+      if(child.type === 'Bone' || child.name === 'Armature'){
+        //console.log(`checking ${child.name}...`);
+        const result = getRightPawBone(child);
+        if(result){
+          return result;
+        }
+      }
+    }
+  }
+  return null;
+}
+
+let collisionInProgress = false;
+function checkCollisions(){
+  // we need to check if the cat's right paw has made contact with the mug on the table
+  if(rightPaw && mugMesh){
+    const rightPawWorldPos = new THREE.Vector3();
+    const mugWorldPos = new THREE.Vector3();
+    
+    rightPaw.getWorldPosition(rightPawWorldPos);
+    mugMesh.getWorldPosition(mugWorldPos);
+    
+    if(rightPawWorldPos.distanceTo(mugWorldPos) < 0.2 && !collisionInProgress){
+      console.log('collision detected!');
+      collisionInProgress = true;
+      // add impulse to mug's cannon.js box
+      const delta = new THREE.Vector3();
+      delta.subVectors(rightPaw.position, mugMesh.position);
+      //delta.normalize();
+      delta.multiplyScalar(50);
+      mugCollisionSphere.applyImpulse(new CANNON.Vec3(delta.x, delta.y, delta.z), mugCollisionSphere.position);
+    }
+  }
+}
+
 let theCat = null;
+let rightPaw = null;
+let mugMesh = null;
+let mugCollisionSphere = null;
 Promise.all(loadedModels).then((objects) => {
   objects.forEach((mesh) => {
       if(mesh.name === 'cat'){
@@ -269,6 +328,23 @@ Promise.all(loadedModels).then((objects) => {
         
         theCat = mesh;
         console.log(mesh);
+        
+        // look for right paw bone (Bone008)
+        // attach an invisible box to it that we can use for collision purposes
+        const rightPawBone = getRightPawBone(mesh);
+        if(rightPawBone){
+          console.log('found right paw bone');
+          rightPaw = rightPawBone;
+          /*
+          // I don't think we need this?
+          const cubeGeometry = new THREE.BoxGeometry(0.7, 0.7, 0.7);
+          const material = new THREE.MeshBasicMaterial({color: 0x00ffff, transparent: true, opacity: 0.0});
+          const collisionBox = new THREE.Mesh(cubeGeometry, material);
+          rightPawCollisionBox = collisionBox;
+          rightPawBone.add(collisionBox);
+          */
+        }
+        
         scene.add(mesh);
         
         updateCameraPos();
@@ -304,6 +380,34 @@ Promise.all(loadedModels).then((objects) => {
         box.translateY(-0.6);
         
         scene.add(box);
+      }else if(mesh.name === 'table_and_mug'){
+        console.log(mesh);
+        mesh.children.forEach(c => {
+          c.castShadow = true;
+          
+          if(c.name === 'Cylinder011'){
+            console.log('got mug');
+            // this is the mug - setup the needed cannon.js resources for the mug
+            // so we can apply impulse to it
+            const sphereShape = new CANNON.Sphere(1.0);
+            const sphereMat = new CANNON.Material();
+            const sphereBody = new CANNON.Body({material: sphereMat, mass: 0.1});
+            
+            sphereBody.addShape(sphereShape);
+            sphereBody.position.x = c.position.x;
+            sphereBody.position.y = c.position.y;
+            sphereBody.position.z = c.position.z;
+            
+            world.addBody(sphereBody);
+            
+            mugCollisionSphere = sphereBody;
+            mugMesh = c;
+          }
+        });
+        
+        mesh.translateX(10);
+        mesh.translateZ(-5);
+        scene.add(mesh);
       }
   });
 });
@@ -434,6 +538,15 @@ function keydown(evt){
     // d key
     theCat.rotateY(-.2);
     updateCameraPos();
+  }else if(evt.keyCode === 66){
+    // b key
+    animationHandler.playClipName('Beg', false);
+  }else if(evt.keyCode === 80){
+    // p key
+    animationHandler.playClipName('Stretching', false);
+  }else if(evt.keyCode === 82){
+    // r key
+    animationHandler.playClipName('Reach2', false);
   }
 }
 document.addEventListener('keydown', keydown);
@@ -573,6 +686,34 @@ function animate(){
       animationHandler.playClipName('SitDown', false);
       lastTime = currTime;
       isSittingIdle = true;
+    }
+  }
+  
+  // cannon.js stuff
+  // TODO: frame rate seems way slow with the physics?
+  const delta = Math.min(clock.getDelta(), 0.1);
+  world.step(delta);
+  
+  checkCollisions();
+  
+  // update mug mesh position + rotation (important when collision happens)
+  // based on the cannon.js collision sphere we added for the mug
+  if(mugMesh && mugCollisionSphere){
+    if(mugCollisionSphere.position.y > -0.5){
+      mugMesh.position.set(
+        mugCollisionSphere.position.x, 
+        mugCollisionSphere.position.y, 
+        mugCollisionSphere.position.z
+      );
+      
+      mugMesh.quaternion.set(
+        mugCollisionSphere.quaternion.x,
+        mugCollisionSphere.quaternion.y,
+        mugCollisionSphere.quaternion.z,
+        mugCollisionSphere.quaternion.w,
+      );
+    }else{
+      mugCollisionSphere.velocity = new CANNON.Vec3(0, 0, 0);
     }
   }
   
