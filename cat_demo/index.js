@@ -103,7 +103,9 @@ function AnimationHandler(mesh, animations){
   // chain some animations together, like transitioning from standing to sitting
   this.mixer.addEventListener('finished', (event) => {
     //console.log(event.action);
-    if(event.action._clip.name === 'SitDown'){
+    if(event.action._clip.name === 'SitDown' || 
+      event.action._clip.name === 'Beg' ||
+      event.action._clip.name === 'Stretching'){
       this.playClipName('SittingIdle', true);
     }
   });
@@ -118,6 +120,8 @@ function AnimationHandler(mesh, animations){
     
     if(name === 'Walk' || name === 'Eating'){
       action.timeScale = 0.8;
+    }else if(name === 'Beg' || name === 'Stretching'){
+      action.timeScale = 1.0;
     }else{
       action.timeScale = 0.3;
     }
@@ -162,6 +166,7 @@ function getModel(modelFilePath, name){
 loadedModels.push(getModel('../models/cat.gltf', 'cat'));
 loadedModels.push(getModel('../models/cat-food-dish.gltf', 'food-dish'));
 loadedModels.push(getModel('../models/cat-water-dish.gltf', 'water-dish'));
+loadedModels.push(getModel('../models/table_and_mug.gltf', 'table_and_mug'));
 
 function createRing(radius){
   // https://stackoverflow.com/questions/69404468/circle-with-only-border-in-threejs
@@ -250,6 +255,27 @@ function updateCameraPosLerp(factor){
   camera.position.lerp(cameraDestPos, factor);
 }
 
+function getRightPawBone(mesh){
+  if(mesh === null){
+    return null;
+  }
+  if(mesh.name === 'Bone008'){
+    return mesh;
+  }
+  if(mesh.children){
+    for(let child of mesh.children){
+      if(child.type === 'Bone' || child.name === 'Armature'){
+        //console.log(`checking ${child.name}...`);
+        const result = getRightPawBone(child);
+        if(result){
+          return result;
+        }
+      }
+    }
+  }
+  return null;
+}
+
 let theCat = null;
 Promise.all(loadedModels).then((objects) => {
   objects.forEach((mesh) => {
@@ -269,6 +295,18 @@ Promise.all(loadedModels).then((objects) => {
         
         theCat = mesh;
         console.log(mesh);
+        
+        // look for right paw bone (Bone008)
+        // attach an invisible box to it that we can use for collision purposes
+        const rightPawBone = getRightPawBone(mesh);
+        if(rightPawBone){
+          console.log('found right paw bone');
+          const cubeGeometry = new THREE.BoxGeometry(0.7, 0.7, 0.7);
+          const material = new THREE.MeshBasicMaterial({color: 0x00ffff, opacity: 1.0});
+          const collisionBox = new THREE.Mesh(cubeGeometry, material);
+          rightPawBone.add(collisionBox);
+        }
+        
         scene.add(mesh);
         
         updateCameraPos();
@@ -304,6 +342,14 @@ Promise.all(loadedModels).then((objects) => {
         box.translateY(-0.6);
         
         scene.add(box);
+      }else if(mesh.name === 'table_and_mug'){
+        console.log(mesh);
+        mesh.children.forEach(c => {
+          c.castShadow = true;
+        });
+        mesh.translateX(10);
+        mesh.translateZ(-5);
+        scene.add(mesh);
       }
   });
 });
@@ -434,6 +480,12 @@ function keydown(evt){
     // d key
     theCat.rotateY(-.2);
     updateCameraPos();
+  }else if(evt.keyCode === 66){
+    // b key
+    animationHandler.playClipName('Beg', false);
+  }else if(evt.keyCode === 80){
+    // p key
+    animationHandler.playClipName('Stretching', false);
   }
 }
 document.addEventListener('keydown', keydown);
