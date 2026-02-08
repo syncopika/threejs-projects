@@ -299,8 +299,10 @@ function checkCollisions(){
       // add impulse to mug's cannon.js box
       const delta = new THREE.Vector3();
       delta.subVectors(rightPaw.position, mugMesh.position);
-      //delta.normalize();
-      delta.multiplyScalar(50);
+      mugCollisionSphere.type = CANNON.Body.DYNAMIC;
+      mugCollisionSphere.mass = 1.0; // add some mass to the mug
+      mugCollisionSphere.updateMassProperties();
+      //console.log(mugCollisionSphere);
       mugCollisionSphere.applyImpulse(new CANNON.Vec3(delta.x, delta.y, delta.z), mugCollisionSphere.position);
     }
   }
@@ -381,7 +383,7 @@ Promise.all(loadedModels).then((objects) => {
         
         scene.add(box);
       }else if(mesh.name === 'table_and_mug'){
-        console.log(mesh);
+        //console.log(mesh);
         mesh.children.forEach(c => {
           c.castShadow = true;
           
@@ -391,7 +393,7 @@ Promise.all(loadedModels).then((objects) => {
             // so we can apply impulse to it
             const sphereShape = new CANNON.Sphere(1.0);
             const sphereMat = new CANNON.Material();
-            const sphereBody = new CANNON.Body({material: sphereMat, mass: 0.1});
+            const sphereBody = new CANNON.Body({material: sphereMat, mass: 0.0});
             
             sphereBody.addShape(sphereShape);
             sphereBody.position.x = c.position.x;
@@ -690,8 +692,7 @@ function animate(){
   }
   
   // cannon.js stuff
-  // TODO: frame rate seems way slow with the physics?
-  const delta = Math.min(clock.getDelta(), 0.1);
+  const delta = 0.01;
   world.step(delta);
   
   checkCollisions();
