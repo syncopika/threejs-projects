@@ -52,11 +52,12 @@ const hemiLight = new THREE.HemisphereLight(0xffffff);
 hemiLight.position.set(0, 0, 0);
 //scene.add(hemiLight);
 
-function getModel(modelFilePath){
+function getModel(modelFilePath, name){
   return new Promise((resolve) => {
     loader.load(
       modelFilePath,
       function(gltf){
+        gltf.scene.name = name;
         resolve(gltf.scene);
       },
       // called while loading is progressing
@@ -73,9 +74,13 @@ function getModel(modelFilePath){
 }
 
 const loadedModels = [];
-loadedModels.push(getModel('../models/burger.gltf'));
+loadedModels.push(getModel('../models/burger.gltf', 'burger'));
+loadedModels.push(getModel('../models/fries.gltf', 'fries'));
+loadedModels.push(getModel('../models/drink.gltf', 'drink'));
 
 let burger = null;
+let fries = null;
+let drink = null;
 
 const burgerComponents = {
   'patty': null,
@@ -90,29 +95,42 @@ const burgerComponents = {
 Promise.all(loadedModels).then((objects) => {
   objects.forEach((mesh) => {
     //console.log(mesh);
-    burger = mesh;
-    mesh.children.forEach(c => {
-      //console.log(c);
-      if(c.name === 'Plane003'){
-        burgerComponents.lettuce = c;
-      }else if(c.name === 'Cylinder010'){
-        burgerComponents.bunTop = c;
-      }else if(c.name === 'Cylinder012'){
-        burgerComponents.onion = c;
-      }else if(c.name === 'Cylinder013'){
-        burgerComponents.tomato = c;
-      }else if(c.name === 'Cube058'){
-        burgerComponents.cheese = c;
-      }else if(c.name === 'Cube056'){
-        burgerComponents.patty = c;
-      }else{
-        burgerComponents.bunBottom = c;
-      }
-    });
-    mesh.translateY(3);
-    mesh.translateZ(5);
-    scene.add(mesh);
-    console.log(burgerComponents);
+    if(mesh.name === 'burger'){
+      burger = mesh;
+      mesh.children.forEach(c => {
+        //console.log(c);
+        if(c.name === 'Plane003'){
+          burgerComponents.lettuce = c;
+        }else if(c.name === 'Cylinder010'){
+          burgerComponents.bunTop = c;
+        }else if(c.name === 'Cylinder012'){
+          burgerComponents.onion = c;
+        }else if(c.name === 'Cylinder013'){
+          burgerComponents.tomato = c;
+        }else if(c.name === 'Cube058'){
+          burgerComponents.cheese = c;
+        }else if(c.name === 'Cube056'){
+          burgerComponents.patty = c;
+        }else{
+          burgerComponents.bunBottom = c;
+        }
+      });
+      mesh.translateY(3);
+      mesh.translateZ(5);
+      scene.add(mesh);
+      console.log(burgerComponents);
+    }else if(mesh.name === 'fries'){
+      fries = mesh;
+      fries.translateX(5);
+      fries.translateZ(2);
+      fries.rotateY(Math.PI);
+      scene.add(fries);
+    }else if(mesh.name === 'drink'){
+      drink = mesh;
+      drink.translateX(-5);
+      drink.translateZ(2);
+      scene.add(drink);
+    }
   });
 });
 
