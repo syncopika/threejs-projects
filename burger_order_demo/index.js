@@ -43,8 +43,8 @@ spotLight.shadow.mapSize.width = 1024;
 spotLight.shadow.mapSize.height = 1024;
 //scene.add(spotLight);
 
-const pointLight = new THREE.PointLight(0xffffff, 1, 0);
-pointLight.position.set(0, 10, 20);
+const pointLight = new THREE.PointLight(0xffffff, 4, 0);
+pointLight.position.set(0, 10, 30);
 pointLight.castShadow = true;
 scene.add(pointLight);
 
@@ -121,14 +121,16 @@ Promise.all(loadedModels).then((objects) => {
       console.log(burgerComponents);
     }else if(mesh.name === 'fries'){
       fries = mesh;
-      fries.translateX(5);
-      fries.translateZ(2);
+      fries.translateZ(5);
+      fries.translateY(3);
+      fries.translateX(3);
       fries.rotateY(Math.PI);
       scene.add(fries);
     }else if(mesh.name === 'drink'){
       drink = mesh;
-      drink.translateX(-5);
-      drink.translateZ(2);
+      drink.translateX(-4);
+      drink.translateY(3);
+      drink.translateZ(3);
       scene.add(drink);
     }
   });
