@@ -77,10 +77,12 @@ const loadedModels = [];
 loadedModels.push(getModel('../models/burger.gltf', 'burger'));
 loadedModels.push(getModel('../models/fries.gltf', 'fries'));
 loadedModels.push(getModel('../models/drink.gltf', 'drink'));
+loadedModels.push(getModel('../models/tray.gltf', 'tray'));
 
 let burger = null;
 let fries = null;
 let drink = null;
+let tray = null;
 
 const burgerComponents = {
   'patty': null,
@@ -132,6 +134,11 @@ Promise.all(loadedModels).then((objects) => {
       drink.translateY(3);
       drink.translateZ(3);
       scene.add(drink);
+    }else if(mesh.name === 'tray'){
+      tray = mesh;
+      tray.translateY(3);
+      tray.translateZ(5);
+      scene.add(tray);
     }
   });
 });
