@@ -117,39 +117,126 @@ Promise.all(loadedModels).then((objects) => {
           burgerComponents.bunBottom = c;
         }
       });
-      mesh.translateY(3);
-      mesh.translateZ(5);
-      scene.add(mesh);
+      //mesh.translateY(3);
+      //mesh.translateZ(5);
+      //scene.add(mesh);
       console.log(burgerComponents);
     }else if(mesh.name === 'fries'){
       fries = mesh;
-      fries.translateZ(5);
-      fries.translateY(3);
-      fries.translateX(3);
+      //fries.translateZ(5);
+      //fries.translateY(3);
+      //fries.translateX(3);
       fries.rotateY(Math.PI);
-      scene.add(fries);
+      //scene.add(fries);
     }else if(mesh.name === 'drink'){
       drink = mesh;
-      drink.translateX(-4);
-      drink.translateY(3);
-      drink.translateZ(3);
-      scene.add(drink);
+      //drink.translateX(-4);
+      //drink.translateY(3);
+      //drink.translateZ(3);
+      //scene.add(drink);
     }else if(mesh.name === 'tray'){
       tray = mesh;
-      tray.translateY(3);
-      tray.translateZ(5);
-      scene.add(tray);
+      //tray.translateY(3);
+      //tray.translateZ(5);
+      //scene.add(tray);
     }
   });
 });
 
 // TODO: have an object keep track of burger order and components
 // TODO: use speech
+/*
+order ideas
+prompt: What would you like to order?
+options: burger, fries, drink, meal
+
+prompt: (if meal) what size would you like your meal?
+options: small, medium, large  -> small = 0.7 scale, medium = 1.0 scale, large = 1.5 scale
+
+prompt: (if meal or burger) how would you like your burger?
+options: normal, no bread, no lettuce, no cheese, no tomatoes, no onions, extra cheese, extra lettuce, extra tomatoes, extra onions
+*/
 function receiveOrder(){
 }
 
 // TODO: based on order, create the burger and put it in the scene
 function assembleBurgerAccordingToOrder(){
+  const numPatty = 1;
+  const numCheese = 2;
+  const numTomato = 2;
+  const numOnion = 1;
+  const numLettuce = 2;
+  const numBuns = 1;
+  
+  const components = {
+    bunBottom: {mesh: burgerComponents.bunBottom, count: numBuns, thickness: 0.23, offset: 0},
+    patty: {mesh: burgerComponents.patty, count: numPatty, thickness: 0.15, offset: 0},
+    lettuce: {mesh: burgerComponents.lettuce, count: numLettuce, thickness: 0.01, offset: 0},
+    cheese: {mesh: burgerComponents.cheese, count: numCheese, thickness: 0.04, offset: 0},
+    tomato: {mesh: burgerComponents.tomato, count: numTomato, thickness: 0.01, offset: 0},
+    onion: {mesh: burgerComponents.onion, count: numOnion, thickness: 0.01, offset: 0},
+    bunTop: {mesh: burgerComponents.bunTop, count: numBuns, thickness: 0.2, offset: 0.25},
+  };
+  
+  const newBurger = new THREE.Group();
+  
+  let currY = 0;
+  for(let component in components){
+    const mesh = components[component].mesh;
+    const count = components[component].count;
+    const meshPos = mesh.position;
+    const thickness = components[component].thickness;
+    const offset = components[component].offset;
+    
+    for(let i = 0; i < count; i++){
+      const meshCopy = mesh.clone();
+      meshCopy.position.set(meshPos.x, currY + offset, meshPos.z); 
+      meshCopy.rotateY(Math.random() * 3);
+      newBurger.add(meshCopy);
+      currY += thickness;
+    }
+  }
+  
+  newBurger.translateY(0.1);
+  //newBurger.translateZ(5);
+  
+  console.log(newBurger);
+  
+  //scene.add(newBurger);
+  
+  return newBurger;
+}
+
+function assembleOrder(){
+  // make a new group
+  const order = new THREE.Group();
+  
+  // add a tray
+  order.add(tray.clone());
+  
+  // optional: add drink
+  const drinkMesh = drink.clone();
+  order.add(drinkMesh);
+  drinkMesh.translateX(1.8);
+  drinkMesh.translateY(0.1);
+  
+  // optional: add fries
+  const friesMesh = fries.clone();
+  order.add(friesMesh);
+  friesMesh.translateX(1.8);
+  
+  // optional: add burger
+  const burger = assembleBurgerAccordingToOrder();
+
+  // TODO: depending on what's order, figure out placement of things
+  // if only one item ordered, place in middle of tray
+  
+  order.add(burger);
+  
+  order.translateY(3.2);
+  order.translateZ(5);
+  
+  scene.add(order);
 }
 
 
@@ -215,9 +302,17 @@ function test(){
 }
 document.getElementById('test').addEventListener('click', () => test());
 
+document.getElementById('test2').addEventListener('click', () => assembleOrder());
+
 function update(){
   // move stuff around, etc.
-  if(burger) burger.rotateY(Math.PI / 200);
+  if(scene){
+    scene.children.forEach(c => {
+      if(c.type === 'Group'){
+        c.rotateY(Math.PI / 200);
+      }
+    });
+  }
 }
 
 function keydown(evt){
