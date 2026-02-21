@@ -21,6 +21,13 @@
         text-align: center;
         margin: 0 auto;
       }
+      
+      #orderLog{
+        border: 1px solid #ccc;
+        margin: 0 auto;
+        margin-bottom: 10px;
+        width: 50%;
+      }
     </style>
   </head>
 
@@ -31,12 +38,12 @@
     </div>
     
     <p> customize your burger order with the Web Speech API! (Chromium-based browser needed, e.g. Chrome, Edge) </p>
-    <button id='test'>order with voice (Chromium-based browser needed)</button>
+    <div id='orderLog'></div>
+    <button id='orderWithVoice'>order with voice (Chromium-based browser needed)</button>
     <button id='orderWithoutVoice'>order without voice</button>
     <button id='rotate'>rotate</button>
     <button id='test2'>test</button>
     <p id='speechDetectionStatus'></p>
-    
     <div id='textDisplay'></div>
   </body>
 

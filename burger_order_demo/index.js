@@ -246,6 +246,115 @@ function assembleOrder(order, size){
   scene.add(orderGroup);
 }
 
+// TODO: have order be read back + prompts be read by synthetic voice?
+const prompt1 = 'hello, what would you like to order? your options are: burger, fries, drink, meal';
+const prompt2 = 'what size would you like that in? your options are: small, normal or large';
+const prompt3 = 'your order is ready. enjoy and have a nice day! :D';
+
+function orderWithVoice(){
+  console.log('ordering with voice');
+  
+  const orderLog = document.getElementById('orderLog');
+  
+  let currPromptNum = 1;
+  let order = '';
+  let orderSize = 'normal';
+  
+  function addToOrderLog(string, bold){
+    const newp = document.createElement('p');
+    newp.style.fontFamily = 'arial';
+    if(bold){
+      newp.style.fontWeight = 'bold';
+    }
+    newp.textContent = string;
+    orderLog.appendChild(newp);
+  }
+  
+  function clearOrderLog(){
+    while(orderLog.children.length > 0){
+      for(let child of orderLog.children){
+        //console.log('removing child');
+        child.parentNode.removeChild(child);
+      }
+    }
+  }
+  
+  clearOrderLog();
+ 
+  currPromptNum = 1;
+  addToOrderLog(prompt1, true);
+  
+  const recognition = new SpeechRecognition();
+  recognition.continuous = true;
+  recognition.lang = 'en-US';
+  recognition.interimResults = false;
+  recognition.maxAlternatives = 1;
+  
+  recognition.onresult = (evt) => {
+    console.log(evt);
+    
+    const textDisplay = document.getElementById('textDisplay');
+    while(textDisplay.firstChild){
+      textDisplay.removeChild(textDisplay.firstChild);
+    }
+    
+    let detectedSpeechSoFar = '';
+    const results = evt.results;
+    console.log(results);
+    
+    if(results.length > 0){
+      const detectedSpeech = results[currPromptNum-1][0].transcript;
+      const confidence = results[currPromptNum-1][0].confidence;
+      
+      const newText = document.createElement('p');
+      newText.textContent = `result: ${detectedSpeech}, confidence: ${confidence}`;  
+      textDisplay.appendChild(newText);
+      
+      if(currPromptNum === 1){
+        order = detectedSpeech.toLowerCase().trim();
+        currPromptNum++;
+        addToOrderLog(`you've requested: ${order}`);
+        addToOrderLog(prompt2, true);
+      }else if(currPromptNum === 2){
+        const requestedSize = detectedSpeech;
+        if(detectedSpeech.includes('small')){
+          orderSize = 'small';
+        }else if(detectedSpeech.includes('large')){
+          orderSize = 'large';
+        }
+        
+        addToOrderLog(`you've ordered ${order}, ${orderSize} sized. your order should be ready soon!`);
+        
+        // create order
+        assembleOrder(order, orderSize);
+        
+        // we're done
+        addToOrderLog(prompt3, true);
+        
+        recognition.stop();
+      }else if(currPromptNum === 3){
+        // TODO: ask about burger customizations
+      }
+    };
+  };
+  
+  recognition.onspeechend = () => {
+    console.log('stopping recognition');
+    document.getElementById('speechDetectionStatus').textContent = 'no longer accepting audio for recognition';
+    recognition.stop();
+  };
+  
+  recognition.onnomatch = (evt) => {
+    console.log('no match');
+  };
+  
+  recognition.onerror = (evt) => {
+    console.log('error: ' + evt.error);
+  };
+  
+  recognition.start();
+}
+
 function orderWithoutVoice(){
   // prompt for order
   const orderPrompt = prompt('hello, what would you like to order? your options are: burger, fries, drink, meal');
@@ -260,7 +369,7 @@ function orderWithoutVoice(){
     assembleOrder(orderPrompt, size);
   }
   
-  alert('have a nice day!');
+  alert('your order is ready. enjoy and have a nice day!');
 }
 
 // this is just for simple testing with speech recognition
@@ -273,7 +382,7 @@ function test(){
   
   recognition.start();
   
-  recognition.onresult = function(evt){
+  recognition.onresult = (evt) => {
     console.log(evt);
     
     const textDisplay = document.getElementById('textDisplay');
@@ -309,27 +418,29 @@ function test(){
     };
   };
   
-  recognition.onspeechend = function(){
+  recognition.onspeechend = () => {
     console.log('stopping recognition');
     document.getElementById('speechDetectionStatus').textContent = 'no longer accepting audio for recognition';
     //recognition.stop();
   };
   
-  recognition.onnomatch = function(evt){
+  recognition.onnomatch = (evt) => {
     console.log('no match');
   };
   
-  recognition.onerror = function(evt){
+  recognition.onerror = (evt) => {
     console.log('error: ' + evt.error);
   };
 }
-document.getElementById('test').addEventListener('click', () => test());
+//document.getElementById('test').addEventListener('click', () => test());
 
 document.getElementById('test2').addEventListener('click', () => assembleOrder('meal', 'normal'));
 
 document.getElementById('rotate').addEventListener('click', () => rotate = !rotate);
 
 document.getElementById('orderWithoutVoice').addEventListener('click', () => orderWithoutVoice());
+
+document.getElementById('orderWithVoice').addEventListener('click', () => orderWithVoice());
 
 function update(){
   // move stuff around, etc.
