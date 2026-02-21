@@ -138,13 +138,12 @@ prompt: What would you like to order?
 options: burger, fries, drink, meal
 
 prompt: (if meal) what size would you like your meal?
-options: small, medium, large  -> small = 0.7 scale, medium = 1.0 scale, large = 1.5 scale
+options: small, normal, large  -> small = 0.7 scale, normal = 1.0 scale, large = 1.5 scale
 
 prompt: (if meal or burger) how would you like your burger?
 options: normal, no bread, no lettuce, no cheese, no tomatoes, no onions, extra cheese, extra lettuce, extra tomatoes, extra onions
 */
-function receiveOrder(){
-}
+function receiveOrder(){}
 
 function assembleBurgerAccordingToOrder(){
   const numPatty = 1;
@@ -190,9 +189,20 @@ function assembleBurgerAccordingToOrder(){
   return newBurger;
 }
 
+function adjustMeshSize(mesh, size){
+  //console.log('size: ' + size);
+  if(size === 'small'){
+    mesh.scale.set(0.7, 0.7, 0.7);
+  }else if(size === 'normal'){
+    mesh.scale.set(1.0, 1.0, 1.0);
+  }else{
+    mesh.scale.set(1.5, 1.5, 1.5);
+  }
+}
+
 // TODO: depending on what's order, figure out placement of things
 // if only one item ordered, place in middle of tray
-function assembleOrder(order){
+function assembleOrder(order, size){
   // make a new group
   const orderGroup = new THREE.Group();
   
@@ -204,7 +214,8 @@ function assembleOrder(order){
     const drinkMesh = drink.clone();
     orderGroup.add(drinkMesh);
     drinkMesh.translateX(1.8);
-    drinkMesh.translateY(0.1);
+    drinkMesh.translateY(0.08);
+    adjustMeshSize(drinkMesh, size);
   }
   
   // optional: add fries
@@ -212,11 +223,13 @@ function assembleOrder(order){
     const friesMesh = fries.clone();
     orderGroup.add(friesMesh);
     friesMesh.translateX(1.8);
+    adjustMeshSize(friesMesh, size);
   }
   
   // optional: add burger
   if(order.includes('burger') || order.includes('meal')){
-    const burger = assembleBurgerAccordingToOrder();    
+    const burger = assembleBurgerAccordingToOrder();
+    adjustMeshSize(burger, size);
     orderGroup.add(burger);
   }
   
@@ -238,7 +251,13 @@ function orderWithoutVoice(){
   const orderPrompt = prompt('hello, what would you like to order? your options are: burger, fries, drink, meal');
   
   if(orderPrompt){
-    assembleOrder(orderPrompt);
+    let size = 'normal';
+    if(orderPrompt.includes('meal')){
+      const sizePrompt = prompt('and what size would you like? your options are: small, normal, large');
+      if(sizePrompt) size = sizePrompt;
+    }
+    
+    assembleOrder(orderPrompt, size);
   }
   
   alert('have a nice day!');
@@ -306,7 +325,7 @@ function test(){
 }
 document.getElementById('test').addEventListener('click', () => test());
 
-document.getElementById('test2').addEventListener('click', () => assembleOrder('meal'));
+document.getElementById('test2').addEventListener('click', () => assembleOrder('meal', 'normal'));
 
 document.getElementById('rotate').addEventListener('click', () => rotate = !rotate);
 
