@@ -32,6 +32,8 @@ controls.zoomSpeed = 1.2;
 controls.panSpeed = 0.8;
 */
 
+let rotate = false;
+
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0xeeeeee);
 scene.add(camera);
@@ -117,33 +119,18 @@ Promise.all(loadedModels).then((objects) => {
           burgerComponents.bunBottom = c;
         }
       });
-      //mesh.translateY(3);
-      //mesh.translateZ(5);
-      //scene.add(mesh);
       console.log(burgerComponents);
     }else if(mesh.name === 'fries'){
       fries = mesh;
-      //fries.translateZ(5);
-      //fries.translateY(3);
-      //fries.translateX(3);
       fries.rotateY(Math.PI);
-      //scene.add(fries);
     }else if(mesh.name === 'drink'){
       drink = mesh;
-      //drink.translateX(-4);
-      //drink.translateY(3);
-      //drink.translateZ(3);
-      //scene.add(drink);
     }else if(mesh.name === 'tray'){
       tray = mesh;
-      //tray.translateY(3);
-      //tray.translateZ(5);
-      //scene.add(tray);
     }
   });
 });
 
-// TODO: have an object keep track of burger order and components
 // TODO: use speech
 /*
 order ideas
@@ -159,7 +146,6 @@ options: normal, no bread, no lettuce, no cheese, no tomatoes, no onions, extra 
 function receiveOrder(){
 }
 
-// TODO: based on order, create the burger and put it in the scene
 function assembleBurgerAccordingToOrder(){
   const numPatty = 1;
   const numCheese = 2;
@@ -198,47 +184,65 @@ function assembleBurgerAccordingToOrder(){
   }
   
   newBurger.translateY(0.1);
-  //newBurger.translateZ(5);
   
   console.log(newBurger);
-  
-  //scene.add(newBurger);
   
   return newBurger;
 }
 
-function assembleOrder(){
+// TODO: depending on what's order, figure out placement of things
+// if only one item ordered, place in middle of tray
+function assembleOrder(order){
   // make a new group
-  const order = new THREE.Group();
+  const orderGroup = new THREE.Group();
   
   // add a tray
-  order.add(tray.clone());
+  orderGroup.add(tray.clone());
   
   // optional: add drink
-  const drinkMesh = drink.clone();
-  order.add(drinkMesh);
-  drinkMesh.translateX(1.8);
-  drinkMesh.translateY(0.1);
+  if(order.includes('drink') || order.includes('meal')){
+    const drinkMesh = drink.clone();
+    orderGroup.add(drinkMesh);
+    drinkMesh.translateX(1.8);
+    drinkMesh.translateY(0.1);
+  }
   
   // optional: add fries
-  const friesMesh = fries.clone();
-  order.add(friesMesh);
-  friesMesh.translateX(1.8);
+  if(order.includes('fries') || order.includes('meal')){
+    const friesMesh = fries.clone();
+    orderGroup.add(friesMesh);
+    friesMesh.translateX(1.8);
+  }
   
   // optional: add burger
-  const burger = assembleBurgerAccordingToOrder();
-
-  // TODO: depending on what's order, figure out placement of things
-  // if only one item ordered, place in middle of tray
+  if(order.includes('burger') || order.includes('meal')){
+    const burger = assembleBurgerAccordingToOrder();    
+    orderGroup.add(burger);
+  }
   
-  order.add(burger);
+  orderGroup.translateY(3.2);
+  orderGroup.translateZ(5);
   
-  order.translateY(3.2);
-  order.translateZ(5);
+  // clear the scene first
+  scene.children.forEach(c => {
+    if(c.type === 'Group'){
+      scene.remove(c);
+    }
+  });
   
-  scene.add(order);
+  scene.add(orderGroup);
 }
 
+function orderWithoutVoice(){
+  // prompt for order
+  const orderPrompt = prompt('hello, what would you like to order? your options are: burger, fries, drink, meal');
+  
+  if(orderPrompt){
+    assembleOrder(orderPrompt);
+  }
+  
+  alert('have a nice day!');
+}
 
 // this is just for simple testing with speech recognition
 function test(){
@@ -302,11 +306,15 @@ function test(){
 }
 document.getElementById('test').addEventListener('click', () => test());
 
-document.getElementById('test2').addEventListener('click', () => assembleOrder());
+document.getElementById('test2').addEventListener('click', () => assembleOrder('meal'));
+
+document.getElementById('rotate').addEventListener('click', () => rotate = !rotate);
+
+document.getElementById('orderWithoutVoice').addEventListener('click', () => orderWithoutVoice());
 
 function update(){
   // move stuff around, etc.
-  if(scene){
+  if(scene && rotate){
     scene.children.forEach(c => {
       if(c.type === 'Group'){
         c.rotateY(Math.PI / 200);
@@ -314,20 +322,6 @@ function update(){
     });
   }
 }
-
-function keydown(evt){
-  if(evt.keyCode === 32){
-    // spacebar
-  }else if(evt.keyCode === 49){
-    //1 key
-  }else if(evt.keyCode === 50){
-    //2 key
-  }else if(evt.keyCode === 82){
-    // r key
-  }
-}
-document.addEventListener('keydown', keydown);
-
 
 function animate(){
   //controls.update(); // update trackball control
