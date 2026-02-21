@@ -1,0 +1,52 @@
+<!doctype html>
+<html>
+  <head>
+    <title> burger order demo </title>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r120/three.min.js" integrity="sha512-kgjZw3xjgSUDy9lTU085y+UCVPz3lhxAtdOVkcO4O2dKl2VSBcNsQ9uMg/sXIM4SoOmCiYfyFO/n1/3GSXZtSg==" crossorigin="anonymous"></script>
+    <script src="../libs/utils.js"></script>
+    <script src="../libs/GLTFLoader.js"></script>
+    <script src="../libs/threex.keyboardstate.js"></script>
+    <script src="../libs/TrackballControls.js"></script>
+
+    <style>
+      body {
+        text-align: center;
+        font-family: monospace;
+      }
+      
+      #container{
+        width: 1200px;
+        height: 800px;
+        text-align: center;
+        margin: 0 auto;
+      }
+      
+      #orderLog{
+        border: 1px solid #ccc;
+        margin: 0 auto;
+        margin-bottom: 10px;
+        width: 50%;
+      }
+    </style>
+  </head>
+
+  <body>
+    <h3> burger order demo </h3>
+
+    <div id='container'>
+    </div>
+    
+    <p> customize your burger order with the Web Speech API! (Chromium-based browser needed, e.g. Chrome, Edge) </p>
+    <div id='orderLog'></div>
+    <button id='orderWithVoice'>order with voice (Chromium-based browser needed)</button>
+    <button id='orderWithoutVoice'>order without voice</button>
+    <button id='rotate'>rotate</button>
+    <button id='test2'>test</button>
+    <p id='speechDetectionStatus'></p>
+    <div id='textDisplay'></div>
+  </body>
+
+  <script type="module" src="index.js">
+  </script>
+</html>
