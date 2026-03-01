@@ -1,6 +1,5 @@
 // burger order demo
 // TODO: add fries, onion rings?, drink
-// make a nicer UI or screen thingy to take user's order? :D
 
 const container = document.getElementById('container');
 
@@ -131,7 +130,6 @@ Promise.all(loadedModels).then((objects) => {
   });
 });
 
-// TODO: use speech
 /*
 order ideas
 prompt: What would you like to order?
@@ -253,36 +251,17 @@ const prompt3 = 'your order is ready. enjoy and have a nice day! :D';
 
 function orderWithVoice(){
   console.log('ordering with voice');
+  const promptTextContainer = document.getElementById('promptScreenText');
   
-  const orderLog = document.getElementById('orderLog');
+  while(promptTextContainer.firstChild){
+    promptTextContainer.removeChild(promptTextContainer.firstChild);
+  }
   
   let currPromptNum = 1;
   let order = '';
   let orderSize = 'normal';
   
-  function addToOrderLog(string, bold){
-    const newp = document.createElement('p');
-    newp.style.fontFamily = 'arial';
-    if(bold){
-      newp.style.fontWeight = 'bold';
-    }
-    newp.textContent = string;
-    orderLog.appendChild(newp);
-  }
-  
-  function clearOrderLog(){
-    while(orderLog.children.length > 0){
-      for(let child of orderLog.children){
-        //console.log('removing child');
-        child.parentNode.removeChild(child);
-      }
-    }
-  }
-  
-  clearOrderLog();
- 
-  currPromptNum = 1;
-  addToOrderLog(prompt1, true);
+  addPromptText(promptTextContainer, prompt1);
   
   const recognition = new SpeechRecognition();
   recognition.continuous = true;
@@ -293,11 +272,6 @@ function orderWithVoice(){
   recognition.onresult = (evt) => {
     console.log(evt);
     
-    const textDisplay = document.getElementById('textDisplay');
-    while(textDisplay.firstChild){
-      textDisplay.removeChild(textDisplay.firstChild);
-    }
-    
     let detectedSpeechSoFar = '';
     const results = evt.results;
     console.log(results);
@@ -305,16 +279,17 @@ function orderWithVoice(){
     if(results.length > 0){
       const detectedSpeech = results[currPromptNum-1][0].transcript;
       const confidence = results[currPromptNum-1][0].confidence;
-      
-      const newText = document.createElement('p');
-      newText.textContent = `result: ${detectedSpeech}, confidence: ${confidence}`;  
-      textDisplay.appendChild(newText);
+      console.log(`result: ${detectedSpeech}, confidence: ${confidence}`);
       
       if(currPromptNum === 1){
         order = detectedSpeech.toLowerCase().trim();
         currPromptNum++;
-        addToOrderLog(`you've requested: ${order}`);
-        addToOrderLog(prompt2, true);
+        
+        const selectedOrder = `you've requested: ${order}`;
+        addPromptText(promptTextContainer, selectedOrder, true);
+        
+        // show prompt 2
+        addPromptText(promptTextContainer, prompt2);
       }else if(currPromptNum === 2){
         const requestedSize = detectedSpeech;
         if(detectedSpeech.includes('small')){
@@ -323,13 +298,14 @@ function orderWithVoice(){
           orderSize = 'large';
         }
         
-        addToOrderLog(`you've ordered ${order}, ${orderSize} sized. your order should be ready soon!`);
+        const selectedSize = `you've ordered ${order}, ${orderSize} sized. your order should be ready soon!`;
+        addPromptText(promptTextContainer, selectedSize, true);
         
         // create order
         assembleOrder(order, orderSize);
         
         // we're done
-        addToOrderLog(prompt3, true);
+        addPromptText(promptTextContainer, prompt3);
         
         recognition.stop();
       }else if(currPromptNum === 3){
@@ -355,88 +331,108 @@ function orderWithVoice(){
   recognition.start();
 }
 
-function orderWithoutVoice(){
-  // prompt for order
-  const orderPrompt = prompt('hello, what would you like to order? your options are: burger, fries, drink, meal');
-  
-  if(orderPrompt){
-    let size = 'normal';
-    if(orderPrompt.includes('meal')){
-      const sizePrompt = prompt('and what size would you like? your options are: small, normal, large');
-      if(sizePrompt) size = sizePrompt;
-    }
-    
-    assembleOrder(orderPrompt, size);
+function addPromptText(container, text, bold=false){
+  const p = document.createElement('p');
+  p.textContent = text;
+  if(bold){
+    p.style.fontWeight = 'bold';
   }
-  
-  alert('your order is ready. enjoy and have a nice day!');
+  container.appendChild(p);
 }
 
-// this is just for simple testing with speech recognition
-function test(){
-  const recognition = new SpeechRecognition();
-  recognition.continuous = false; // true
-  recognition.lang = 'en-US';
-  recognition.interimResults = false;
-  recognition.maxAlternatives = 1;
+// prompt for initial order
+function orderPrompt(promptTextContainer, optionsContainer){
+  // clear options container
+  while(optionsContainer.firstChild){
+    optionsContainer.removeChild(optionsContainer.firstChild);
+  }
   
-  recognition.start();
+  // show prompt text
+  const text = 'hello, what would you like to order? your options are: burger, fries, drink, meal';
+  addPromptText(promptTextContainer, text);
   
-  recognition.onresult = (evt) => {
-    console.log(evt);
-    
-    const textDisplay = document.getElementById('textDisplay');
-    while(textDisplay.firstChild){
-      textDisplay.removeChild(textDisplay.firstChild);
-    }
-    
-    let detectedSpeechSoFar = '';
-    const results = evt.results;
-    for(let result of results){
-      const detectedSpeech = result[0].transcript;
-      const confidence = result[0].confidence;
-      const newText = document.createElement('p');
-      newText.textContent = `result: ${detectedSpeech}, confidence: ${confidence}`;
+  // display options for user to select
+  const orderOptions = ['burger', 'fries', 'drink', 'meal'];
+  orderOptions.forEach(opt => {
+    // based on user selection, trigger the next prompt
+    const btn = document.createElement('button');
+    btn.textContent = opt;
+    btn.addEventListener('click', (evt) => {
+      const selectedOrder = `you've requested a ${opt}.`;
       
-      textDisplay.appendChild(newText);
+      addPromptText(promptTextContainer, selectedOrder, true);
       
-      if(newText.textContent.toLowerCase().includes('burger')){
-        // if speech included 'burger', add a new burger to the scene
-        console.log('adding a new burger because it was requested');
-        if(burger){
-          const newBurger = burger.clone(true);
-          scene.add(newBurger);
-          newBurger.rotation.x = Math.random() * 2 * Math.PI;
-          newBurger.rotation.y = Math.random() * 2 * Math.PI;
-          newBurger.rotation.z = Math.random() * 2 * Math.PI;
-          
-          newBurger.position.x = -10 + (Math.random() * 10);
-          newBurger.position.y = -10 + (Math.random() * 10);
-          newBurger.position.z = -20 + (Math.random() * -20);
-        }
+      if(evt.target.textContent === 'meal'){
+        sizePrompt(promptTextContainer, optionsContainer, opt);
+      }else{
+        assembleOrder(opt, 'normal');
+        goodbyePrompt(promptTextContainer, optionsContainer);
       }
-    };
-  };
-  
-  recognition.onspeechend = () => {
-    console.log('stopping recognition');
-    document.getElementById('speechDetectionStatus').textContent = 'no longer accepting audio for recognition';
-    //recognition.stop();
-  };
-  
-  recognition.onnomatch = (evt) => {
-    console.log('no match');
-  };
-  
-  recognition.onerror = (evt) => {
-    console.log('error: ' + evt.error);
-  };
+    });
+    optionsContainer.appendChild(btn);
+  });
 }
-//document.getElementById('test').addEventListener('click', () => test());
+
+// prompt for size specification (currently only for meal option w/ non-voice ordering)
+function sizePrompt(promptTextContainer, optionsContainer, order){
+  // clear options container
+  while(optionsContainer.firstChild){
+    optionsContainer.removeChild(optionsContainer.firstChild);
+  }
+  
+  const text = 'and what size would you like? your options are: small, normal, large';
+  addPromptText(promptTextContainer, text);
+  
+  const sizeOptions = ['small', 'normal', 'large'];
+  sizeOptions.forEach(size => {
+    // based on user selection, trigger the next prompt
+    const btn = document.createElement('button');
+    btn.textContent = size;
+    btn.addEventListener('click', (evt) => {
+      const selectedSize = `you've selected the ${size} size meal.`;
+      addPromptText(promptTextContainer, selectedSize, true);
+      
+      assembleOrder(order, size);
+      
+      goodbyePrompt(promptTextContainer, optionsContainer);
+    });
+    optionsContainer.appendChild(btn);
+  });
+}
+
+// end user interaction
+function goodbyePrompt(promptTextContainer, optionsContainer){
+  // clear options container
+  while(optionsContainer.firstChild){
+    optionsContainer.removeChild(optionsContainer.firstChild);
+  }
+  
+  const text = 'your order is ready. enjoy and have a nice day!';
+  addPromptText(promptTextContainer, text);
+}
+
+function orderWithoutVoice(){
+  const promptTextContainer = document.getElementById('promptScreenText');
+  const optionsContainer = document.getElementById('optionsContainer');
+  
+  // clear any text first
+  while(promptTextContainer.firstChild){
+    promptTextContainer.removeChild(promptTextContainer.firstChild);
+  }
+  
+  orderPrompt(promptTextContainer, optionsContainer);
+}
 
 document.getElementById('test2').addEventListener('click', () => assembleOrder('meal', 'normal'));
 
-document.getElementById('rotate').addEventListener('click', () => rotate = !rotate);
+document.getElementById('rotate').addEventListener('click', (evt) => {
+  rotate = !rotate;
+  if(rotate){
+    evt.target.textContent = 'stop rotate';
+  }else{
+    evt.target.textContent = 'rotate';
+  }
+});
 
 document.getElementById('orderWithoutVoice').addEventListener('click', () => orderWithoutVoice());
 
