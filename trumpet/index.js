@@ -37,6 +37,7 @@ let audioSource;
 let audioFileUrl;
 let animationFrameReqId;
 let isPlaying = false;
+let cameraOrientation = 'side';
 
 const noteToValveComboMap = {
   'a': '12',
@@ -458,6 +459,22 @@ function getModel(modelFilePath){
   });
 }
 
+function cameraFront(){
+  if(cameraOrientation === 'side'){
+    camera.position.set(-8.8, 5.5, 0.5);
+    camera.rotateY(-Math.PI / 2);
+    cameraOrientation = 'front';
+  }
+}
+
+function cameraSide(){
+  if(cameraOrientation === 'front'){
+    camera.position.set(0, 4, 10);
+    camera.rotateY(Math.PI / 2);
+    cameraOrientation = 'side';
+  }
+}
+
 function update(){
   // move stuff around, etc.
 }
@@ -469,6 +486,12 @@ function keydown(evt){
     valves[2].morphTargetInfluences[0] = 1.0;
   }else if(evt.key === '3'){
     valves[3].morphTargetInfluences[0] = 1.0;
+  }else if(evt.key === 's'){
+    // switch camera to side view
+    cameraSide();
+  }else if(evt.key === 'f'){
+    // switch camera to front view
+    cameraFront();
   }
     
   // TODO: how could we differentiate between notes with the same valve combinations?

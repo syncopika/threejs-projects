@@ -13,5 +13,5 @@ Initially I had an idea to make some sort of an English-learning application by 
 I think that's a bit too complicated for me right now though but maybe a nice feature addition for this demo in the future!
     
 ![screenshot](screenshot.png)    
-![gif 1 (non-voice ordering)](01-03-2026_095701.gif)    
-![gif 2 (voice ordering)](01-03-2026_095559.gif)
+![gif 1 (voice ordering)](01-03-2026_095701.gif)    
+![gif 2 (non-voice ordering)](01-03-2026_095559.gif)
