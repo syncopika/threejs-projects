@@ -494,6 +494,7 @@ function keydown(evt){
   
   if(evt.keyCode === 32){
     // spacebar
+    evt.preventDefault(); // prevent scrolling
     if(!isWalking){
       // allow eating/drinking only if near food/water
       if(!isEating && isNearFoodOrWater){
