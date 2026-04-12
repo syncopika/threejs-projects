@@ -112,12 +112,16 @@ function loadInNotes(){
     'c5',
     'cs5',
     'd5',
+    'ds5',
     'e5',
     'f5',
+    'fs5',
     'g5',
     'gs5',
     'a5',
     'b5',
+    'as4', // TODO: there's already bb4 so we shouldn't have to duplicate it and rename it to as4 - just have enharmonic mapping?
+    'as5', // TODO: I already have bb5 so we should have a map for enharmonics so we don't have to load/copy more data than needed
   ];
   let totalNotes = notesToLoad.length;
   notesToLoad.forEach(note => {
@@ -162,7 +166,12 @@ function play(piece){
     piece.forEach((note, index) => {
       // set up buffer nodes
       const newBufNode = audioContext.createBufferSource();
-      if(note.note) newBufNode.buffer = noteBufferMap[note.note].buffer;
+      if(note.note){
+        if(!noteBufferMap[note.note]){
+          console.error(`${note.note} does not have a corresponding sound!`);
+        }
+        newBufNode.buffer = noteBufferMap[note.note].buffer;
+      }
       newBufNode.connect(gainNode);
             
       // schedule note (use seconds for start time)
@@ -542,7 +551,7 @@ function keyup(evt){
 }
 document.addEventListener('keyup', keyup);
 
-document.getElementById('playExample').addEventListener('click', () => {
+document.getElementById('playExample').addEventListener('click', async () => {
   const selectedExample = document.getElementById('selectExamplePiece').value;
   //console.log(selectedExample);
     
@@ -550,6 +559,11 @@ document.getElementById('playExample').addEventListener('click', () => {
     if(selectedExample === 'examplePiece1') playExamplePiece1();
     else if(selectedExample === 'examplePiece2') playExamplePiece2();
     else if(selectedExample === 'nostalgia-excerpt') playNostalgiaExcerpt();
+    else if(selectedExample === 'humpty-dumpty-heart'){
+      const response = await fetch('mmp_to_trpt_demo.json');
+      const data = await response.json();
+      play(data);
+    }
   }
 });
 
