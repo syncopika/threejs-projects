@@ -151,9 +151,14 @@ function loadInNotes(){
 }
 loadInNotes();
 
+
+let audioBufNodes = [];
 function play(piece){
   const startTime = audioContext.currentTime;
   let offset = 0;
+  
+  audioBufNodes.forEach(n => n.stop());
+  audioBufNodes = [];
     
   // TODO: maybe figure out a better way to do this? 
   // ideally i'd like to set the valves 
@@ -197,6 +202,8 @@ function play(piece){
           setValves('c');
         };
       }
+      
+      audioBufNodes.push(newBufNode);
     });
   });
 }
@@ -620,6 +627,9 @@ function stopAudio(){
     
   // reload since we can't restart buffer source
   if(audioFileUrl) loadAudioFile(audioFileUrl);
+  
+  audioBufNodes.forEach(n => n.stop());
+  audioBufNodes = [];
 }
 document.getElementById('stop').addEventListener('click', stopAudio);
 
