@@ -1,0 +1,826 @@
+[
+    {
+        "note": "f5",
+        "length": 75.0
+    },
+    {
+        "note": "",
+        "length": 75.0
+    },
+    {
+        "note": "ds5",
+        "length": 75.0
+    },
+    {
+        "note": "",
+        "length": 75.0
+    },
+    {
+        "note": "d5",
+        "length": 150.0
+    },
+    {
+        "note": "",
+        "length": 150.0
+    },
+    {
+        "note": "f5",
+        "length": 75.0
+    },
+    {
+        "note": "",
+        "length": 75.0
+    },
+    {
+        "note": "gs5",
+        "length": 150.0
+    },
+    {
+        "note": "",
+        "length": 150.0
+    },
+    {
+        "note": "b5",
+        "length": 75.0
+    },
+    {
+        "note": "",
+        "length": 75.0
+    },
+    {
+        "note": "as5",
+        "length": 150.0
+    },
+    {
+        "note": "",
+        "length": 150.0
+    },
+    {
+        "note": "gs5",
+        "length": 75.0
+    },
+    {
+        "note": "",
+        "length": 75.0
+    },
+    {
+        "note": "g5",
+        "length": 150.0
+    },
+    {
+        "note": "",
+        "length": 150.0
+    },
+    {
+        "note": "as5",
+        "length": 75.0
+    },
+    {
+        "note": "",
+        "length": 75.0
+    },
+    {
+        "note": "cs5",
+        "length": 150.0
+    },
+    {
+        "note": "",
+        "length": 150.0
+    },
+    {
+        "note": "e5",
+        "length": 150.0
+    },
+    {
+        "note": "",
+        "length": 225.0
+    },
+    {
+        "note": "cs5",
+        "length": 75.0
+    },
+    {
+        "note": "",
+        "length": 75.0
+    },
+    {
+        "note": "ds5",
+        "length": 150.0
+    },
+    {
+        "note": "",
+        "length": 225.0
+    },
+    {
+        "note": "cs5",
+        "length": 150.0
+    },
+    {
+        "note": "",
+        "length": 450.0
+    },
+    {
+        "note": "c5",
+        "length": 150.0
+    },
+    {
+        "note": "",
+        "length": 150.0
+    },
+    {
+        "note": "ds5",
+        "length": 75.0
+    },
+    {
+        "note": "",
+        "length": 75.0
+    },
+    {
+        "note": "cs5",
+        "length": 75.0
+    },
+    {
+        "note": "",
+        "length": 225.0
+    },
+    {
+        "note": "f5",
+        "length": 150.0
+    },
+    {
+        "note": "",
+        "length": 450.0
+    },
+    {
+        "note": "e5",
+        "length": 150.0
+    },
+    {
+        "note": "",
+        "length": 150.0
+    },
+    {
+        "note": "fs5",
+        "length": 75.0
+    },
+    {
+        "note": "",
+        "length": 75.0
+    },
+    {
+        "note": "f5",
+        "length": 150.0
+    },
+    {
+        "note": "",
+        "length": 225.0
+    },
+    {
+        "note": "gs5",
+        "length": 300.0
+    },
+    {
+        "note": "",
+        "length": 375.0
+    },
+    {
+        "note": "fs5",
+        "length": 150.0
+    },
+    {
+        "note": "",
+        "length": 975.0
+    },
+    {
+        "note": "b5",
+        "length": 150.0
+    },
+    {
+        "note": "",
+        "length": 225.0
+    },
+    {
+        "note": "a5",
+        "length": 75.0
+    },
+    {
+        "note": "",
+        "length": 75.0
+    },
+    {
+        "note": "gs5",
+        "length": 150.0
+    },
+    {
+        "note": "",
+        "length": 150.0
+    },
+    {
+        "note": "fs5",
+        "length": 75.0
+    },
+    {
+        "note": "",
+        "length": 75.0
+    },
+    {
+        "note": "f5",
+        "length": 150.0
+    },
+    {
+        "note": "",
+        "length": 150.0
+    },
+    {
+        "note": "ds5",
+        "length": 75.0
+    },
+    {
+        "note": "",
+        "length": 75.0
+    },
+    {
+        "note": "d5",
+        "length": 150.0
+    },
+    {
+        "note": "",
+        "length": 150.0
+    },
+    {
+        "note": "f5",
+        "length": 75.0
+    },
+    {
+        "note": "",
+        "length": 75.0
+    },
+    {
+        "note": "gs5",
+        "length": 75.0
+    },
+    {
+        "note": "",
+        "length": 150.0
+    },
+    {
+        "note": "b5",
+        "length": 75.0
+    },
+    {
+        "note": "",
+        "length": 75.0
+    },
+    {
+        "note": "as5",
+        "length": 150.0
+    },
+    {
+        "note": "",
+        "length": 150.0
+    },
+    {
+        "note": "gs5",
+        "length": 75.0
+    },
+    {
+        "note": "",
+        "length": 75.0
+    },
+    {
+        "note": "fs5",
+        "length": 150.0
+    },
+    {
+        "note": "",
+        "length": 150.0
+    },
+    {
+        "note": "as4",
+        "length": 75.0
+    },
+    {
+        "note": "",
+        "length": 75.0
+    },
+    {
+        "note": "cs5",
+        "length": 75.0
+    },
+    {
+        "note": "",
+        "length": 150.0
+    },
+    {
+        "note": "fs5",
+        "length": 75.0
+    },
+    {
+        "note": "",
+        "length": 75.0
+    },
+    {
+        "note": "f5",
+        "length": 150.0
+    },
+    {
+        "note": "",
+        "length": 150.0
+    },
+    {
+        "note": "ds5",
+        "length": 75.0
+    },
+    {
+        "note": "",
+        "length": 75.0
+    },
+    {
+        "note": "f5",
+        "length": 150.0
+    },
+    {
+        "note": "",
+        "length": 150.0
+    },
+    {
+        "note": "fs5",
+        "length": 75.0
+    },
+    {
+        "note": "",
+        "length": 75.0
+    },
+    {
+        "note": "gs5",
+        "length": 150.0
+    },
+    {
+        "note": "",
+        "length": 150.0
+    },
+    {
+        "note": "f5",
+        "length": 75.0
+    },
+    {
+        "note": "",
+        "length": 75.0
+    },
+    {
+        "note": "fs5",
+        "length": 37.5
+    },
+    {
+        "note": "",
+        "length": 37.5
+    },
+    {
+        "note": "gs5",
+        "length": 37.5
+    },
+    {
+        "note": "",
+        "length": 37.5
+    },
+    {
+        "note": "fs5",
+        "length": 37.5
+    },
+    {
+        "note": "",
+        "length": 75.0
+    },
+    {
+        "note": "f5",
+        "length": 150.0
+    },
+    {
+        "note": "",
+        "length": 150.0
+    },
+    {
+        "note": "ds5",
+        "length": 75.0
+    },
+    {
+        "note": "",
+        "length": 75.0
+    },
+    {
+        "note": "d5",
+        "length": 150.0
+    },
+    {
+        "note": "",
+        "length": 150.0
+    },
+    {
+        "note": "f5",
+        "length": 75.0
+    },
+    {
+        "note": "",
+        "length": 75.0
+    },
+    {
+        "note": "ds5",
+        "length": 150.0
+    },
+    {
+        "note": "",
+        "length": 225.0
+    },
+    {
+        "note": "fs5",
+        "length": 75.0
+    },
+    {
+        "note": "",
+        "length": 75.0
+    },
+    {
+        "note": "as5",
+        "length": 75.0
+    },
+    {
+        "note": "",
+        "length": 75.0
+    },
+    {
+        "note": "cs5",
+        "length": 75.0
+    },
+    {
+        "note": "",
+        "length": 75.0
+    },
+    {
+        "note": "e5",
+        "length": 150.0
+    },
+    {
+        "note": "",
+        "length": 150.0
+    },
+    {
+        "note": "f5",
+        "length": 75.0
+    },
+    {
+        "note": "",
+        "length": 75.0
+    },
+    {
+        "note": "fs5",
+        "length": 150.0
+    },
+    {
+        "note": "",
+        "length": 150.0
+    },
+    {
+        "note": "g5",
+        "length": 75.0
+    },
+    {
+        "note": "",
+        "length": 75.0
+    },
+    {
+        "note": "gs5",
+        "length": 150.0
+    },
+    {
+        "note": "",
+        "length": 150.0
+    },
+    {
+        "note": "cs5",
+        "length": 150.0
+    },
+    {
+        "note": "",
+        "length": 225.0
+    },
+    {
+        "note": "as5",
+        "length": 75.0
+    },
+    {
+        "note": "",
+        "length": 75.0
+    },
+    {
+        "note": "cs5",
+        "length": 150.0
+    },
+    {
+        "note": "",
+        "length": 525.0
+    },
+    {
+        "note": "f5",
+        "length": 75.0
+    },
+    {
+        "note": "",
+        "length": 75.0
+    },
+    {
+        "note": "ds5",
+        "length": 75.0
+    },
+    {
+        "note": "",
+        "length": 75.0
+    },
+    {
+        "note": "d5",
+        "length": 150.0
+    },
+    {
+        "note": "",
+        "length": 150.0
+    },
+    {
+        "note": "f5",
+        "length": 75.0
+    },
+    {
+        "note": "",
+        "length": 75.0
+    },
+    {
+        "note": "gs5",
+        "length": 150.0
+    },
+    {
+        "note": "",
+        "length": 150.0
+    },
+    {
+        "note": "b5",
+        "length": 75.0
+    },
+    {
+        "note": "",
+        "length": 75.0
+    },
+    {
+        "note": "as5",
+        "length": 150.0
+    },
+    {
+        "note": "",
+        "length": 150.0
+    },
+    {
+        "note": "gs5",
+        "length": 75.0
+    },
+    {
+        "note": "",
+        "length": 75.0
+    },
+    {
+        "note": "fs5",
+        "length": 150.0
+    },
+    {
+        "note": "",
+        "length": 150.0
+    },
+    {
+        "note": "gs5",
+        "length": 75.0
+    },
+    {
+        "note": "",
+        "length": 75.0
+    },
+    {
+        "note": "as5",
+        "length": 150.0
+    },
+    {
+        "note": "",
+        "length": 150.0
+    },
+    {
+        "note": "fs5",
+        "length": 75.0
+    },
+    {
+        "note": "",
+        "length": 75.0
+    },
+    {
+        "note": "f5",
+        "length": 150.0
+    },
+    {
+        "note": "",
+        "length": 150.0
+    },
+    {
+        "note": "fs5",
+        "length": 75.0
+    },
+    {
+        "note": "",
+        "length": 75.0
+    },
+    {
+        "note": "gs5",
+        "length": 150.0
+    },
+    {
+        "note": "",
+        "length": 150.0
+    },
+    {
+        "note": "f5",
+        "length": 75.0
+    },
+    {
+        "note": "",
+        "length": 75.0
+    },
+    {
+        "note": "ds5",
+        "length": 150.0
+    },
+    {
+        "note": "",
+        "length": 150.0
+    },
+    {
+        "note": "f5",
+        "length": 75.0
+    },
+    {
+        "note": "",
+        "length": 75.0
+    },
+    {
+        "note": "fs5",
+        "length": 150.0
+    },
+    {
+        "note": "",
+        "length": 150.0
+    },
+    {
+        "note": "ds5",
+        "length": 75.0
+    },
+    {
+        "note": "",
+        "length": 75.0
+    },
+    {
+        "note": "cs5",
+        "length": 150.0
+    },
+    {
+        "note": "",
+        "length": 150.0
+    },
+    {
+        "note": "as4",
+        "length": 75.0
+    },
+    {
+        "note": "",
+        "length": 75.0
+    },
+    {
+        "note": "gs4",
+        "length": 150.0
+    },
+    {
+        "note": "",
+        "length": 150.0
+    },
+    {
+        "note": "fs4",
+        "length": 75.0
+    },
+    {
+        "note": "",
+        "length": 75.0
+    },
+    {
+        "note": "f4",
+        "length": 375.0
+    },
+    {
+        "note": "",
+        "length": 450.0
+    },
+    {
+        "note": "cs5",
+        "length": 150.0
+    },
+    {
+        "note": "gs4",
+        "length": 75.0
+    },
+    {
+        "note": "",
+        "length": 262.5
+    },
+    {
+        "note": "cs5",
+        "length": 150.0
+    },
+    {
+        "note": "",
+        "length": 187.5
+    },
+    {
+        "note": "cs5",
+        "length": 225.0
+    },
+    {
+        "note": "",
+        "length": 300.0
+    },
+    {
+        "note": "gs4",
+        "length": 150.0
+    },
+    {
+        "note": "",
+        "length": 150.0
+    },
+    {
+        "note": "as4",
+        "length": 75.0
+    },
+    {
+        "note": "",
+        "length": 75.0
+    },
+    {
+        "note": "c5",
+        "length": 150.0
+    },
+    {
+        "note": "",
+        "length": 150.0
+    },
+    {
+        "note": "cs5",
+        "length": 75.0
+    },
+    {
+        "note": "",
+        "length": 75.0
+    },
+    {
+        "note": "ds5",
+        "length": 150.0
+    },
+    {
+        "note": "",
+        "length": 150.0
+    },
+    {
+        "note": "cs5",
+        "length": 150.0
+    },
+    {
+        "note": "",
+        "length": 375.0
+    },
+    {
+        "note": "ds5",
+        "length": 150.0
+    },
+    {
+        "note": "",
+        "length": 150.0
+    },
+    {
+        "note": "f5",
+        "length": 75.0
+    },
+    {
+        "note": "",
+        "length": 75.0
+    },
+    {
+        "note": "fs5",
+        "length": 150.0
+    },
+    {
+        "note": "",
+        "length": 150.0
+    },
+    {
+        "note": "gs5",
+        "length": 150.0
+    }
+]
