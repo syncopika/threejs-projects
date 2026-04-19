@@ -9,7 +9,7 @@
 import json
 import xml.etree.ElementTree as ET
 
-file = "humpty dumpty heart - don fagerquist solo (dave pell octet).mmp"
+file = "humpty dumpty heart - don fagerquist solo (dave pell octet) - Bb.mmp"
 
 output = []
 
