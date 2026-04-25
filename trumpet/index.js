@@ -97,16 +97,21 @@ let readyToPlay = false;
 function loadInNotes(){
   document.getElementById('status').textContent = 'loading in notes...';
   const notesToLoad = [
+    'c3',
     'c4',
     'cs4',
+    'cs6',
     'd4',
     'ds4',
     'e4',
     'f4',
     'fs4',
+    'g3',
     'g4',
+    'gs3',
     'gs4',
     'a4',
+    'bb3',
     'bb4',
     'b4',
     'c5',
@@ -120,6 +125,7 @@ function loadInNotes(){
     'gs5',
     'a5',
     'b5',
+    'as3', // TODO: as3 == bb3
     'as4', // TODO: there's already bb4 so we shouldn't have to duplicate it and rename it to as4 - just have enharmonic mapping?
     'as5', // TODO: I already have bb5 so we should have a map for enharmonics so we don't have to load/copy more data than needed
   ];

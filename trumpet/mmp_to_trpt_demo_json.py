@@ -67,14 +67,7 @@ for el in tree.iter(tag = 'track'):
                 })
                 
             # add the note
-            note_octave_fixed = note_octave  
-            
-            # TODO: until I get more trumpet note audio samples in, adjust octave to a note sample I do have
-            if note_octave > 5:
-                note_octave_fixed = 5
-            elif note_octave < 4:
-                note_octave_fixed = 4
-            
+            note_octave_fixed = note_octave
             note_name_fixed = f"{note_name.lower().replace('#', 's')}{note_octave_fixed}"
             
             output.append({
