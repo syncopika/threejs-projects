@@ -50,9 +50,17 @@ qrCodeMesh.add(cube);
 
 scene.add(qrCodeMesh);
 
+document.getElementById('toggleWireframe').addEventListener('change', (evt) => {
+  const wireframeOn = evt.target.checked;
+  console.log(`wireframe on: ${wireframeOn}`);
+  qrCodeMesh.children.forEach(c => {
+    c.material.wireframe = wireframeOn;
+  });
+});
 
 document.getElementById('generateCode').addEventListener('click', () => {
-  const qrcodeCanvas = generateQRCode('heythere');
+  const input = document.getElementById('inputText').value;
+  const qrcodeCanvas = generateQRCode(input);
   
   // traverse the pixels of finalResultCtx to form the 3d QR code
   const w = qrcodeCanvas.width;
@@ -63,10 +71,10 @@ document.getElementById('generateCode').addEventListener('click', () => {
     qrCodeMesh.remove(child);
   }
   
-  const cubeGeometry = new THREE.BoxGeometry(1.0, 1.0, 1.0);
+  const cubeGeometry = new THREE.BoxGeometry(0.8, 0.8, 0.8);
   
-  const material = new THREE.MeshBasicMaterial({color: 0x0000ff});
-  //material.wireframe = true;
+  const selectedColor = document.getElementById('colorPicker').value;
+  const material = new THREE.MeshBasicMaterial({color: selectedColor});
   
   const cube = new THREE.Mesh(cubeGeometry, material);
   
@@ -87,6 +95,7 @@ document.getElementById('generateCode').addEventListener('click', () => {
         newCube.material = newCube.material.clone();
         newCube.material.color.set(0xffffff);
       }
+      //newCube.material.wireframe = true;
       
       //console.log(`r: ${r}, g: ${g}, b: ${b}`);
       

@@ -3145,15 +3145,6 @@ function getDataMaskPatternResult(ctx, formula, doNotTouchModules, width, height
   // turn any blue modules to white
   correctReservedAreaColor(newCanvasCtx, width, height);
   
-  const newCanvasDiv = document.createElement('div');
-  newCanvasDiv.style.padding = '2px';
-  newCanvasDiv.style.textAlign = 'center';
-  newCanvasDiv.style.border = '1px solid #ccc';
-  const text = document.createElement('p');
-  text.textContent = `mask pattern ${formulaNum}`;
-  newCanvasDiv.appendChild(newCanvas);
-  newCanvasDiv.appendChild(text);
-  
   // now we have to evaluate the canvas ;_;
   
   // penalty rule #1. find groups of 5 or more same-colored modules in a row or column
@@ -3309,7 +3300,14 @@ function applyDataMaskPatternAndQuietZone(ctx, formula, width, height, doNotTouc
   newCanvas2.style.width = `${3 * newCanvas2.width}px`;
   newCanvas2.style.height = `${3 * newCanvas2.height}px`;
   newCanvas2.style.imageRendering = 'pixelated';
-  document.body.appendChild(newCanvas2);
+  
+  const newCanvasContainer = document.getElementById('generatedQRCode2d');
+  if(newCanvasContainer){
+    for(let child of newCanvasContainer.children){
+      newCanvasContainer.removeChild(child);
+    }
+    newCanvasContainer.appendChild(newCanvas2);
+  }
   
   return newCanvas2;
 }
@@ -3795,53 +3793,6 @@ function addData(width, height, data, qrVersion, ctx, doNotTouchModules, dataInd
   }
   
   console.log('done');
-}
-
-function addDataStepper(width, height, data, qrVersion, beforeAddingDataImgData, doNotTouchModules){
-  (function(){
-    // make a closure so we can have this variable stick around that will be used by the button click event functions (instead of having a global var)
-    let dataIndexCounterForStepper = 0;
-    const newCanvas = document.createElement('canvas');
-    newCanvas.style.width = '200px';
-    newCanvas.style.display = 'inline-block';
-    newCanvas.width = width;
-    newCanvas.height = height;
-    
-    const newCtx = newCanvas.getContext('2d');
-    newCtx.putImageData(beforeAddingDataImgData, 0, 0);
-    
-    newCanvas.style.border = 'solid 1px #000';
-    
-    const stepperDiv = document.createElement('div');
-    stepperDiv.id = 'stepper';
-    stepperDiv.style.border = 'solid 2px #ccc';
-    stepperDiv.style.margin = '20px auto';
-    
-    const stepForwardBtn = document.createElement('button');
-    stepForwardBtn.style.display = 'inline-block';
-    stepForwardBtn.textContent = '>>';
-    stepForwardBtn.addEventListener('click', () => {
-      newCtx.putImageData(beforeAddingDataImgData, 0, 0); // reset image
-      dataIndexCounterForStepper++;
-      if(dataIndexCounterForStepper > data.length) dataIndexCounterForStepper = 0;
-      addData(width, height, data, qrVersion, newCtx, doNotTouchModules, dataIndexCounterForStepper);
-    });
-    
-    const stepBackwardsBtn = document.createElement('button');
-    stepBackwardsBtn.style.display = 'inline-block';
-    stepBackwardsBtn.textContent = '<<';
-    stepBackwardsBtn.addEventListener('click', () => {
-      newCtx.putImageData(beforeAddingDataImgData, 0, 0); // reset image
-      dataIndexCounterForStepper--;
-      if(dataIndexCounterForStepper < 0) dataIndexCounterForStepper = data.length;
-      addData(width, height, data, qrVersion, newCtx, doNotTouchModules, dataIndexCounterForStepper);
-    });
-    
-    stepperDiv.appendChild(stepBackwardsBtn);
-    stepperDiv.appendChild(newCanvas);
-    stepperDiv.appendChild(stepForwardBtn);
-    document.body.appendChild(stepperDiv);
-  })();
 }
 
 function generateQRCode(inputStr){
