@@ -1,0 +1,45 @@
+<!doctype html>
+<html>
+  <head>
+    <title> QR code </title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r120/three.min.js" integrity="sha512-kgjZw3xjgSUDy9lTU085y+UCVPz3lhxAtdOVkcO4O2dKl2VSBcNsQ9uMg/sXIM4SoOmCiYfyFO/n1/3GSXZtSg==" crossorigin="anonymous"></script>
+    <script src="../libs/utils.js"></script>
+    <script src="../libs/GLTFLoader.js"></script>
+    <script src="../libs/TrackballControls.js"></script>
+    <script src="qrCode.js"></script>
+    
+    <style>
+      body {
+        text-align: center;
+        font-family: monospace;
+      }
+      
+      #container {
+        width: 90%;
+        height: 800px;
+        text-align: center;
+        margin: 0 auto;
+      }
+      
+      #generateCode, #generatedQRCode2d {
+        margin-top: 15px;
+      }
+    </style>
+  </head>
+
+  <body>
+    <h3> 3D QR Code </h3>
+
+    <div id='container'>
+    </div>
+    
+    <label for='inputText'>input:</label><input type='text' id='inputText' value='heythere' />
+    <input type='color' id='colorPicker' value='rgb(0,0,255)' />
+    <label for='toggleWireframe'>wireframe:</label><input type='checkbox' id='toggleWireframe' />
+    <button id='generateCode'>generate QR code</button>
+    
+    <div id='generatedQRCode2d'></div>
+  </body>
+  <script src="index.js"></script>
+</html>
