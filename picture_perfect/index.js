@@ -211,13 +211,18 @@ function update(){
 
 function keydown(evt){
   if(evt.keyCode === 32){
+    evt.preventDefault();
+    
     // spacebar
     console.log('capturing photo!');
     
-    // TODO: simulate a quick camera flash
+    // simulate a quick camera flash
+    const container = document.getElementById('container');
+    container.style.visibility = 'hidden';
     setTimeout(() => {
       // change back to normal
-    }, 500);
+      container.style.visibility = 'visible';
+    }, 300);
     
     const photo = captureImage();
     console.log(photo);
