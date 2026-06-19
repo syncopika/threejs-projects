@@ -213,6 +213,12 @@ function keydown(evt){
   if(evt.keyCode === 32){
     // spacebar
     console.log('capturing photo!');
+    
+    // TODO: simulate a quick camera flash
+    setTimeout(() => {
+      // change back to normal
+    }, 500);
+    
     const photo = captureImage();
     console.log(photo);
     
