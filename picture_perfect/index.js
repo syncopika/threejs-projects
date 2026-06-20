@@ -13,7 +13,7 @@ camera.position.set(0, 4, 10);
 // optional stuff
 //const keyboard = new THREEx.KeyboardState();
 const raycaster = new THREE.Raycaster();
-//const mouse = new THREE.Vector2();
+const mouse = new THREE.Vector2();
 //const clock = new THREE.Clock();
 
 const loadingManager = new THREE.LoadingManager();
@@ -29,7 +29,7 @@ renderer.setSize(container.clientWidth, container.clientHeight);
 container.appendChild(renderer.domElement);
 
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0xeeeeee);
+scene.background = new THREE.Color(0xdddddd);
 scene.add(camera);
 
 const spotLight = new THREE.SpotLight(0xffffff);
@@ -132,12 +132,38 @@ function determineDistance(target){
 }
 
 // https://github.com/syncopika/safari_snap/blob/master/Assets/scripts/Snapshot.cs#L64
-function determineScreenPlace(){
-  // determine where the subject is placed in the screen
+// https://github.com/syncopika/safari_snap/blob/master/Assets/scripts/CameraScript.cs#L66
+function determineScreenPlace(target){
+  // determine where the subject is placed in the viewport based on their world position
+  const targetWorldPos = new THREE.Vector3();
+  target.getWorldPosition(targetWorldPos);
+  
+  // project target's world position onto camera
+  targetWorldPos.project(camera);
+  
+  // get viewport coordinates of target
+  const viewportCoords = new THREE.Vector2((targetWorldPos.x + 1) / 2, -(targetWorldPos.y + 1) / 2);
+  
+  let result = '';
+  
+  if(viewportCoords.x >= 0.4 && viewportCoords <= 0.6 && viewportCoords.y <= 0.65 && viewportCoords.y >= 0.45){
+    result = 'centered';
+  }else if(viewportCoords.x >= 0.4 && viewportCoords.x <= 0.6){
+    result = 'not centered';
+  }else if(viewportCoords.x < 0.4){
+    result = 'left';
+  }else{
+    result = 'right';
+  }
+  
+  result += `(x: ${viewportCoords.x}, y: ${viewportCoords.y})`;
+  
+  return result;
 }
 
 function saveScreenshot(){
   // save renderer frame as image
+  return renderer.domElement.toDataURL("image/png");
 }
 
 function updateSnapshotCountUI(remaining){
@@ -145,7 +171,7 @@ function updateSnapshotCountUI(remaining){
 }
 
 // https://github.com/syncopika/safari_snap/blob/master/Assets/scripts/CameraScript.cs#L40
-function captureImage(){
+function captureImage(evt){
   if(remainingSnapshots === 0){
     console.log('out of snapshots');
     return;
@@ -154,8 +180,7 @@ function captureImage(){
     updateSnapshotCountUI(remainingSnapshots);
   }
   
-  // TODO: capture image, e.g.
-  // the state of the subject at the moment of photograph
+  // capture the state of the subject at the moment of photograph
   // forward vector, distance, etc.
   // also actually capture image pixels and store it somewhere
   const snapshot = {
@@ -167,8 +192,14 @@ function captureImage(){
     screenshot: '',
   };
   
-  // TODO: raycast should come from camera position TO mouse cursor position on pointerdown
-  raycaster.set(camera.position, new THREE.Vector3(0, 0, -1));
+  // TODO: raycast should come from mouse cursor position on pointerdown
+  //raycaster.set(camera.position, new THREE.Vector3(0, 0, -1));
+  const rect = renderer.domElement.getBoundingClientRect();
+  mouse.x = ((evt.clientX - rect.left) / rect.width) * 2 - 1;
+  mouse.y = -((evt.clientY - rect.top) / rect.height) * 2 + 1;
+  console.log(mouse);
+  raycaster.setFromCamera(mouse, camera);
+  
   const intersections = raycaster.intersectObjects(scene.children, true);
   const targets = intersections.filter(i => i.object.type === 'Mesh');
   
@@ -185,11 +216,17 @@ function captureImage(){
   snapshot.targetName = targetName;
   
   // get distance of target
-  // TODO: need to take into account camera field-of-view
   snapshot.distanceAway = determineDistance(hit);
   
   // get orientation of target
   snapshot.orientation = determineOrientation(hit);
+  
+  // get viewport placement
+  snapshot.screenPlacement = determineScreenPlace(hit);
+  
+  // capture image from renderer
+  const imgData = saveScreenshot();
+  snapshot.screenshot = imgData;
   
   return snapshot;
 }
@@ -212,9 +249,20 @@ function updateSnapshotResults(snapshot){
   const orientation = document.createElement('p');
   orientation.textContent = `orientation: ${snapshot.orientation}`;
   
+  const screenPlacement = document.createElement('p');
+  screenPlacement.textContent = `screen placement: ${snapshot.screenPlacement}`;
+  
+  const snapshotImage = document.createElement('img');
+  snapshotImage.style.border = '1px solid #000';
+  snapshotImage.style.width = '200px';
+  snapshotImage.style.height = '150px';
+  snapshotImage.src = snapshot.screenshot;
+  
   newResult.appendChild(name);
   newResult.appendChild(dist);
   newResult.appendChild(orientation);
+  newResult.appendChild(screenPlacement);
+  newResult.appendChild(snapshotImage);
   
   container.appendChild(newResult);
 }
@@ -227,34 +275,60 @@ function update(){
 
 function keydown(evt){
   if(evt.keyCode === 32){
-    evt.preventDefault();
-    
     // spacebar
-    console.log('capturing photo!');
-    
-    // simulate a quick camera flash
-    const container = document.getElementById('container');
-    container.style.visibility = 'hidden';
-    setTimeout(() => {
-      // change back to normal
-      container.style.visibility = 'visible';
-    }, 300);
-    
-    const photo = captureImage();
-    console.log(photo);
-    
-    // TODO: analyze snapshot and show results in UI
-    
-    if(photo) updateSnapshotResults(photo);
   }else if(evt.keyCode === 49){
     //1 key
   }else if(evt.keyCode === 50){
     //2 key
   }else if(evt.keyCode === 82){
     // r key
+  }else if(evt.keyCode === 65){
+    // a key
+    camera.rotateY(0.1);
+  }else if(evt.keyCode === 68){
+    // d key
+    camera.rotateY(-0.1);
   }
 }
 document.addEventListener('keydown', keydown);
+
+renderer.domElement.addEventListener('pointerdown', (evt) => {
+  console.log('capturing photo!');
+  
+  // simulate a quick camera flash
+  const container = document.getElementById('container');
+  container.style.visibility = 'hidden';
+  setTimeout(() => {
+    // change back to normal
+    container.style.visibility = 'visible';
+  }, 300);
+  
+  const photo = captureImage(evt);
+  console.log(photo);
+  
+  if(photo) updateSnapshotResults(photo);
+});
+
+renderer.domElement.addEventListener('pointermove', (evt) => {
+  const mouseMoveX = -(evt.clientX / renderer.domElement.clientWidth) * 2 + 1;
+  const mouseMoveY = -(evt.clientY / renderer.domElement.clientHeight) * 2 + 1;
+
+  let xDeg = mouseMoveX * 180 / Math.PI;
+  let yDeg = mouseMoveY * 180 / Math.PI;
+  
+  //console.log(`xDeg: ${xDeg}, yDeg: ${yDeg}`);
+  
+  if(yDeg < 3 && yDeg > -3){
+    // clamp
+    // TODO: this rotation doesn't seem quite right when the camera is rotated about the Y-axis
+    camera.rotation.x = yDeg / 8;
+  }
+  
+  if(xDeg < 5 && xDeg > -5){
+    // clamp
+    camera.rotation.y = xDeg / 8;
+  }
+});
 
 function scrollWheel(evt){
   evt.preventDefault();
@@ -271,7 +345,6 @@ function scrollWheel(evt){
 document.addEventListener('wheel', scrollWheel, {passive:false});
 
 function animate(){
-  //controls.update(); // update trackball control
   requestAnimationFrame(animate);
   renderer.render(scene, camera);
   update();
