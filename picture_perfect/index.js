@@ -146,10 +146,10 @@ function determineScreenPlace(target){
   
   let result = '';
   
-  if(viewportCoords.x >= 0.4 && viewportCoords <= 0.6 && viewportCoords.y <= 0.65 && viewportCoords.y >= 0.45){
+  if(viewportCoords.x >= 0.4 && viewportCoords.x <= 0.6 && Math.abs(viewportCoords.y) <= 0.65 && Math.abs(viewportCoords.y) >= 0.45){
     result = 'centered';
   }else if(viewportCoords.x >= 0.4 && viewportCoords.x <= 0.6){
-    result = 'not centered';
+    result = 'almost centered';
   }else if(viewportCoords.x < 0.4){
     result = 'left';
   }else{
@@ -192,8 +192,7 @@ function captureImage(evt){
     screenshot: '',
   };
   
-  // TODO: raycast should come from mouse cursor position on pointerdown
-  //raycaster.set(camera.position, new THREE.Vector3(0, 0, -1));
+  // raycast should come from mouse cursor position on pointerdown
   const rect = renderer.domElement.getBoundingClientRect();
   mouse.x = ((evt.clientX - rect.left) / rect.width) * 2 - 1;
   mouse.y = -((evt.clientY - rect.top) / rect.height) * 2 + 1;
@@ -232,6 +231,7 @@ function captureImage(evt){
 }
 
 function analyzeSnapshot(){
+  // TODO: allocate points or something based on snapshot properties
 }
 
 function updateSnapshotResults(snapshot){
@@ -310,8 +310,9 @@ renderer.domElement.addEventListener('pointerdown', (evt) => {
 });
 
 renderer.domElement.addEventListener('pointermove', (evt) => {
-  const mouseMoveX = -(evt.clientX / renderer.domElement.clientWidth) * 2 + 1;
-  const mouseMoveY = -(evt.clientY / renderer.domElement.clientHeight) * 2 + 1;
+  const rect = renderer.domElement.getBoundingClientRect();
+  const mouseMoveX = -(((evt.clientX - rect.left) / rect.width) * 2 - 1); // make this negative so that moving the mouse to the left rotates the camera to the left also
+  const mouseMoveY = -((evt.clientY - rect.top) / rect.height) * 2 + 1;
 
   let xDeg = mouseMoveX * 180 / Math.PI;
   let yDeg = mouseMoveY * 180 / Math.PI;
@@ -320,7 +321,7 @@ renderer.domElement.addEventListener('pointermove', (evt) => {
   
   if(yDeg < 3 && yDeg > -3){
     // clamp
-    // TODO: this rotation doesn't seem quite right when the camera is rotated about the Y-axis
+    // TODO: this rotation doesn't seem quite right when the camera is rotated about the Y-axis?
     camera.rotation.x = yDeg / 8;
   }
   
