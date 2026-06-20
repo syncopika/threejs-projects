@@ -1,0 +1,45 @@
+<!doctype html>
+<html>
+  <head>
+    <title> picture_perfect </title>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r120/three.min.js" integrity="sha512-kgjZw3xjgSUDy9lTU085y+UCVPz3lhxAtdOVkcO4O2dKl2VSBcNsQ9uMg/sXIM4SoOmCiYfyFO/n1/3GSXZtSg==" crossorigin="anonymous"></script>
+    <script src="../libs/utils.js"></script>
+    <script src="../libs/GLTFLoader.js"></script>
+    <script src="../libs/threex.keyboardstate.js"></script>
+
+    <style>
+      body {
+        text-align: center;
+        font-family: monospace;
+      }
+      
+      #container {
+        width: 1200px;
+        height: 800px;
+        text-align: center;
+        margin: 0 auto;
+      }
+      
+      #snapshotCounter {
+        font-weight: bold;
+      }
+    </style>
+  </head>
+
+  <body>
+    <h3> picture_perfect (WIP) </h3>
+    <p> use your mouse to move the camera around and your scroll wheel to zoom in/out. use a and d keys to rotate the camera about the Y axis. click to take a snaphot! the green line sticking out of the sphere represents the forward direction of the sphere. </p>
+
+    <div id='container'>
+    </div>
+    
+    <p id='snapshotCounter'></p>
+    
+    <div id='snapshotResults'>
+    </div>
+  </body>
+
+  <script type="module" src="index.js">
+  </script>
+</html>
