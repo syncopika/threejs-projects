@@ -10,4 +10,3 @@ In this demo, I try to cover the following things:
 This is basically just an implementation of some of the important bits that are necessary for the gameplay in safari_snap (and probably other similar photography games?).    
 I highly recommend reading the writeup I wrote for it! :D    
     
-![show a gif or screenshot here!]()    

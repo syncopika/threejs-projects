@@ -21,7 +21,8 @@ setupLoadingManager(loadingManager);
 
 const loader = new THREE.GLTFLoader(loadingManager);
 
-const renderer = new THREE.WebGLRenderer({antialias: true});
+// preserveDrawingBuffer needs to be true to be able to capture a frame of the renderer as image data
+const renderer = new THREE.WebGLRenderer({antialias: true, preserveDrawingBuffer: true});
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 renderer.setSize(container.clientWidth, container.clientHeight);    
@@ -102,23 +103,37 @@ function getForwardVector(mesh){
 
 // https://github.com/syncopika/safari_snap/blob/master/Assets/scripts/Snapshot.cs#L46
 function determineOrientation(target){
-  // for the purposes of this demo, the camera is always directed along the vector
-  // (0, 0, -1) - negative z-axis/screen
-  // TODO: we just need to compare the subject (sphere) forward vector with (0, 0, -1) via dot product
-  const currTargetForward = getForwardVector(target);
-  const cameraForward = new THREE.Vector3(0, 0, -1);
+  // we're interested in the orientation of the target (e.g. direction it's facing) relative to the camera direction
+  // to do that we can compare the subject's (sphere) forward vector with the direction of the camera via dot product
+  const currTargetForward = getForwardVector(target); 
+  const cameraForward = getForwardVector(camera);
   const dotProduct = cameraForward.dot(currTargetForward);
-  return dotProduct;  
+  
+  let orientation = '';
+  if(dotProduct > 0.8){
+    orientation = 'target is looking away';
+  }else if(dotProduct <= 0.8 && dotProduct >= 0){
+    orientation = 'target is sort of looking away';
+  }else{
+    orientation = 'target is looking towards camera';
+  }
+  
+  return `${dotProduct}, ${orientation}`;
 }
 
+// https://github.com/syncopika/safari_snap/blob/master/Assets/scripts/CameraScript.cs#L56
 function determineDistance(target){
-  const dist = camera.position.distanceTo(target.position);
+  // need to take into account camera field-of-view
+  // e.g. if we're zoomed in a lot, the distance of the target should appear to be small (because it looks like the target is close to the camera)
+  // we're trying to get the perceived distance from the camera (not actual distance).
+  let dist = camera.position.distanceTo(target.position);
+  dist *= (camera.fov / fov);
   return dist;
 }
 
+// https://github.com/syncopika/safari_snap/blob/master/Assets/scripts/Snapshot.cs#L64
 function determineScreenPlace(){
-  // TODO: determine where the subject is placed in the screen
-  // https://github.com/syncopika/safari_snap/blob/master/Assets/scripts/Snapshot.cs#L64
+  // determine where the subject is placed in the screen
 }
 
 function saveScreenshot(){
@@ -152,6 +167,7 @@ function captureImage(){
     screenshot: '',
   };
   
+  // TODO: raycast should come from camera position TO mouse cursor position on pointerdown
   raycaster.set(camera.position, new THREE.Vector3(0, 0, -1));
   const intersections = raycaster.intersectObjects(scene.children, true);
   const targets = intersections.filter(i => i.object.type === 'Mesh');
@@ -240,6 +256,19 @@ function keydown(evt){
 }
 document.addEventListener('keydown', keydown);
 
+function scrollWheel(evt){
+  evt.preventDefault();
+  // control camera zoom
+  if(evt.deltaY < 0){
+    // zoom in
+    camera.fov--;
+  }else{
+    // zoom out
+    camera.fov++;
+  }
+  camera.updateProjectionMatrix();
+}
+document.addEventListener('wheel', scrollWheel, {passive:false});
 
 function animate(){
   //controls.update(); // update trackball control
