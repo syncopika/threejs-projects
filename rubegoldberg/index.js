@@ -68,9 +68,7 @@ const sphereShape = new CANNON.Sphere(0.6);
 const sphereMat = new CANNON.Material();
 const sphereBody = new CANNON.Body({material: sphereMat, mass: 1.5});
 sphereBody.addShape(sphereShape);
-sphereBody.position.x = sphereMesh.position.x;
-sphereBody.position.y = sphereMesh.position.y;
-sphereBody.position.z = sphereMesh.position.z;
+sphereBody.position.copy(sphereMesh.position);
 world.addBody(sphereBody);
 
 // make the sphere bounce a bit. smaller restitution = less bounce
@@ -94,9 +92,7 @@ function createDomino(xPos, yPos, zPos){
   const dominoCannonShape = new CANNON.Box(new CANNON.Vec3(0.7, 1.2, 0.2));
   const dominoCannonMat = new CANNON.Material();
   const dominoCannonBody = new CANNON.Body({material: dominoCannonMat, mass: 0.1});
-  dominoCannonBody.position.x = dominoMesh.position.x;
-  dominoCannonBody.position.y = dominoMesh.position.y;
-  dominoCannonBody.position.z = dominoMesh.position.z;
+  dominoCannonBody.position.copy(dominoMesh.position);
   dominoCannonBody.addShape(dominoCannonShape);
   world.addBody(dominoCannonBody);
   
@@ -121,29 +117,26 @@ for(let i = 0; i < numDominoes; i++){
 // seesaw-type thing
 const cylinderGeo = new THREE.CylinderGeometry(0.3, 0.3, 3, 32);
 const cylinderMat = new THREE.MeshBasicMaterial({color: 0xeeeeee});
-const cylinder = new THREE.Mesh(cylinderGeo, cylinderMat);
-cylinder.rotateZ(Math.PI / 2);
-cylinder.position.set(0, 2.1, -4);
-scene.add(cylinder);
+const cylinderMesh = new THREE.Mesh(cylinderGeo, cylinderMat);
+cylinderMesh.position.set(0, 2.5, -4);
+cylinderMesh.rotateZ(Math.PI / 2);
+scene.add(cylinderMesh);
 
 const cylinderCannonShape = new CANNON.Cylinder(0.3, 0.3, 3, 32);
-const cylinderCannonMat = new CANNON.Material();
-const cylinderCannonBody = new CANNON.Body({material: cylinderCannonMat, mass: 0.1});
-cylinderCannonBody.position.copy(cylinder.position);
-cylinderCannonBody.quaternion.copy(cylinder.quaternion);
-/*
-cylinderCannonBody.position.x = cylinder.position.x;
-cylinderCannonBody.position.y = cylinder.position.y;
-cylinderCannonBody.position.z = cylinder.position.z;
-*/
 
-/*
-cylinderCannonBody.quaternion.set(
-  cylinder.quaternion.x,
-  cylinder.quaternion.y,
-  cylinder.quaternion.z,
-  cylinder.quaternion.w,
-);*/
+// https://github.com/schteppe/cannon.js/issues/58
+// need to adjust cannon cylinder so it aligns with three.js cylinder because they're oriented differently
+const quat = new CANNON.Quaternion();
+quat.setFromAxisAngle(new CANNON.Vec3(1, 0, 0), -Math.PI / 2);
+const trans = new CANNON.Vec3(0, 0, 0);
+cylinderCannonShape.transformAllPoints(trans, quat);
+
+const cylinderCannonMat = new CANNON.Material();
+const cylinderCannonBody = new CANNON.Body({material: cylinderCannonMat, mass: 0.3});
+
+cylinderCannonBody.quaternion.copy(cylinderMesh.quaternion);
+cylinderCannonBody.position.copy(cylinderMesh.position);
+
 cylinderCannonBody.addShape(cylinderCannonShape);
 world.addBody(cylinderCannonBody);
 
@@ -162,13 +155,8 @@ function update(){
   delta = Math.min(clock.getDelta(), 0.1);
   world.step(delta);
     
-  sphereMesh.position.set(sphereBody.position.x, sphereBody.position.y, sphereBody.position.z);
-  sphereMesh.quaternion.set(
-    sphereBody.quaternion.x,
-    sphereBody.quaternion.y,
-    sphereBody.quaternion.z,
-    sphereBody.quaternion.w,
-  );
+  sphereMesh.position.copy(sphereBody.position);
+  sphereMesh.quaternion.copy(sphereBody.quaternion);
   
   dominoes.forEach(d => {
     const body = d.cannonBody;
@@ -176,7 +164,8 @@ function update(){
     d.mesh.quaternion.copy(body.quaternion);
   });
   
-  cylinder.quaternion.copy(cylinderCannonBody.quaternion);
+  cylinderMesh.position.copy(cylinderCannonBody.position);
+  cylinderMesh.quaternion.copy(cylinderCannonBody.quaternion);
 }
 
 function keydown(evt){
@@ -190,8 +179,8 @@ function keydown(evt){
     camera.setRotationFromQuaternion(camRotation);
   }else if(evt.keyCode === 50){
     //2 key
-    camera.rotateY(Math.PI/-2);
-    camera.rotateX(Math.PI/-3);
+    camera.rotateY(Math.PI / -2);
+    camera.rotateX(Math.PI / -3);
     camera.position.set(-10, 15, -8);
   }else if(evt.keyCode === 82){
     // r key
