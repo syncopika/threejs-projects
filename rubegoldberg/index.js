@@ -74,7 +74,7 @@ world.addBody(sphereBody);
 // make the sphere bounce a bit. smaller restitution = less bounce
 // https://github.com/pmndrs/cannon-es/blob/master/examples/bounce.html
 // https://github.com/schteppe/cannon.js/issues/444
-const contactMat = new CANNON.ContactMaterial(groundMat, sphereMat, {friction: 0.0,  restitution: 0.8});
+const contactMat = new CANNON.ContactMaterial(groundMat, sphereMat, {friction: 0.0,  restitution: 0.5});
 world.addContactMaterial(contactMat);
 
 // rube goldberg things
@@ -115,10 +115,12 @@ for(let i = 0; i < numDominoes; i++){
 }
 
 // seesaw-type thing
-const cylinderGeo = new THREE.CylinderGeometry(0.3, 0.3, 3, 32);
+
+// cylinder
+const cylinderGeo = new THREE.CylinderGeometry(0.1, 0.3, 3, 32);
 const cylinderMat = new THREE.MeshBasicMaterial({color: 0xeeeeee});
 const cylinderMesh = new THREE.Mesh(cylinderGeo, cylinderMat);
-cylinderMesh.position.set(0, 2.5, -4);
+cylinderMesh.position.set(0, 2.1, -4);
 cylinderMesh.rotateZ(Math.PI / 2);
 scene.add(cylinderMesh);
 
@@ -132,13 +134,51 @@ const trans = new CANNON.Vec3(0, 0, 0);
 cylinderCannonShape.transformAllPoints(trans, quat);
 
 const cylinderCannonMat = new CANNON.Material();
-const cylinderCannonBody = new CANNON.Body({material: cylinderCannonMat, mass: 0.3});
+const cylinderCannonBody = new CANNON.Body({material: cylinderCannonMat, mass: 0.6});
 
 cylinderCannonBody.quaternion.copy(cylinderMesh.quaternion);
 cylinderCannonBody.position.copy(cylinderMesh.position);
 
 cylinderCannonBody.addShape(cylinderCannonShape);
 world.addBody(cylinderCannonBody);
+
+// plank
+const plankGeo = new THREE.BoxGeometry(1.5, 0.02, 3.5);
+const plankMat = new THREE.MeshPhongMaterial({color: 0xffff00});
+const plankMesh = new THREE.Mesh(plankGeo, plankMat);
+plankMesh.castShadow = true;
+plankMesh.receiveShadow = true;
+plankMesh.position.set(0, 2.3, -5);
+plankMesh.rotateX(145 * (Math.PI / 180)); // 145 deg
+scene.add(plankMesh);
+
+const plankCannonShape = new CANNON.Box(new CANNON.Vec3(1.0, 0.02, 1.9));
+const plankCannonMat = new CANNON.Material();
+const plankCannonBody = new CANNON.Body({material: plankCannonMat, mass: 0.2});
+plankCannonBody.position.copy(plankMesh.position);
+plankCannonBody.quaternion.copy(plankMesh.quaternion);
+plankCannonBody.addShape(plankCannonShape);
+world.addBody(plankCannonBody);
+
+// cube on plank
+const cubeGeo = new THREE.BoxGeometry(1.5, 1.5, 1.5);
+const cubeMat = new THREE.MeshPhongMaterial({color: 0xff00ff});
+const cubeMesh = new THREE.Mesh(cubeGeo, cubeMat);
+cubeMesh.castShadow = true;
+cubeMesh.receiveShadow = true;
+cubeMesh.position.set(0, 3.5, -6);
+scene.add(cubeMesh);
+
+const cubeCannonShape = new CANNON.Box(new CANNON.Vec3(0.9, 0.9, 0.9));
+const cubeCannonMat = new CANNON.Material();
+const cubeCannonBody = new CANNON.Body({material: cubeCannonMat, mass: 0.03});
+cubeCannonBody.position.copy(cubeMesh.position);
+cubeCannonBody.quaternion.copy(cubeMesh.quaternion);
+cubeCannonBody.addShape(cubeCannonShape);
+world.addBody(cubeCannonBody);
+
+//const plankContactMat = new CANNON.ContactMaterial(plankCannonMat, dominoCannonMat, {friction: 0.0,  restitution: 0.5});
+//world.addContactMaterial(plankContactMat);
 
 // for basketball
 // - to simplify things, make the hoop a torus
@@ -166,13 +206,19 @@ function update(){
   
   cylinderMesh.position.copy(cylinderCannonBody.position);
   cylinderMesh.quaternion.copy(cylinderCannonBody.quaternion);
+  
+  plankMesh.position.copy(plankCannonBody.position);
+  plankMesh.quaternion.copy(plankCannonBody.quaternion);
+  
+  cubeMesh.position.copy(cubeCannonBody.position);
+  cubeMesh.quaternion.copy(cubeCannonBody.quaternion);
 }
 
 function keydown(evt){
   if(evt.keyCode === 32){
     // spacebar
     // remember that gravity is -9.8! this affects the suitable amount for the y-axis to use.
-    sphereBody.applyImpulse(new CANNON.Vec3(0, 0.8, -0.5), sphereBody.position);
+    sphereBody.applyImpulse(new CANNON.Vec3(0, 0.8, -0.5 * 3), sphereBody.position);
   }else if(evt.keyCode === 49){
     //1 key
     camera.position.set(0, 4, 10);
