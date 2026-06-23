@@ -343,7 +343,7 @@ function scrollWheel(evt){
   }
   camera.updateProjectionMatrix();
 }
-document.addEventListener('wheel', scrollWheel, {passive:false});
+renderer.domElement.addEventListener('wheel', scrollWheel, {passive:false});
 
 function animate(){
   requestAnimationFrame(animate);
