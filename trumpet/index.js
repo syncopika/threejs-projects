@@ -74,8 +74,9 @@ const valveToNoteComboMap = {
 
 function setValves(note){
   const valveCombo = noteToValveComboMap[note];
+  
   if(!valveCombo) return;
-    
+  
   const firstOpen = !valveCombo.includes('1');
   const secondOpen = !valveCombo.includes('2');
   const thirdOpen = !valveCombo.includes('3');
@@ -142,13 +143,12 @@ function loadInNotes(){
     }).then((buffer) => {
       audioContext.decodeAudioData(buffer, (decodedData) => {
         newSource.buffer = decodedData; // newSource will be a buffer source node that will be a reference node that we'll use to create the nodes for playing the notes
-        noteBufferMap[note.substring(note.indexOf('-')+1).toLowerCase()] = newSource;
+        noteBufferMap[note.substring(note.indexOf('-') + 1).toLowerCase()] = newSource;
                 
         totalNotes--;
         if(totalNotes === 0){
           document.getElementById('status').textContent = '';
           readyToPlay = true;
-                    
           //console.log(noteBufferMap);
         }
       });
@@ -171,25 +171,33 @@ function play(piece){
   // at the time a note plays but there's no start callback 
   // so use onended for now (and set valve combo for first note initially)
   // so far this seems to work well enough though :)
-  setValves(piece[0].note.substring(0, piece[0].note.length-1));
+  setValves(piece[0].note.substring(0, piece[0].note.length - 1));
     
   audioContext.resume().then(() => {
     piece.forEach((note, index) => {
       // set up buffer nodes
       const newBufNode = audioContext.createBufferSource();
+      
       if(note.note){
         if(!noteBufferMap[note.note]){
           console.error(`${note.note} does not have a corresponding sound!`);
         }
         newBufNode.buffer = noteBufferMap[note.note].buffer;
+      }else{
+        // even if we just want silence, we still should provide a buffer.
+        // otherwise the buffer node might get pruned from the audio graph.
+        newBufNode.buffer = audioContext.createBuffer(1, 1, audioContext.sampleRate);
       }
+      
       newBufNode.connect(gainNode);
             
       // schedule note (use seconds for start time)
       const start = startTime + offset;
-      const end = start + note.length/1000;
-      gainNode.gain.setTargetAtTime(1.5, start, 0.0045);
-      gainNode.gain.setTargetAtTime(0.0, (end - .0025), 0.0070);
+      const end = start + (note.length / 1000);
+
+      // start at the volume we want and fade out to prevent clicking
+      gainNode.gain.setValueAtTime(1.5, start);
+      gainNode.gain.linearRampToValueAtTime(0.0, end - .0025);
       
       newBufNode.start(start);
       newBufNode.stop(end);
@@ -198,9 +206,11 @@ function play(piece){
             
       // when setting valves, note that we don't care about octave
       if(index < piece.length - 1){
-        const nextNote = piece[index+1];
+        const nextNote = piece[index + 1];
         newBufNode.onended = () => {
-          setValves(nextNote.note.substring(0, nextNote.note.length-1));
+          if(nextNote.note){
+            setValves(nextNote.note.substring(0, nextNote.note.length - 1));
+          }
         };
       }else{
         // last note so reset all valves to open when this note is finished playing
