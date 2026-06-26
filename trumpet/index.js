@@ -197,7 +197,9 @@ function play(piece){
 
       // start at the volume we want and fade out to prevent clicking
       gainNode.gain.setValueAtTime(1.5, start);
-      gainNode.gain.linearRampToValueAtTime(0.0, end - .0025);
+      gainNode.gain.linearRampToValueAtTime(0.0, end - .001);
+      //gainNode.gain.setTargetAtTime(1.5, start, 0.01);
+      //gainNode.gain.setTargetAtTime(0.0, (end - .0025), 0.01);
       
       newBufNode.start(start);
       newBufNode.stop(end);
@@ -564,8 +566,8 @@ function keyup(evt){
       // schedule note (use seconds for start time)
       const start = audioContext.currentTime;
       const end = start + 0.5;
-      gainNode.gain.setTargetAtTime(1.5, start, 0.0045);
-      gainNode.gain.setTargetAtTime(0.0, (end - .0025), 0.0070);
+      gainNode.gain.setTargetAtTime(1.5, start, 0.01);
+      gainNode.gain.setTargetAtTime(0.0, (end - .0025), 0.01);
             
       newBufNode.start(start);
       newBufNode.stop(end);
@@ -639,6 +641,12 @@ function stopAudio(){
     }
     
     window.cancelAnimationFrame(animationFrameReqId);
+  }
+  
+  if(gainNode){
+    // https://developer.mozilla.org/en-US/docs/Web/API/AudioParam/cancelScheduledValues
+    // clear any scheduled gain changes that were made via setTargetAtTime, etc.
+    gainNode.gain.cancelScheduledValues(audioCtx.currentTime);
   }
     
   // reload since we can't restart buffer source
