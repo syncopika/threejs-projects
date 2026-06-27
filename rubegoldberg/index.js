@@ -57,9 +57,7 @@ const normalMaterial = new THREE.MeshPhongMaterial();
 const sphereMesh = new THREE.Mesh(sphereGeometry, normalMaterial);
 sphereMesh.receiveShadow = true;
 sphereMesh.castShadow = true;
-sphereMesh.position.x = 0;
-sphereMesh.position.y = 4;
-sphereMesh.position.z = 7;
+sphereMesh.position.set(0, 16, 8);
 scene.add(sphereMesh);
 
 // based on these CANNON shapes and bodies which abide by physics,
@@ -105,14 +103,50 @@ function createDomino(xPos, yPos, zPos){
   };
 }
 
+// make a platform for the dominoes
+const platGeo = new THREE.BoxGeometry(1.4, 7.3, 0.2);
+const platMat = new THREE.MeshPhongMaterial({color: 0x00ffcc});
+const platMesh = new THREE.Mesh(platGeo, platMat);
+platMesh.castShadow = true;
+platMesh.receiveShadow = true;
+platMesh.position.set(0, 5.0, 0);
+platMesh.rotateX(Math.PI / 2);
+scene.add(platMesh);
+
+const platCannonShape = new CANNON.Box(new CANNON.Vec3(1.4, 3.6, 0.2));
+const platCannonMat = new CANNON.Material();
+const platCannonBody = new CANNON.Body({material: platCannonMat, mass: 0.0});
+platCannonBody.position.copy(platMesh.position);
+platCannonBody.quaternion.copy(platMesh.quaternion);
+platCannonBody.addShape(platCannonShape);
+world.addBody(platCannonBody);
+
+
 const numDominoes = 5;
 const zSeparation = 1.6;
-let startZ = 4.5;
+let startZ = 3.2;
 for(let i = 0; i < numDominoes; i++){
-  const newDomino = createDomino(0, 1.5, startZ);
+  const newDomino = createDomino(0, 7.5, startZ);
   dominoes.push(newDomino);
   startZ -= zSeparation;
 }
+
+
+const platGeo2 = new THREE.BoxGeometry(1.4, 7.3, 0.2);
+const platMat2 = new THREE.MeshPhongMaterial({color: 0x00ffcc});
+const platMesh2 = new THREE.Mesh(platGeo2, platMat2);
+platMesh2.castShadow = true;
+platMesh2.receiveShadow = true;
+platMesh2.position.set(0, 8.5, 6.5);
+platMesh2.rotateX(Math.PI / 4);
+scene.add(platMesh2);
+const platCannonShape2 = new CANNON.Box(new CANNON.Vec3(1.4, 3.6, 0.2));
+const platCannonMat2 = new CANNON.Material();
+const platCannonBody2 = new CANNON.Body({material: platCannonMat2, mass: 0.0});
+platCannonBody2.position.copy(platMesh2.position);
+platCannonBody2.quaternion.copy(platMesh2.quaternion);
+platCannonBody2.addShape(platCannonShape2);
+world.addBody(platCannonBody2);
 
 // seesaw-type thing
 
@@ -161,15 +195,15 @@ plankCannonBody.addShape(plankCannonShape);
 world.addBody(plankCannonBody);
 
 // cube on plank
-const cubeGeo = new THREE.BoxGeometry(1.5, 1.5, 1.5);
+const cubeGeo = new THREE.BoxGeometry(1.2, 1.2, 1.2);
 const cubeMat = new THREE.MeshPhongMaterial({color: 0xff00ff});
 const cubeMesh = new THREE.Mesh(cubeGeo, cubeMat);
 cubeMesh.castShadow = true;
 cubeMesh.receiveShadow = true;
-cubeMesh.position.set(0, 3.5, -6);
+cubeMesh.position.set(0, 3.0, -6);
 scene.add(cubeMesh);
 
-const cubeCannonShape = new CANNON.Box(new CANNON.Vec3(0.9, 0.9, 0.9));
+const cubeCannonShape = new CANNON.Box(new CANNON.Vec3(0.8, 0.8, 0.8));
 const cubeCannonMat = new CANNON.Material();
 const cubeCannonBody = new CANNON.Body({material: cubeCannonMat, mass: 0.03});
 cubeCannonBody.position.copy(cubeMesh.position);
@@ -179,13 +213,6 @@ world.addBody(cubeCannonBody);
 
 //const plankContactMat = new CANNON.ContactMaterial(plankCannonMat, dominoCannonMat, {friction: 0.0,  restitution: 0.5});
 //world.addContactMaterial(plankContactMat);
-
-// for basketball
-// - to simplify things, make the hoop a torus
-// - backboard can just be a regular rectangular plane
-// - how about fabric/cloth w/ ammo for the net?
-createBasketballHoop();
-
 
 const clock = new THREE.Clock();
 let delta;
@@ -240,63 +267,7 @@ function keydown(evt){
 }
 document.addEventListener('keydown', keydown);
 
-function createBasketballHoop(){
-  // backboard
-  // https://github.com/schteppe/cannon.js/issues/403
-  const planeGeometry = new THREE.BoxGeometry(5, 3, 0.3);
-  const material = new THREE.MeshLambertMaterial({color: 0xffffff});
-  const plane = new THREE.Mesh(planeGeometry, material);
-  plane.receiveShadow = true;
-  plane.castShadow = true;
-  plane.position.x = 0;
-  plane.position.y = 4;
-  plane.position.z = -9;
-  scene.add(plane);
-    
-  // !? https://stackoverflow.com/questions/26183492/cannonjs-and-three-js-one-unit-off
-  const planeShape = new CANNON.Box(new CANNON.Vec3(2.5, 1.5, 0.15));
-  const backboardMat = new CANNON.Material();
-  const planeBody = new CANNON.Body({material: backboardMat, mass: 0});
-  // make sure the body is positioned where the mesh is.
-  planeBody.position.x = plane.position.x;
-  planeBody.position.y = plane.position.y;
-  planeBody.position.z = plane.position.z;
-  planeBody.addShape(planeShape);
-  world.addBody(planeBody);
-    
-  const contactMat = new CANNON.ContactMaterial(backboardMat, sphereMat, {friction: 0.0,  restitution: 0.5});
-  world.addContactMaterial(contactMat);
-    
-  // the hoop
-  const hoopGeometry = new THREE.TorusGeometry(0.90, 0.1, 15, 100);
-  const hoopMaterial = new THREE.MeshBasicMaterial({color: 0xffa500, wireframe: true});
-  const hoop = new THREE.Mesh(hoopGeometry, hoopMaterial);
-  hoop.receiveShadow = true;
-  hoop.castShadow = true;
-  hoop.rotateX(-Math.PI/2);
-  hoop.position.x = 0;
-  hoop.position.y = 3.6;
-  hoop.position.z = -8;
-  scene.add(hoop);
-    
-  // set up rigidbody for hoop
-  //console.log(hoop.geometry);
-  const indices = hoop.geometry.faces.map(face => [face.a, face.b, face.c]).reduce((x, acc) => acc.concat(x), []);
-  const vertices = hoop.geometry.vertices.map(vert => [vert.x, vert.y, vert.z]).reduce((x, acc) => acc.concat(x), []);
-    
-  const hoopShape = new CANNON.Trimesh(vertices, indices);
-  const hoopMat = new CANNON.Material();
-  const hoopBody = new CANNON.Body({material: hoopMat, mass: 0});
-  hoopBody.quaternion.setFromEuler(-Math.PI/2, 0, 0);
-  hoopBody.position.x = hoop.position.x;
-  hoopBody.position.y = hoop.position.y;
-  hoopBody.position.z = hoop.position.z;
-  hoopBody.addShape(hoopShape);
-  world.addBody(hoopBody);
-    
-  const hoopContactMat = new CANNON.ContactMaterial(hoopMat, sphereMat, {friction: 0.0,  restitution: 0.1});
-  world.addContactMaterial(hoopContactMat);
-    
+function createPole(){  
   // the pole
   const poleGeometry = new THREE.CylinderGeometry(0.2, 0.2, 7, 20); // radius top, radius bottom, height, radial segments
   const poleMaterial = new THREE.MeshBasicMaterial({color: 0xdddddd, wireframe: true});
