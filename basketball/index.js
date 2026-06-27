@@ -55,20 +55,16 @@ const normalMaterial = new THREE.MeshPhongMaterial();
 const sphereMesh = new THREE.Mesh(sphereGeometry, normalMaterial);
 sphereMesh.receiveShadow = true;
 sphereMesh.castShadow = true;
-sphereMesh.position.x = 0;
-sphereMesh.position.y = 4;
-sphereMesh.position.z = 7;
+sphereMesh.position.set(0, 4, 7);
 scene.add(sphereMesh);
 
 // based on these CANNON shapes and bodies which abide by physics,
 // we can move the actual three.js meshes correspondingly
-const sphereShape = new CANNON.Sphere(0.7);
+const sphereShape = new CANNON.Sphere(0.6);
 const sphereMat = new CANNON.Material();
 const sphereBody = new CANNON.Body({material: sphereMat, mass: 0.8});
 sphereBody.addShape(sphereShape);
-sphereBody.position.x = sphereMesh.position.x;
-sphereBody.position.y = sphereMesh.position.y;
-sphereBody.position.z = sphereMesh.position.z;
+sphereBody.position.copy(sphereMesh.position);
 world.addBody(sphereBody);
 
 // make the sphere bounce a bit. smaller restitution = less bounce
@@ -93,13 +89,8 @@ function update(){
   delta = Math.min(clock.getDelta(), 0.1);
   world.step(delta);
     
-  sphereMesh.position.set(sphereBody.position.x, sphereBody.position.y, sphereBody.position.z);
-  sphereMesh.quaternion.set(
-    sphereBody.quaternion.x,
-    sphereBody.quaternion.y,
-    sphereBody.quaternion.z,
-    sphereBody.quaternion.w,
-  );
+  sphereMesh.position.copy(sphereBody.position);
+  sphereMesh.quaternion.copy(sphereBody.quaternion);
 }
 
 function keydown(evt){
@@ -117,9 +108,7 @@ function keydown(evt){
     camera.rotateX(Math.PI*(3/2));
   }else if(evt.keyCode === 82){
     // r key
-    sphereBody.position.x = 0;
-    sphereBody.position.y = 4;
-    sphereBody.position.z = 7;
+    sphereBody.position.set(0, 4, 7);
     sphereBody.velocity = new CANNON.Vec3(0, 0, 0);
     camera.position.set(0, 4, 10);
     camera.setRotationFromQuaternion(camRotation);
@@ -135,19 +124,17 @@ function createBasketballHoop(){
   const plane = new THREE.Mesh(planeGeometry, material);
   plane.receiveShadow = true;
   plane.castShadow = true;
-  plane.position.x = 0;
-  plane.position.y = 4;
-  plane.position.z = -9;
+  plane.position.set(0, 4, -9);
   scene.add(plane);
     
-  // !? https://stackoverflow.com/questions/26183492/cannonjs-and-three-js-one-unit-off
+  // https://stackoverflow.com/questions/26183492/cannonjs-and-three-js-one-unit-off
+  // https://discourse.threejs.org/t/three-js-and-cannon-js-are-different-in-width-property-of-object/47813
+  // note that cannon.js boxes take half-extents
   const planeShape = new CANNON.Box(new CANNON.Vec3(2.5, 1.5, 0.15));
   const backboardMat = new CANNON.Material();
   const planeBody = new CANNON.Body({material: backboardMat, mass: 0});
   // make sure the body is positioned where the mesh is.
-  planeBody.position.x = plane.position.x;
-  planeBody.position.y = plane.position.y;
-  planeBody.position.z = plane.position.z;
+  planeBody.position.copy(plane.position);
   planeBody.addShape(planeShape);
   world.addBody(planeBody);
     
@@ -161,9 +148,7 @@ function createBasketballHoop(){
   hoop.receiveShadow = true;
   hoop.castShadow = true;
   hoop.rotateX(-Math.PI/2);
-  hoop.position.x = 0;
-  hoop.position.y = 3.6;
-  hoop.position.z = -8;
+  hoop.position.set(0, 3.6, -8);
   scene.add(hoop);
     
   // set up rigidbody for hoop
@@ -175,9 +160,7 @@ function createBasketballHoop(){
   const hoopMat = new CANNON.Material();
   const hoopBody = new CANNON.Body({material: hoopMat, mass: 0});
   hoopBody.quaternion.setFromEuler(-Math.PI/2, 0, 0);
-  hoopBody.position.x = hoop.position.x;
-  hoopBody.position.y = hoop.position.y;
-  hoopBody.position.z = hoop.position.z;
+  hoopBody.position.copy(hoop.position);
   hoopBody.addShape(hoopShape);
   world.addBody(hoopBody);
     
@@ -189,9 +172,7 @@ function createBasketballHoop(){
   const poleMaterial = new THREE.MeshBasicMaterial({color: 0xdddddd, wireframe: true});
   const pole = new THREE.Mesh(poleGeometry, poleMaterial);
   pole.receiveShadow = true;
-  pole.position.x = 0;
-  pole.position.y = 0;
-  pole.position.z = -9.2;
+  pole.position.set(0, 0, -9.2);
   scene.add(pole);
     
   const poleIndices = pole.geometry.faces.map(face => [face.a, face.b, face.c]).reduce((x, acc) => acc.concat(x), []);
@@ -199,9 +180,7 @@ function createBasketballHoop(){
   const poleShape = new CANNON.Trimesh(poleVertices, poleIndices);
   const poleMat = new CANNON.Material();
   const poleBody = new CANNON.Body({material: poleMat, mass: 0});
-  poleBody.position.x = pole.position.x;
-  poleBody.position.y = pole.position.y;
-  poleBody.position.z = pole.position.z;
+  poleBody.position.copy(pole.position);
   poleBody.addShape(poleShape);
   world.addBody(poleBody);
     
