@@ -56,7 +56,7 @@ world.addBody(planeBody);
 const dominoCannonMat = new CANNON.Material();
 const sphereMat = new CANNON.Material();
 
-const ball = createSphere(0, 16, 9);
+const ball = createSphere(0, 19, 13, 1.0);
 const sphereMesh = ball.mesh;
 const sphereBody = ball.body;
 
@@ -64,15 +64,15 @@ const sphereBody = ball.body;
 const dominoes = [];
 
 // specify contact between dominoes
-const dominoContactMat = new CANNON.ContactMaterial(dominoCannonMat, dominoCannonMat, {friction: 0.3,  restitution: 0.1});
+const dominoContactMat = new CANNON.ContactMaterial(dominoCannonMat, dominoCannonMat, {friction: 0.2,  restitution: 0.1});
 world.addContactMaterial(dominoContactMat)
 
 // specify contact mat between sphere and domino
-const dominoSphereContactMat = new CANNON.ContactMaterial(dominoCannonMat, sphereMat, {friction: 10.0,  restitution: 0.01});
+const dominoSphereContactMat = new CANNON.ContactMaterial(dominoCannonMat, sphereMat, {friction: 0.0,  restitution: 0.01});
 world.addContactMaterial(dominoSphereContactMat);
 
-function createSphere(x, y, z){
-  const sphereGeometry = new THREE.SphereGeometry(0.9, 32, 16);
+function createSphere(x, y, z, radius=0.9){
+  const sphereGeometry = new THREE.SphereGeometry(radius, 32, 16);
   const normalMaterial = new THREE.MeshPhongMaterial();
   const sphereMesh = new THREE.Mesh(sphereGeometry, normalMaterial);
   sphereMesh.receiveShadow = true;
@@ -80,7 +80,7 @@ function createSphere(x, y, z){
   sphereMesh.position.set(x, y, z);
   scene.add(sphereMesh);
 
-  const sphereShape = new CANNON.Sphere(0.9);
+  const sphereShape = new CANNON.Sphere(radius);
   const sphereBody = new CANNON.Body({material: sphereMat, mass: 1.5});
   sphereBody.addShape(sphereShape);
   sphereBody.position.copy(sphereMesh.position);
@@ -152,9 +152,9 @@ const dominoPlatform1 = createBox(dominoPlatform1MeshDim, 0x00ffcc, 0.0);
 placeAndRotateMesh(dominoPlatform1.mesh, dominoPlatform1.cannonBody, new THREE.Vector3(0, 5.0, 0), new THREE.Vector3(1, 0, 0), Math.PI / 2, scene, world);
 
 // ramp for ball to roll down
-const platform2MeshDim = new THREE.Vector3(1.4, 7.3, 0.2);
+const platform2MeshDim = new THREE.Vector3(1.4, 15, 0.2);
 const platform2 = createBox(platform2MeshDim, 0x00ffcc, 0.0);
-placeAndRotateMesh(platform2.mesh, platform2.cannonBody, new THREE.Vector3(0, 8.5, 7.2), new THREE.Vector3(1, 0, 0), Math.PI / 4, scene, world);
+placeAndRotateMesh(platform2.mesh, platform2.cannonBody, new THREE.Vector3(0, 11.5, 10.2), new THREE.Vector3(1, 0, 0), Math.PI / 4, scene, world);
 
 const numDominoes = 4;
 const zSeparation = 0.9;
@@ -165,7 +165,7 @@ for(let i = 0; i < numDominoes; i++){
   startZ -= zSeparation;
 }
 
-const ball2 = createSphere(0, 7, -1.3);
+const ball2 = createSphere(0, 7, -2.2, 0.4);
 
 
 // seesaw-type thing
@@ -174,7 +174,7 @@ const ball2 = createSphere(0, 7, -1.3);
 const cylinderGeo = new THREE.CylinderGeometry(0.1, 0.3, 3, 32);
 const cylinderMat = new THREE.MeshBasicMaterial({color: 0xeeeeee});
 const cylinderMesh = new THREE.Mesh(cylinderGeo, cylinderMat);
-cylinderMesh.position.set(0, 2.1, -7);
+cylinderMesh.position.set(0, 2.1, -6);
 cylinderMesh.rotateZ(Math.PI / 2);
 scene.add(cylinderMesh);
 
@@ -202,13 +202,13 @@ const plankMat = new THREE.MeshPhongMaterial({color: 0xffff00});
 const plankMesh = new THREE.Mesh(plankGeo, plankMat);
 plankMesh.castShadow = true;
 plankMesh.receiveShadow = true;
-plankMesh.position.set(0, 2.3, -8);
+plankMesh.position.set(0, 2.3, -7);
 plankMesh.rotateX(145 * (Math.PI / 180)); // 145 deg
 scene.add(plankMesh);
 
 const plankCannonShape = new CANNON.Box(new CANNON.Vec3(1.0, 0.02, 1.9));
 const plankCannonMat = new CANNON.Material();
-const plankCannonBody = new CANNON.Body({material: plankCannonMat, mass: 0.1});
+const plankCannonBody = new CANNON.Body({material: plankCannonMat, mass: 0.2});
 plankCannonBody.position.copy(plankMesh.position);
 plankCannonBody.quaternion.copy(plankMesh.quaternion);
 plankCannonBody.addShape(plankCannonShape);
@@ -220,12 +220,12 @@ const cubeMat = new THREE.MeshPhongMaterial({color: 0xff00ff});
 const cubeMesh = new THREE.Mesh(cubeGeo, cubeMat);
 cubeMesh.castShadow = true;
 cubeMesh.receiveShadow = true;
-cubeMesh.position.set(0, 3.0, -9);
+cubeMesh.position.set(0, 3.0, -8);
 scene.add(cubeMesh);
 
-const cubeCannonShape = new CANNON.Box(new CANNON.Vec3(0.8, 0.8, 0.8));
+const cubeCannonShape = new CANNON.Box(new CANNON.Vec3(0.6, 0.6, 0.6));
 const cubeCannonMat = new CANNON.Material();
-const cubeCannonBody = new CANNON.Body({material: cubeCannonMat, mass: 0.02});
+const cubeCannonBody = new CANNON.Body({material: cubeCannonMat, mass: 0.5});
 cubeCannonBody.position.copy(cubeMesh.position);
 cubeCannonBody.quaternion.copy(cubeMesh.quaternion);
 cubeCannonBody.addShape(cubeCannonShape);
