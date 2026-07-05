@@ -11,7 +11,7 @@ document.getElementById('showKeyboard').addEventListener('click', () => {
 
 const fov = 60;
 const camera = new THREE.PerspectiveCamera(fov, container.clientWidth / container.clientHeight, 0.01, 1000);
-camera.position.set(-38, 16, 0);
+camera.position.set(-30, 16, 0);
 camera.rotateY(-Math.PI / 2);
 camera.rotateX(-Math.PI / 8);
 const camRotation = new THREE.Quaternion();
@@ -60,6 +60,7 @@ const sphereMat = new CANNON.Material();
 const ball = createSphere(0, 32, -1, 1.0);
 const sphereMesh = ball.mesh;
 const sphereBody = ball.body;
+sphereMesh.name = 'initialBall;1';
 
 // use a variable to track objects in the path of the rube goldberg device that we're interested in having the camera focus on
 let currObjectToFocusOn = sphereMesh;
@@ -83,6 +84,7 @@ function createSphere(x, y, z, radius=0.9){
   sphereMesh.castShadow = true;
   sphereMesh.position.set(x, y, z);
   scene.add(sphereMesh);
+  sphereMesh.name = 'sphere';
 
   const sphereShape = new CANNON.Sphere(radius);
   const sphereBody = new CANNON.Body({material: sphereMat, mass: 1.5});
@@ -93,7 +95,7 @@ function createSphere(x, y, z, radius=0.9){
   return {mesh: sphereMesh, body: sphereBody};
 }
 
-function createDomino(xPos, yPos, zPos){
+function createDomino(xPos, yPos, zPos, name){
   const width = 1.0;
   const height = 2.2;
   const depth = 0.3;
@@ -105,6 +107,7 @@ function createDomino(xPos, yPos, zPos){
   dominoMesh.receiveShadow = true;
   dominoMesh.position.set(xPos, yPos, zPos);
   scene.add(dominoMesh);
+  dominoMesh.name = name;
 
   const dominoCannonShape = new CANNON.Box(new CANNON.Vec3(width / 2, height / 2, depth / 2));
   const dominoCannonMat = new CANNON.Material();
@@ -112,6 +115,7 @@ function createDomino(xPos, yPos, zPos){
   
   dominoCannonBody.addEventListener('collide', () => {
     if(currObjectToFocusOn !== dominoMesh){
+      if(currObjectToFocusOn.name.split(';')[1] < dominoMesh.name.split(';')[1]) return;
       currObjectToFocusOn = dominoMesh;
     }
   });
@@ -175,21 +179,12 @@ const numDominoes = 4;
 const zSeparation = 0.9;
 let startZ = 3.2;
 for(let i = 0; i < numDominoes; i++){
-  const newDomino = createDomino(0, 6.3, startZ);
+  const newDomino = createDomino(0, 6.3, startZ, `domino;${2+i}`);
   dominoes.push(newDomino);
   startZ -= zSeparation;
 }
 
-/*
-const ball2 = createSphere(0, 7, -2.2, 0.4);
-const sphereMesh2 = ball2.mesh;
-const sphereBody2 = ball2.body;
-sphereBody2.addEventListener('collide', () => {
-  currObjectToFocusOn = sphereMesh2;
-});
-*/
-
-// seesaw-type thing
+// seesaw-type thing on the platform
 
 // cylinder
 const cylinderGeo = new THREE.CylinderGeometry(0.3, 0.3, 3, 32);
@@ -242,8 +237,9 @@ const cubeMat = new THREE.MeshPhongMaterial({color: 0xff00ff});
 const cubeMesh = new THREE.Mesh(cubeGeo, cubeMat);
 cubeMesh.castShadow = true;
 cubeMesh.receiveShadow = true;
-cubeMesh.position.set(0, 9.2, -3);
+cubeMesh.position.set(0, 9.1, -3);
 scene.add(cubeMesh);
+cubeMesh.name = `cube;${numDominoes+2}`;
 
 const cubeCannonShape = new CANNON.Box(new CANNON.Vec3(0.6, 0.6, 0.6));
 const cubeCannonMat = new CANNON.Material();
@@ -253,21 +249,42 @@ cubeCannonBody.quaternion.copy(cubeMesh.quaternion);
 cubeCannonBody.addShape(cubeCannonShape);
 world.addBody(cubeCannonBody);
 
-cubeCannonBody.addEventListener('collide', () => {
+cubeCannonBody.addEventListener('collide', (evt) => {
+  // console.log(evt);
+  if(currObjectToFocusOn.name.split(';')[1] < cubeMesh.name.split(';')[1]) return;
   currObjectToFocusOn = cubeMesh;
 });
+
+// end seesaw thingy
+
+/*
+const ball2 = createSphere(0, 7, -2.2, 0.4);
+const sphereMesh2 = ball2.mesh;
+const sphereBody2 = ball2.body;
+sphereBody2.addEventListener('collide', () => {
+  currObjectToFocusOn = sphereMesh2;
+});
+*/
 
 const clock = new THREE.Clock();
 let delta;
 
 function update(){
-  camera.position.set(camera.position.x, currObjectToFocusOn.position.y, camera.position.z);
+  if(currObjectToFocusOn){
+    //console.log(currObjectToFocusOn.name);
+  }
+  
+  //camera.position.set(camera.position.x, currObjectToFocusOn.position.y, camera.position.z);
   camera.lookAt(currObjectToFocusOn.position);
   
   // move the stuff
-  delta = Math.min(clock.getDelta(), 0.1);
+  let clockDelta = clock.getDelta();
+  delta = Math.min(clockDelta, 0.1);
   world.step(delta);
-    
+
+  // TODO: hoping to have platform3 be kinda wobbly for fun by rotating it slightly about the x axis back and forth
+  platform3.cannonBody.quaternion.setFromAxisAngle(new CANNON.Vec3(1, 0, 0), -Math.sin(clock.getElapsedTime()));
+  
   sphereMesh.position.copy(sphereBody.position);
   sphereMesh.quaternion.copy(sphereBody.quaternion);
   
@@ -286,6 +303,9 @@ function update(){
   cubeMesh.position.copy(cubeCannonBody.position);
   cubeMesh.quaternion.copy(cubeCannonBody.quaternion);
   
+  platform3.mesh.position.copy(platform3.cannonBody.position);
+  platform3.mesh.quaternion.copy(platform3.cannonBody.quaternion);
+  
   //sphereMesh2.position.copy(sphereBody2.position);
   //sphereMesh2.quaternion.copy(sphereBody2.quaternion);
 }
@@ -296,16 +316,7 @@ function keydown(evt){
     // remember that gravity is -9.8! this affects the suitable amount for the y-axis to use.
     sphereBody.applyImpulse(new CANNON.Vec3(0, 0.8, -0.5 * 3), sphereBody.position);
   }
-  /*else if(evt.keyCode === 49){
-    //1 key
-    camera.position.set(0, 4, 10);
-    camera.setRotationFromQuaternion(camRotation);
-  }else if(evt.keyCode === 50){
-    //2 key
-    camera.rotateY(Math.PI / -2);
-    camera.rotateX(Math.PI / -3);
-    camera.position.set(-10, 15, -8);
-  }else if(evt.keyCode === 82){
+  /*else if(evt.keyCode === 82){
     // r key
     sphereBody.position.x = 0;
     sphereBody.position.y = 4;
