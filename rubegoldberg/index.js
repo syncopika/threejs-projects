@@ -39,8 +39,8 @@ world.gravity.set(0, -9.82, 0);
 
 const cannonDebugRenderer = new THREE.CannonDebugRenderer(scene, world);
 
-const planeGeometry = new THREE.PlaneGeometry(25, 25);
-const material = new THREE.MeshLambertMaterial({color: 0x055c9d});
+const planeGeometry = new THREE.PlaneGeometry(60, 60);
+const material = new THREE.MeshLambertMaterial({color: 0x088c9d});
 const plane = new THREE.Mesh(planeGeometry, material);
 plane.rotateX(-Math.PI / 2);
 plane.receiveShadow = true;
@@ -57,13 +57,14 @@ world.addBody(planeBody);
 const dominoCannonMat = new CANNON.Material();
 const sphereMat = new CANNON.Material();
 
-const ball = createSphere(0, 32, -1, 1.0);
+const ball = createSphere(0, 36, -1, 1);
 const sphereMesh = ball.mesh;
 const sphereBody = ball.body;
-sphereMesh.name = 'initialBall;1';
+sphereBody.name = 'initialBall;1';
 
-// use a variable to track objects in the path of the rube goldberg device that we're interested in having the camera focus on
-let currObjectToFocusOn = sphereMesh;
+// use a variable to track objects in the path of the rube goldberg device that we're interested in having the camera focus on.
+// use the cannon body of the mesh for tracking
+let currObjectToFocusOn = sphereBody;
 
 // rube goldberg things
 const dominoes = [];
@@ -107,16 +108,18 @@ function createDomino(xPos, yPos, zPos, name){
   dominoMesh.receiveShadow = true;
   dominoMesh.position.set(xPos, yPos, zPos);
   scene.add(dominoMesh);
-  dominoMesh.name = name;
 
   const dominoCannonShape = new CANNON.Box(new CANNON.Vec3(width / 2, height / 2, depth / 2));
   const dominoCannonMat = new CANNON.Material();
   const dominoCannonBody = new CANNON.Body({material: dominoCannonMat, mass: 0.2});
   
-  dominoCannonBody.addEventListener('collide', () => {
-    if(currObjectToFocusOn !== dominoMesh){
-      if(currObjectToFocusOn.name.split(';')[1] < dominoMesh.name.split(';')[1]) return;
-      currObjectToFocusOn = dominoMesh;
+  dominoCannonBody.name = name;
+  
+  dominoCannonBody.addEventListener('collide', (evt) => {
+    if(evt.body.name){
+      if(parseInt(evt.body.name.split(';')[1]) === parseInt(dominoCannonBody.name.split(';')[1]) - 1){
+        currObjectToFocusOn = dominoCannonBody;
+      }
     }
   });
   
@@ -184,6 +187,28 @@ for(let i = 0; i < numDominoes; i++){
   startZ -= zSeparation;
 }
 
+// add torus to catch ball
+const torusGeometry = new THREE.TorusGeometry(0.90, 0.1, 25, 100);
+const torusMaterial = new THREE.MeshBasicMaterial({color: 0xffa500, wireframe: true});
+const torus = new THREE.Mesh(torusGeometry, torusMaterial);
+torus.receiveShadow = true;
+torus.castShadow = true;
+torus.rotateX(-Math.PI / 2);
+torus.position.set(0, 1.0, 6);
+scene.add(torus);
+  
+// set up rigidbody for torus
+const indices = torus.geometry.faces.map(face => [face.a, face.b, face.c]).reduce((x, acc) => acc.concat(x), []);
+const vertices = torus.geometry.vertices.map(vert => [vert.x, vert.y, vert.z]).reduce((x, acc) => acc.concat(x), []);
+  
+const torusShape = new CANNON.Trimesh(vertices, indices);
+const torusMat = new CANNON.Material();
+const torusBody = new CANNON.Body({material: torusMat, mass: 0});
+torusBody.quaternion.setFromEuler(-Math.PI / 2, 0, 0);
+torusBody.position.copy(torus.position);
+torusBody.addShape(torusShape);
+world.addBody(torusBody);
+
 // seesaw-type thing on the platform
 
 // cylinder
@@ -239,7 +264,6 @@ cubeMesh.castShadow = true;
 cubeMesh.receiveShadow = true;
 cubeMesh.position.set(0, 9.1, -3);
 scene.add(cubeMesh);
-cubeMesh.name = `cube;${numDominoes+2}`;
 
 const cubeCannonShape = new CANNON.Box(new CANNON.Vec3(0.6, 0.6, 0.6));
 const cubeCannonMat = new CANNON.Material();
@@ -249,10 +273,15 @@ cubeCannonBody.quaternion.copy(cubeMesh.quaternion);
 cubeCannonBody.addShape(cubeCannonShape);
 world.addBody(cubeCannonBody);
 
+cubeCannonBody.name = `cube;${numDominoes+2}`;
+
 cubeCannonBody.addEventListener('collide', (evt) => {
-  // console.log(evt);
-  if(currObjectToFocusOn.name.split(';')[1] < cubeMesh.name.split(';')[1]) return;
-  currObjectToFocusOn = cubeMesh;
+  //console.log(evt.body);
+  // this is kinda weird but since the last domino to fall never touches the cube we're interested in following with the camera,
+  // we have to detect when the last domino was hit via it's sequence id (when the last domino is hit, it should be currObjectToFocusOn).
+  if(parseInt(currObjectToFocusOn.name.split(';')[1]) === parseInt(cubeCannonBody.name.split(';')[1]) - 1){
+    currObjectToFocusOn = cubeCannonBody;
+  }
 });
 
 // end seesaw thingy
@@ -275,7 +304,7 @@ function update(){
   }
   
   //camera.position.set(camera.position.x, currObjectToFocusOn.position.y, camera.position.z);
-  camera.lookAt(currObjectToFocusOn.position);
+  camera.lookAt(new THREE.Vector3(currObjectToFocusOn.position.x, currObjectToFocusOn.position.y, currObjectToFocusOn.position.z));
   
   // move the stuff
   let clockDelta = clock.getDelta();
@@ -283,7 +312,7 @@ function update(){
   world.step(delta);
 
   // TODO: hoping to have platform3 be kinda wobbly for fun by rotating it slightly about the x axis back and forth
-  platform3.cannonBody.quaternion.setFromAxisAngle(new CANNON.Vec3(1, 0, 0), -Math.sin(clock.getElapsedTime()));
+  //platform3.cannonBody.quaternion.setFromAxisAngle(new CANNON.Vec3(1, 0, 0), -Math.sin(clock.getElapsedTime()));
   
   sphereMesh.position.copy(sphereBody.position);
   sphereMesh.quaternion.copy(sphereBody.quaternion);
