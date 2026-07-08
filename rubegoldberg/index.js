@@ -9,9 +9,14 @@ document.getElementById('showKeyboard').addEventListener('click', () => {
   new JSKeyboard(document.getElementById('mobileKeyboard'));
 });
 
+const loadingManager = new THREE.LoadingManager();
+setupLoadingManager(loadingManager);
+
+const loader = new THREE.GLTFLoader(loadingManager);
+
 const fov = 60;
 const camera = new THREE.PerspectiveCamera(fov, container.clientWidth / container.clientHeight, 0.01, 1000);
-camera.position.set(-30, 16, 0);
+camera.position.set(-20, 16, 0);
 camera.rotateY(-Math.PI / 2);
 camera.rotateX(-Math.PI / 8);
 const camRotation = new THREE.Quaternion();
@@ -40,7 +45,7 @@ world.gravity.set(0, -9.82, 0);
 const cannonDebugRenderer = new THREE.CannonDebugRenderer(scene, world);
 
 const planeGeometry = new THREE.PlaneGeometry(60, 60);
-const material = new THREE.MeshLambertMaterial({color: 0x088c9d});
+const material = new THREE.MeshLambertMaterial({color: 0x088ccd});
 const plane = new THREE.Mesh(planeGeometry, material);
 plane.rotateX(-Math.PI / 2);
 plane.receiveShadow = true;
@@ -57,7 +62,7 @@ world.addBody(planeBody);
 const dominoCannonMat = new CANNON.Material();
 const sphereMat = new CANNON.Material();
 
-const ball = createSphere(0, 36, -1, 1);
+const ball = createSphere(0, 36, 1, 1);
 const sphereMesh = ball.mesh;
 const sphereBody = ball.body;
 sphereBody.name = 'initialBall;1';
@@ -66,7 +71,7 @@ sphereBody.name = 'initialBall;1';
 // use the cannon body of the mesh for tracking
 let currObjectToFocusOn = sphereBody;
 
-// rube goldberg things
+// "rube goldberg" things
 const dominoes = [];
 
 // specify contact between dominoes
@@ -76,6 +81,48 @@ world.addContactMaterial(dominoContactMat)
 // specify contact mat between sphere and domino
 const dominoSphereContactMat = new CANNON.ContactMaterial(dominoCannonMat, sphereMat, {friction: 0.0,  restitution: 0.01});
 world.addContactMaterial(dominoSphereContactMat);
+
+let lightbulb = null;
+
+const pointLight = new THREE.PointLight(0xffffff, 5, 10, 1.0);
+
+function getModel(modelFilePath){
+  return new Promise(() => {
+    loader.load(
+      modelFilePath,
+      async function(gltf){
+        scene.add(gltf.scene);
+        gltf.scene.translateZ(-10);
+        gltf.scene.translateY(1);
+        
+        console.log(gltf.scene);
+        gltf.scene.children.forEach(c => c.castShadow = true);
+        
+        const bulbMaterial = new THREE.MeshStandardMaterial({
+          color: 0xffffff,
+          emissive: 0xffe599,
+          emissiveIntensity: 1.5,
+        });
+        
+        const bulb = gltf.scene.children[3];
+        bulb.material = bulbMaterial;
+                
+        //pointLight.position.copy(gltf.scene.position);
+        bulb.add(pointLight);
+        pointLight.translateY(3);
+      },
+      // called while loading is progressing
+      function(xhr){
+        console.log((xhr.loaded / xhr.total * 100) + '% loaded');
+      },
+      // called when loading has errors
+      function(error){
+        console.log('An error happened');
+        console.log(error);
+      }
+    );
+  });
+}
 
 function createSphere(x, y, z, radius=0.9){
   const sphereGeometry = new THREE.SphereGeometry(radius, 32, 16);
@@ -176,7 +223,7 @@ placeAndRotateMesh(platform2.mesh, platform2.cannonBody, new THREE.Vector3(0, 11
 
 const platform3MeshDim = new THREE.Vector3(1.4, 12, 0.2);
 const platform3 = createBox(platform3MeshDim, 0xccffcc, 0.0);
-placeAndRotateMesh(platform3.mesh, platform3.cannonBody, new THREE.Vector3(0, 20, 3), new THREE.Vector3(1, 0, 0), -Math.PI / 3.5, scene, world);
+placeAndRotateMesh(platform3.mesh, platform3.cannonBody, new THREE.Vector3(0, 20, 3), new THREE.Vector3(1, 0, 0), -Math.PI / 2.5, scene, world);
 
 const numDominoes = 4;
 const zSeparation = 0.9;
@@ -196,11 +243,8 @@ torus.castShadow = true;
 torus.rotateX(-Math.PI / 2);
 torus.position.set(0, 1.0, 6);
 scene.add(torus);
-  
-// set up rigidbody for torus
 const indices = torus.geometry.faces.map(face => [face.a, face.b, face.c]).reduce((x, acc) => acc.concat(x), []);
 const vertices = torus.geometry.vertices.map(vert => [vert.x, vert.y, vert.z]).reduce((x, acc) => acc.concat(x), []);
-  
 const torusShape = new CANNON.Trimesh(vertices, indices);
 const torusMat = new CANNON.Material();
 const torusBody = new CANNON.Body({material: torusMat, mass: 0});
@@ -208,9 +252,34 @@ torusBody.quaternion.setFromEuler(-Math.PI / 2, 0, 0);
 torusBody.position.copy(torus.position);
 torusBody.addShape(torusShape);
 world.addBody(torusBody);
+torusBody.addEventListener('collide', () => {
+  torusMaterial.color.set(0x00ff00);
+});
+
+// add another torus to catch the cube that ideally should fall off the platform
+// TODO: since trimesh-box collisions aren't suported in cannon.js, let's create a box to catch the cube instead of a trimesh
+const torusGeometry2 = new THREE.TorusGeometry(1.0, 0.1, 25, 100);
+const torusMaterial2 = new THREE.MeshBasicMaterial({color: 0xffa500, wireframe: true});
+const torus2 = new THREE.Mesh(torusGeometry2, torusMaterial2);
+torus2.receiveShadow = true;
+torus2.castShadow = true;
+torus2.rotateX(-Math.PI / 2);
+torus2.position.set(0, 1.0, -5.5);
+scene.add(torus2);
+const indices2 = torus2.geometry.faces.map(face => [face.a, face.b, face.c]).reduce((x, acc) => acc.concat(x), []);
+const vertices2 = torus2.geometry.vertices.map(vert => [vert.x, vert.y, vert.z]).reduce((x, acc) => acc.concat(x), []);
+const torusShape2 = new CANNON.Trimesh(vertices2, indices2);
+const torusMat2 = new CANNON.Material();
+const torusBody2 = new CANNON.Body({material: torusMat2, mass: 0});
+torusBody2.quaternion.setFromEuler(-Math.PI / 2, 0, 0);
+torusBody2.position.copy(torus2.position);
+torusBody2.addShape(torusShape2);
+world.addBody(torusBody2);
+torusBody2.addEventListener('collide', () => {
+  torusMaterial2.color.set(0x00ff00);
+});
 
 // seesaw-type thing on the platform
-
 // cylinder
 const cylinderGeo = new THREE.CylinderGeometry(0.3, 0.3, 3, 32);
 const cylinderMat = new THREE.MeshBasicMaterial({color: 0xeeeeee});
@@ -265,6 +334,7 @@ cubeMesh.receiveShadow = true;
 cubeMesh.position.set(0, 9.1, -3);
 scene.add(cubeMesh);
 
+// note that cannon.js doesn't handle trimesh(e.g. torus)-box collisions well
 const cubeCannonShape = new CANNON.Box(new CANNON.Vec3(0.6, 0.6, 0.6));
 const cubeCannonMat = new CANNON.Material();
 const cubeCannonBody = new CANNON.Body({material: cubeCannonMat, mass: 0.1});
@@ -311,8 +381,8 @@ function update(){
   delta = Math.min(clockDelta, 0.1);
   world.step(delta);
 
-  // TODO: hoping to have platform3 be kinda wobbly for fun by rotating it slightly about the x axis back and forth
-  //platform3.cannonBody.quaternion.setFromAxisAngle(new CANNON.Vec3(1, 0, 0), -Math.sin(clock.getElapsedTime()));
+  // have platform3 be kinda wobbly for fun by rotating it slightly about the x axis back and forth
+  platform3.cannonBody.quaternion.setFromAxisAngle(new CANNON.Vec3(1, 0, 0), -Math.sin(clock.getElapsedTime() / 2));
   
   sphereMesh.position.copy(sphereBody.position);
   sphereMesh.quaternion.copy(sphereBody.quaternion);
@@ -365,4 +435,5 @@ function animate(){
   cannonDebugRenderer.update();
 }
 
+getModel('../models/lightbulb.gltf', 'lightbulb');
 animate();
