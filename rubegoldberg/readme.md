@@ -1,0 +1,12 @@
+# rube goldberg device attempt with cannon.js    
+this was an attempt to make a rube goldberg device but it has not been going well 😅    
+     
+some things I learned/got out of it:    
+- cannon.js does not support box-trimesh collisions so if you want to try to catch a box in a torus (made via trimesh), you won't get any collision detection    
+- physics is hard. trying to figure out how fast the ball should go to hit the dominoes with enough force to have them tip each other over felt a bit painful and was not easy.
+- I made a lightbulb mesh in Blender! :D that's probably the best feature of this "demo"
+    
+![pic1](screenshots/1.png)    
+![pic2](screenshots/2.png)    
+![pic3](screenshots/3.png)    
+![lightbulb](screenshots/09-07-2026_202317.gif)    
