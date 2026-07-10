@@ -2,12 +2,6 @@
 // https://github.com/schteppe/cannon.js/tree/master/tools/threejs
 
 const container = document.getElementById('container');
-//const keyboard = new THREEx.KeyboardState();
-
-// set up mobile keyboard
-document.getElementById('showKeyboard').addEventListener('click', () => {
-  new JSKeyboard(document.getElementById('mobileKeyboard'));
-});
 
 const loadingManager = new THREE.LoadingManager();
 setupLoadingManager(loadingManager);
@@ -16,7 +10,7 @@ const loader = new THREE.GLTFLoader(loadingManager);
 
 const fov = 60;
 const camera = new THREE.PerspectiveCamera(fov, container.clientWidth / container.clientHeight, 0.01, 1000);
-camera.position.set(-20, 16, 0);
+camera.position.set(-30, 16, 0);
 camera.rotateY(-Math.PI / 2);
 camera.rotateX(-Math.PI / 8);
 const camRotation = new THREE.Quaternion();
@@ -84,6 +78,9 @@ world.addContactMaterial(dominoSphereContactMat);
 
 let lightbulb = null;
 
+let caughtBall1 = false;
+let caughtBall2 = false;
+
 const pointLight = new THREE.PointLight(0xffffff, 5, 10, 1.0);
 
 function getModel(modelFilePath){
@@ -101,15 +98,17 @@ function getModel(modelFilePath){
         const bulbMaterial = new THREE.MeshStandardMaterial({
           color: 0xffffff,
           emissive: 0xffe599,
-          emissiveIntensity: 1.5,
+          emissiveIntensity: 0.0, //1.5,
+          transparent: true,
+          opacity: 0.5,
         });
         
         const bulb = gltf.scene.children[3];
         bulb.material = bulbMaterial;
-                
-        //pointLight.position.copy(gltf.scene.position);
-        bulb.add(pointLight);
+        
         pointLight.translateY(3);
+        
+        lightbulb = gltf.scene;
       },
       // called while loading is progressing
       function(xhr){
@@ -235,7 +234,7 @@ for(let i = 0; i < numDominoes; i++){
 }
 
 // add torus to catch ball
-const torusGeometry = new THREE.TorusGeometry(0.90, 0.1, 25, 100);
+const torusGeometry = new THREE.TorusGeometry(1.1, 0.1, 25, 100);
 const torusMaterial = new THREE.MeshBasicMaterial({color: 0xffa500, wireframe: true});
 const torus = new THREE.Mesh(torusGeometry, torusMaterial);
 torus.receiveShadow = true;
@@ -254,10 +253,10 @@ torusBody.addShape(torusShape);
 world.addBody(torusBody);
 torusBody.addEventListener('collide', () => {
   torusMaterial.color.set(0x00ff00);
+  caughtBall1 = true;
 });
 
 // add another torus to catch the cube that ideally should fall off the platform
-// TODO: since trimesh-box collisions aren't suported in cannon.js, let's create a box to catch the cube instead of a trimesh
 const torusGeometry2 = new THREE.TorusGeometry(1.0, 0.1, 25, 100);
 const torusMaterial2 = new THREE.MeshBasicMaterial({color: 0xffa500, wireframe: true});
 const torus2 = new THREE.Mesh(torusGeometry2, torusMaterial2);
@@ -277,6 +276,7 @@ torusBody2.addShape(torusShape2);
 world.addBody(torusBody2);
 torusBody2.addEventListener('collide', () => {
   torusMaterial2.color.set(0x00ff00);
+  caughtBall2 = true;
 });
 
 // seesaw-type thing on the platform
@@ -284,7 +284,7 @@ torusBody2.addEventListener('collide', () => {
 const cylinderGeo = new THREE.CylinderGeometry(0.3, 0.3, 3, 32);
 const cylinderMat = new THREE.MeshBasicMaterial({color: 0xeeeeee});
 const cylinderMesh = new THREE.Mesh(cylinderGeo, cylinderMat);
-cylinderMesh.position.set(0, 8.5, -1.2);
+cylinderMesh.position.set(0, 6.2, -1.2);
 cylinderMesh.rotateZ(Math.PI / 2);
 scene.add(cylinderMesh);
 
@@ -312,7 +312,7 @@ const plankMat = new THREE.MeshPhongMaterial({color: 0xffff00});
 const plankMesh = new THREE.Mesh(plankGeo, plankMat);
 plankMesh.castShadow = true;
 plankMesh.receiveShadow = true;
-plankMesh.position.set(0, 8.7, -2);
+plankMesh.position.set(0, 6.4, -2);
 plankMesh.rotateX(145 * (Math.PI / 180)); // 145 deg
 scene.add(plankMesh);
 
@@ -325,7 +325,8 @@ plankCannonBody.quaternion.copy(plankMesh.quaternion);
 plankCannonBody.addShape(plankCannonShape);
 world.addBody(plankCannonBody);
 
-// cube on plank
+/* cube on plank
+// was hoping to have the cube be catchable in a torus but cannon.js doesn't support trimesh-box collisions :/
 const cubeGeo = new THREE.BoxGeometry(1.2, 1.2, 1.2);
 const cubeMat = new THREE.MeshPhongMaterial({color: 0xff00ff});
 const cubeMesh = new THREE.Mesh(cubeGeo, cubeMat);
@@ -353,26 +354,29 @@ cubeCannonBody.addEventListener('collide', (evt) => {
     currObjectToFocusOn = cubeCannonBody;
   }
 });
+*/
 
-// end seesaw thingy
-
-/*
-const ball2 = createSphere(0, 7, -2.2, 0.4);
+// sphere on plank
+const ball2 = createSphere(0, 6.6, -3.5, 0.9);
 const sphereMesh2 = ball2.mesh;
 const sphereBody2 = ball2.body;
-sphereBody2.addEventListener('collide', () => {
-  currObjectToFocusOn = sphereMesh2;
+sphereBody2.name = `ball2;${numDominoes+2}`;
+
+sphereBody2.addEventListener('collide', (evt) => {
+  // console.log(evt.body);
+  // this is kinda weird but since the last domino to fall never touches the cube we're interested in following with the camera,
+  // we have to detect when the last domino was hit via it's sequence id (when the last domino is hit, it should be currObjectToFocusOn).
+  if(parseInt(currObjectToFocusOn.name.split(';')[1]) === parseInt(sphereBody2.name.split(';')[1]) - 1){
+    currObjectToFocusOn = sphereBody2;
+  }
 });
-*/
+
+// end seesaw thingy
 
 const clock = new THREE.Clock();
 let delta;
 
 function update(){
-  if(currObjectToFocusOn){
-    //console.log(currObjectToFocusOn.name);
-  }
-  
   //camera.position.set(camera.position.x, currObjectToFocusOn.position.y, camera.position.z);
   camera.lookAt(new THREE.Vector3(currObjectToFocusOn.position.x, currObjectToFocusOn.position.y, currObjectToFocusOn.position.z));
   
@@ -380,6 +384,18 @@ function update(){
   let clockDelta = clock.getDelta();
   delta = Math.min(clockDelta, 0.1);
   world.step(delta);
+  
+  // move lightbulb up and down
+  if(lightbulb){
+    const elapsedTime = clock.getElapsedTime();
+    lightbulb.translateY(Math.sin(elapsedTime) * 0.01);
+    
+    // the bulb mesh
+    if(caughtBall1 && caughtBall2){
+      lightbulb.children[3].material.emissiveIntensity = Math.sin(elapsedTime) * 1.5;
+      lightbulb.children[3].material.needsUpdate = true;
+    }
+  }
 
   // have platform3 be kinda wobbly for fun by rotating it slightly about the x axis back and forth
   platform3.cannonBody.quaternion.setFromAxisAngle(new CANNON.Vec3(1, 0, 0), -Math.sin(clock.getElapsedTime() / 2));
@@ -399,34 +415,12 @@ function update(){
   plankMesh.position.copy(plankCannonBody.position);
   plankMesh.quaternion.copy(plankCannonBody.quaternion);
   
-  cubeMesh.position.copy(cubeCannonBody.position);
-  cubeMesh.quaternion.copy(cubeCannonBody.quaternion);
-  
   platform3.mesh.position.copy(platform3.cannonBody.position);
   platform3.mesh.quaternion.copy(platform3.cannonBody.quaternion);
   
-  //sphereMesh2.position.copy(sphereBody2.position);
-  //sphereMesh2.quaternion.copy(sphereBody2.quaternion);
+  sphereMesh2.position.copy(sphereBody2.position);
+  sphereMesh2.quaternion.copy(sphereBody2.quaternion);
 }
-
-function keydown(evt){
-  if(evt.keyCode === 32){
-    // spacebar
-    // remember that gravity is -9.8! this affects the suitable amount for the y-axis to use.
-    sphereBody.applyImpulse(new CANNON.Vec3(0, 0.8, -0.5 * 3), sphereBody.position);
-  }
-  /*else if(evt.keyCode === 82){
-    // r key
-    sphereBody.position.x = 0;
-    sphereBody.position.y = 4;
-    sphereBody.position.z = 7;
-    sphereBody.velocity = new CANNON.Vec3(0, 0, 0);
-    camera.position.set(0, 4, 10);
-    camera.setRotationFromQuaternion(camRotation);
-  }
-  */
-}
-document.addEventListener('keydown', keydown);
 
 function animate(){
   requestAnimationFrame(animate);
