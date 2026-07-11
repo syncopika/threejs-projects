@@ -394,6 +394,7 @@ function update(){
     if(caughtBall1 && caughtBall2){
       lightbulb.children[3].material.emissiveIntensity = Math.sin(elapsedTime) * 1.5;
       lightbulb.children[3].material.needsUpdate = true;
+      lightbulb.children[3].material.opacity = Math.max(Math.sin(elapsedTime), 0.1);
     }
   }
 
