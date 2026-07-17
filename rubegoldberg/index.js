@@ -33,6 +33,11 @@ spotLight.shadow.mapSize.width = 1024;
 spotLight.shadow.mapSize.height = 1024;
 scene.add(spotLight);
 
+document.getElementById('setSceneLightIntensity').addEventListener('change', (evt) => {
+  const newValue = evt.target.value;
+  spotLight.intensity = parseFloat(newValue);
+});
+
 const world = new CANNON.World();
 world.gravity.set(0, -9.82, 0);
 
@@ -325,37 +330,6 @@ plankCannonBody.quaternion.copy(plankMesh.quaternion);
 plankCannonBody.addShape(plankCannonShape);
 world.addBody(plankCannonBody);
 
-/* cube on plank
-// was hoping to have the cube be catchable in a torus but cannon.js doesn't support trimesh-box collisions :/
-const cubeGeo = new THREE.BoxGeometry(1.2, 1.2, 1.2);
-const cubeMat = new THREE.MeshPhongMaterial({color: 0xff00ff});
-const cubeMesh = new THREE.Mesh(cubeGeo, cubeMat);
-cubeMesh.castShadow = true;
-cubeMesh.receiveShadow = true;
-cubeMesh.position.set(0, 9.1, -3);
-scene.add(cubeMesh);
-
-// note that cannon.js doesn't handle trimesh(e.g. torus)-box collisions well
-const cubeCannonShape = new CANNON.Box(new CANNON.Vec3(0.6, 0.6, 0.6));
-const cubeCannonMat = new CANNON.Material();
-const cubeCannonBody = new CANNON.Body({material: cubeCannonMat, mass: 0.1});
-cubeCannonBody.position.copy(cubeMesh.position);
-cubeCannonBody.quaternion.copy(cubeMesh.quaternion);
-cubeCannonBody.addShape(cubeCannonShape);
-world.addBody(cubeCannonBody);
-
-cubeCannonBody.name = `cube;${numDominoes+2}`;
-
-cubeCannonBody.addEventListener('collide', (evt) => {
-  //console.log(evt.body);
-  // this is kinda weird but since the last domino to fall never touches the cube we're interested in following with the camera,
-  // we have to detect when the last domino was hit via it's sequence id (when the last domino is hit, it should be currObjectToFocusOn).
-  if(parseInt(currObjectToFocusOn.name.split(';')[1]) === parseInt(cubeCannonBody.name.split(';')[1]) - 1){
-    currObjectToFocusOn = cubeCannonBody;
-  }
-});
-*/
-
 // sphere on plank
 const ball2 = createSphere(0, 6.6, -3.5, 0.9);
 const sphereMesh2 = ball2.mesh;
@@ -423,10 +397,18 @@ function update(){
   sphereMesh2.quaternion.copy(sphereBody2.quaternion);
 }
 
+const toggleCannonDebugCheckbox = document.getElementById('toggleCannonDebug');
 function animate(){
   requestAnimationFrame(animate);
   renderer.render(scene, camera);
   update();
+  
+  if(toggleCannonDebugCheckbox){
+    cannonDebugRenderer._meshes.forEach(mesh => {
+      mesh.visible = toggleCannonDebugCheckbox.checked;
+    });
+  }
+  
   cannonDebugRenderer.update();
 }
 
