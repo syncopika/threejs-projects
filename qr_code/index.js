@@ -120,4 +120,13 @@ function animate(){
   update();
 }
 
+// allow converting a string to QR code via query param
+const searchParams = new URLSearchParams(new URL(document.location.toString()).search);
+if(searchParams.has("text")){
+  const textToConvert = searchParams.get("text");
+  console.log(textToConvert);
+  document.getElementById('inputText').value = textToConvert;
+  document.getElementById('generateCode').click();
+}
+
 animate();
