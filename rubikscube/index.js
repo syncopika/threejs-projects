@@ -26,7 +26,21 @@ container.appendChild(renderer.domElement);
 
 //const axesHelper = new THREE.AxesHelper(10);
 
-// TODO: allow user to pick a layer of the cube to rotate
+let turnOffTrackballRotate = false;
+document.getElementById('turnOffTrackballRotate').addEventListener('change', () => {
+  turnOffTrackballRotate = !turnOffTrackballRotate;
+  controls.noRotate = turnOffTrackballRotate;
+});
+
+let autoRotateLayer = true;
+document.getElementById('autoRotateLayer').addEventListener('change', (evt) => {
+  autoRotateLayer = !autoRotateLayer;
+});
+
+// allow user to pick a layer of the cube to rotate
+const lastPointerDownCoord = {};
+let canMoveLayer = false;
+let selectedCube = null;
 renderer.domElement.addEventListener('pointerdown', (evt) => {
   mouse.x = (evt.offsetX / evt.target.width) * 2 - 1;
   mouse.y = -(evt.offsetY / evt.target.height) * 2 + 1;
@@ -45,6 +59,60 @@ renderer.domElement.addEventListener('pointerdown', (evt) => {
     //sphere.position.copy(cube.position);
     //selectCubeGroup(cube);
     //cubeIsRotating = true;
+    selectedCube = cube;
+    lastPointerDownCoord.x = mouse.x
+    lastPointerDownCoord.y = mouse.y;
+    canMoveLayer = true;
+  }else{
+    canMoveLayer = false;
+    selectedCube = null;
+  }
+});
+
+renderer.domElement.addEventListener('pointerup', (evt) => {
+  if(autoRotateLayer || cubeIsRotating || !canMoveLayer){
+    return; // can't manually move a layer if auto layer rotation is on or a layer is currently in rotation
+  }
+  
+  const mouseX = (evt.offsetX / evt.target.width) * 2 - 1;
+  const mouseY = -(evt.offsetY / evt.target.height) * 2 + 1;
+  
+  const pointerUpCoord = {x: mouseX, y: mouseY};
+  
+  // determine if it's up, down, left or right
+  const xDiff = Math.abs(pointerUpCoord.x - lastPointerDownCoord.x);
+  const yDiff = Math.abs(pointerUpCoord.y - lastPointerDownCoord.y);
+  const isRight = pointerUpCoord.x < lastPointerDownCoord.x && yDiff < 5 && xDiff > yDiff;
+  const isLeft = pointerUpCoord.x > lastPointerDownCoord.x && yDiff < 5 && xDiff > yDiff;
+  const isDown = pointerUpCoord.y < lastPointerDownCoord.y && xDiff < 2 && yDiff > xDiff;
+  const isUp = pointerUpCoord.y > lastPointerDownCoord.y && xDiff < 2 && yDiff > xDiff;
+  
+  // TODO: this is slightly tricky I think. the orientation/direction at which we should rotate I think depends
+  // on how the cube is facing the camera?
+  if(isLeft){
+    console.log('rotating layer left');
+    canMoveLayer = false;
+    cubeIsRotating = true;
+    selectCubeGroup(selectedCube.name, 'horz', 'left');
+    rotateGroup();
+  }else if(isRight){
+    console.log('rotating layer right');
+    canMoveLayer = false;
+    cubeIsRotating = true;
+    selectCubeGroup(selectedCube.name, 'horz', 'right');
+    rotateGroup();
+  }else if(isUp){
+    console.log('rotating layer up');
+    canMoveLayer = false;
+    cubeIsRotating = true;
+    selectCubeGroup(selectedCube.name, 'vert', 'up');
+    rotateGroup();
+  }else if(isDown){
+    console.log('rotating layer down');
+    canMoveLayer = false;
+    cubeIsRotating = true;
+    selectCubeGroup(selectedCube.name, 'vert', 'down');
+    rotateGroup();
   }
 });
 
@@ -195,11 +263,18 @@ function rotateGroup(){
       moveGroupChildrenToCubeScene();
     }
   }else{
-    // TODO: we should be able to rotate vertically about x or z axis
     // vertical
     const targetQuaternion = new THREE.Quaternion();
-    targetQuaternion.setFromEuler(new THREE.Euler(0, 0, direction * Math.PI/2, 'XYZ')); // 90 deg rotation
-        
+    
+    // TODO: slightly hacky now but if we're manually rotating a layer, we probably want to rotate about the x-axis, not z
+    if(selectedCube){
+      // rotate about x-axis
+      targetQuaternion.setFromEuler(new THREE.Euler(direction * Math.PI/2, 0, 0, 'XYZ'));
+    }else{
+      // rotate about z-axis
+      targetQuaternion.setFromEuler(new THREE.Euler(0, 0, direction * Math.PI/2, 'XYZ')); // 90 deg rotation
+    }
+    
     if(!rotatingGroup.quaternion.equals(targetQuaternion)){
       const step = 0.8 * delta;
       rotatingGroup.quaternion.rotateTowards(targetQuaternion, step);
@@ -210,17 +285,36 @@ function rotateGroup(){
   }
 }
 
-function selectCubeGroup(){
-  // given a randomly selected cube
+function selectCubeGroup(specificCubeName=null, specificLayerDirection=null, orientation=null){
+  // given a randomly selected cube (or find get the layer of the specificCubeName cube if provided)
   // randomly choose which way to rotate
   if(cubeScene){
     const cubes = Array.from(scene.children).filter(c => c.name.includes('Cube'));
     //console.log('cube scene children length: ' + cubes.length);
-    const selectedCube = cubes[Math.floor(Math.random() * cubes.length)];
+    let selectedCube = cubes[Math.floor(Math.random() * cubes.length)];
+    
+    if(specificCubeName){
+      selectedCube = cubes.find(cube => cube.name === specificCubeName);
+      if(!selectedCube) console.error(`unable to find cube ${specificCubeName}!`);
+    }
+    
     //selectedCube.add(axesHelper);
         
-    const layerDirection = Math.random() > 0.5 ? 'vert' : 'horz';
+    const layerDirection = specificLayerDirection ? specificLayerDirection : (Math.random() > 0.5 ? 'vert' : 'horz');
+    
     direction = Math.random() > 0.5 ? 1 : -1;
+    
+    if(orientation){
+      if(orientation === 'up'){
+        direction = -1;
+      }else if(orientation === 'down'){
+        direction = 1;
+      }else if(orientation === 'left'){
+        direction = 1;
+      }else{
+        direction = -1;
+      }
+    }
         
     const cubeGroup = {};
     cubeGroup[selectedCube.name] = selectedCube;
@@ -242,16 +336,28 @@ function selectCubeGroup(){
         }
       });
     }else{
-      // check x-axis
-      collectCubes(selectedCube, new THREE.Vector3(1, 0, 0), cubeGroup);
-            
+      // vertical rotation
+      
+      // TODO: this feels kinda hacky but if rotating manually, check vertical layer via z-axis and y-axis (we probably don't want the x-axis as that'll get us the front layer facing the screen)
+      // is there a better way to do this?
+      if(specificCubeName){
+        collectCubes(selectedCube, new THREE.Vector3(0, 0, 1), cubeGroup);
+      }else{
+        // check x-axis
+        collectCubes(selectedCube, new THREE.Vector3(1, 0, 0), cubeGroup);
+      }
+      
       // check y-axis
       collectCubes(selectedCube, new THREE.Vector3(0, 1, 0), cubeGroup);
             
       // collect rest of cubes in layer
       Object.keys(cubeGroup).forEach(name => {
         if(name !== selectedCube.name){
-          collectCubes(cubeGroup[name], new THREE.Vector3(1, 0, 0), cubeGroup);
+          if(specificCubeName){
+            collectCubes(cubeGroup[name], new THREE.Vector3(0, 0, 1), cubeGroup);
+          }else{
+            collectCubes(cubeGroup[name], new THREE.Vector3(1, 0, 0), cubeGroup);
+          }
           collectCubes(cubeGroup[name], new THREE.Vector3(0, 1, 0), cubeGroup);
         }
       });
@@ -282,7 +388,7 @@ function selectCubeGroup(){
 function update(){
   if(pause) return;
     
-  if(!cubeIsRotating && cubeScene){
+  if(!cubeIsRotating && cubeScene && autoRotateLayer){
     selectCubeGroup();
     cubeIsRotating = true;
   }
