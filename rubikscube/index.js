@@ -263,11 +263,18 @@ function rotateGroup(){
       moveGroupChildrenToCubeScene();
     }
   }else{
-    // TODO: we should be able to rotate vertically about x or z axis
     // vertical
     const targetQuaternion = new THREE.Quaternion();
-    targetQuaternion.setFromEuler(new THREE.Euler(0, 0, direction * Math.PI/2, 'XYZ')); // 90 deg rotation
-        
+    
+    // TODO: slightly hacky now but if we're manually rotating a layer, we probably want to rotate about the x-axis, not z
+    if(selectedCube){
+      // rotate about x-axis
+      targetQuaternion.setFromEuler(new THREE.Euler(direction * Math.PI/2, 0, 0, 'XYZ'));
+    }else{
+      // rotate about z-axis
+      targetQuaternion.setFromEuler(new THREE.Euler(0, 0, direction * Math.PI/2, 'XYZ')); // 90 deg rotation
+    }
+    
     if(!rotatingGroup.quaternion.equals(targetQuaternion)){
       const step = 0.8 * delta;
       rotatingGroup.quaternion.rotateTowards(targetQuaternion, step);
@@ -330,16 +337,27 @@ function selectCubeGroup(specificCubeName=null, specificLayerDirection=null, ori
       });
     }else{
       // vertical rotation
-      // check x-axis
-      collectCubes(selectedCube, new THREE.Vector3(1, 0, 0), cubeGroup);
-            
+      
+      // TODO: this feels kinda hacky but if rotating manually, check vertical layer via z-axis and y-axis (we probably don't want the x-axis as that'll get us the front layer facing the screen)
+      // is there a better way to do this?
+      if(specificCubeName){
+        collectCubes(selectedCube, new THREE.Vector3(0, 0, 1), cubeGroup);
+      }else{
+        // check x-axis
+        collectCubes(selectedCube, new THREE.Vector3(1, 0, 0), cubeGroup);
+      }
+      
       // check y-axis
       collectCubes(selectedCube, new THREE.Vector3(0, 1, 0), cubeGroup);
             
       // collect rest of cubes in layer
       Object.keys(cubeGroup).forEach(name => {
         if(name !== selectedCube.name){
-          collectCubes(cubeGroup[name], new THREE.Vector3(1, 0, 0), cubeGroup);
+          if(specificCubeName){
+            collectCubes(cubeGroup[name], new THREE.Vector3(0, 0, 1), cubeGroup);
+          }else{
+            collectCubes(cubeGroup[name], new THREE.Vector3(1, 0, 0), cubeGroup);
+          }
           collectCubes(cubeGroup[name], new THREE.Vector3(0, 1, 0), cubeGroup);
         }
       });
