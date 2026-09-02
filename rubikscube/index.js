@@ -24,7 +24,8 @@ renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 renderer.setSize(container.clientWidth, container.clientHeight);    
 container.appendChild(renderer.domElement);
 
-//const axesHelper = new THREE.AxesHelper(10);
+const axesHelper = new THREE.AxesHelper(10);
+const sceneAxesHelper = new THREE.AxesHelper(20);
 
 let turnOffTrackballRotate = false;
 document.getElementById('turnOffTrackballRotate').addEventListener('change', () => {
@@ -119,6 +120,7 @@ renderer.domElement.addEventListener('pointerup', (evt) => {
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0xeeeeee);
 scene.add(camera);
+//scene.add(sceneAxesHelper);
 
 const spotLight = new THREE.SpotLight(0xffffff);
 spotLight.position.set(0, 70, -8);
@@ -250,10 +252,18 @@ function moveGroupChildrenToCubeScene(){
 function rotateGroup(){
   // https://stackoverflow.com/questions/73103621/how-do-i-slowly-rotate-a-cube-90-degrees-in-three-js
   const delta = clock.getDelta();
+  
+  // depending on how the camera is facing when rotating a layer manually, 
+  // we might be looking along the x axis or the z axis, which influences how we should rotate vertically
+  const cameraForwardVec = new THREE.Vector3();
+  camera.getWorldDirection(cameraForwardVec);
+  const xMagnitude = Math.abs(cameraForwardVec.x);
+  const zMagnitude = Math.abs(cameraForwardVec.z);
+  
   if(rotatingDirection === 'horz'){
     // horizontal
     const targetQuaternion = new THREE.Quaternion();
-    targetQuaternion.setFromEuler(new THREE.Euler(0, direction * Math.PI/2, 0, 'XYZ')); // 90 deg rotation
+    targetQuaternion.setFromEuler(new THREE.Euler(0, direction * Math.PI/2, 0, 'XYZ')); // 90 deg rotation about y-axis
         
     if(!rotatingGroup.quaternion.equals(targetQuaternion)){
       const step = 0.8 * delta;
@@ -266,10 +276,13 @@ function rotateGroup(){
     // vertical
     const targetQuaternion = new THREE.Quaternion();
     
-    // TODO: slightly hacky now but if we're manually rotating a layer, we probably want to rotate about the x-axis, not z
     if(selectedCube){
-      // rotate about x-axis
-      targetQuaternion.setFromEuler(new THREE.Euler(direction * Math.PI/2, 0, 0, 'XYZ'));
+      if(xMagnitude > zMagnitude){
+        // if we're facing the x-axis, rotate vertically about the z-axis
+        targetQuaternion.setFromEuler(new THREE.Euler(0, 0, direction * Math.PI/2, 'XYZ'));
+      }else{
+        targetQuaternion.setFromEuler(new THREE.Euler(direction * Math.PI/2, 0, 0, 'XYZ'));
+      }
     }else{
       // rotate about z-axis
       targetQuaternion.setFromEuler(new THREE.Euler(0, 0, direction * Math.PI/2, 'XYZ')); // 90 deg rotation
@@ -287,7 +300,7 @@ function rotateGroup(){
 
 function selectCubeGroup(specificCubeName=null, specificLayerDirection=null, orientation=null){
   // given a randomly selected cube (or find get the layer of the specificCubeName cube if provided)
-  // randomly choose which way to rotate
+  // randomly choose which way to rotate if not manually rotating
   if(cubeScene){
     const cubes = Array.from(scene.children).filter(c => c.name.includes('Cube'));
     //console.log('cube scene children length: ' + cubes.length);
@@ -304,11 +317,19 @@ function selectCubeGroup(specificCubeName=null, specificLayerDirection=null, ori
     
     direction = Math.random() > 0.5 ? 1 : -1;
     
+    // depending on how the camera is facing when rotating a layer manually, 
+    // we might be looking along the x axis or the z axis, which influences how we should rotate vertically
+    const cameraForwardVec = new THREE.Vector3();
+    camera.getWorldDirection(cameraForwardVec);
+    
     if(orientation){
       if(orientation === 'up'){
         direction = -1;
+        // flip direction depending on the camera's orientation towards the x or z axes.
+        if(cameraForwardVec.x < 0 || cameraForwardVec.z > 0) direction = 1;
       }else if(orientation === 'down'){
         direction = 1;
+        if(cameraForwardVec.x < 0 || cameraForwardVec.z > 0) direction = -1;
       }else if(orientation === 'left'){
         direction = 1;
       }else{
@@ -338,10 +359,26 @@ function selectCubeGroup(specificCubeName=null, specificLayerDirection=null, ori
     }else{
       // vertical rotation
       
-      // TODO: this feels kinda hacky but if rotating manually, check vertical layer via z-axis and y-axis (we probably don't want the x-axis as that'll get us the front layer facing the screen)
-      // is there a better way to do this?
+      // depending on how the camera is facing when rotating a layer manually, 
+      // we might be looking along the x axis or the z axis, which influences how we should rotate vertically
+      const cameraForwardVec = new THREE.Vector3();
+      camera.getWorldDirection(cameraForwardVec);
+      const xMagnitude = Math.abs(cameraForwardVec.x);
+      const zMagnitude = Math.abs(cameraForwardVec.z);
+      
+      if(xMagnitude > zMagnitude){
+        console.log('facing x axis');
+      }else{
+        console.log('facing z axis');
+      }
+      
       if(specificCubeName){
-        collectCubes(selectedCube, new THREE.Vector3(0, 0, 1), cubeGroup);
+        if(xMagnitude > zMagnitude){
+          // if we're facing the x-axis, collect the cubes along the x-axis
+          collectCubes(selectedCube, new THREE.Vector3(1, 0, 0), cubeGroup);
+        }else{
+          collectCubes(selectedCube, new THREE.Vector3(0, 0, 1), cubeGroup);
+        }
       }else{
         // check x-axis
         collectCubes(selectedCube, new THREE.Vector3(1, 0, 0), cubeGroup);
@@ -354,7 +391,11 @@ function selectCubeGroup(specificCubeName=null, specificLayerDirection=null, ori
       Object.keys(cubeGroup).forEach(name => {
         if(name !== selectedCube.name){
           if(specificCubeName){
-            collectCubes(cubeGroup[name], new THREE.Vector3(0, 0, 1), cubeGroup);
+            if(xMagnitude > zMagnitude){
+              collectCubes(selectedCube, new THREE.Vector3(1, 0, 0), cubeGroup);
+            }else{
+              collectCubes(selectedCube, new THREE.Vector3(0, 0, 1), cubeGroup);
+            }
           }else{
             collectCubes(cubeGroup[name], new THREE.Vector3(1, 0, 0), cubeGroup);
           }
