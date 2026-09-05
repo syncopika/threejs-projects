@@ -244,10 +244,19 @@ function assembleOrder(order, size){
   scene.add(orderGroup);
 }
 
+const orderOptions = ['burger', 'fries', 'drink', 'meal', 'uhhh'];
+
 // TODO: have order be read back + prompts be read by synthetic voice?
 const prompt1 = 'hello, what would you like to order? your options are: burger, fries, drink, meal';
 const prompt2 = 'what size would you like that in? your options are: small, normal or large';
 const prompt3 = 'your order is ready. enjoy and have a nice day! :D';
+
+function say(line){
+  const utterance = new SpeechSynthesisUtterance(line);
+  utterance.voice = window.speechSynthesis.getVoices()[0];
+  window.speechSynthesis.speak(utterance);
+  console.log(line);
+}
 
 function orderWithVoice(){
   console.log('ordering with voice');
@@ -262,6 +271,7 @@ function orderWithVoice(){
   let orderSize = 'normal';
   
   addPromptText(promptTextContainer, prompt1);
+  say(prompt1);
   
   const recognition = new SpeechRecognition();
   recognition.continuous = true;
@@ -272,24 +282,31 @@ function orderWithVoice(){
   recognition.onresult = (evt) => {
     console.log(evt);
     
-    let detectedSpeechSoFar = '';
     const results = evt.results;
     console.log(results);
     
     if(results.length > 0){
-      const detectedSpeech = results[currPromptNum-1][0].transcript;
-      const confidence = results[currPromptNum-1][0].confidence;
+      const detectedSpeech = results[results.length-1][0].transcript;
+      const confidence = results[results.length-1][0].confidence;
       console.log(`result: ${detectedSpeech}, confidence: ${confidence}`);
       
       if(currPromptNum === 1){
         order = detectedSpeech.toLowerCase().trim();
-        currPromptNum++;
         
-        const selectedOrder = `you've requested: ${order}`;
-        addPromptText(promptTextContainer, selectedOrder, true);
-        
-        // show prompt 2
-        addPromptText(promptTextContainer, prompt2);
+        if(!orderOptions.includes(order)){
+          addPromptText(promptTextContainer, `sorry, I'm not sure what ${order.trim()} is. can you repeat your order please?`);
+          say(`sorry, I'm not sure what ${order.trim()} is. can you repeat your order please?`);
+        }else{
+          currPromptNum++;
+          
+          const selectedOrder = `you've requested: ${order}`;
+          say(selectedOrder);
+          addPromptText(promptTextContainer, selectedOrder, true);
+          
+          // show prompt 2
+          addPromptText(promptTextContainer, prompt2);
+          say(prompt2);
+        }
       }else if(currPromptNum === 2){
         const requestedSize = detectedSpeech;
         if(detectedSpeech.includes('small')){
@@ -299,6 +316,7 @@ function orderWithVoice(){
         }
         
         const selectedSize = `you've ordered ${order}, ${orderSize} sized. your order should be ready soon!`;
+        say(selectedSize);
         addPromptText(promptTextContainer, selectedSize, true);
         
         // create order
@@ -306,6 +324,7 @@ function orderWithVoice(){
         
         // we're done
         addPromptText(promptTextContainer, prompt3);
+        say(prompt3);
         
         recognition.stop();
       }else if(currPromptNum === 3){
@@ -337,6 +356,10 @@ function addPromptText(container, text, bold=false){
   if(bold){
     p.style.fontWeight = 'bold';
   }
+  p.style.backgroundColor = '#87ceeb';
+  p.style.border = '1px solid #ccc';
+  p.style.borderRadius = '10px';
+  p.style.padding = '2px';
   container.appendChild(p);
 }
 
@@ -352,13 +375,17 @@ function orderPrompt(promptTextContainer, optionsContainer){
   addPromptText(promptTextContainer, text);
   
   // display options for user to select
-  const orderOptions = ['burger', 'fries', 'drink', 'meal'];
-  orderOptions.forEach(opt => {
+  orderOptions.forEach(opt => {    
     // based on user selection, trigger the next prompt
     const btn = document.createElement('button');
     btn.textContent = opt;
     btn.addEventListener('click', (evt) => {
-      const selectedOrder = `you've requested a ${opt}.`;
+      if(opt === 'uhhh'){
+        addPromptText(promptTextContainer, 'sorry, I didn\'t quite get that. can you repeat your order please?');
+        return;
+      }
+      
+      const selectedOrder = `you've requested: ${opt}.`;
       
       addPromptText(promptTextContainer, selectedOrder, true);
       
