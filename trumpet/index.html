@@ -31,6 +31,14 @@
       #importAudioSection {
         margin: 15px;
       }
+      
+      #tracker {
+        border: 1px solid #ccc;
+        padding: 2px;
+        text-align: center;
+        width: 50%;
+        margin: 0 auto;
+      }
     </style>
   </head>
 
@@ -72,6 +80,17 @@
         <label>turn off imported audio?</label><input id='turnOffImportedAudio' type='checkbox' />
       </div>
       <p id='currentNote'></p>
+    </div>
+    
+    <div id='tracker'>
+      <h2> tracker </h2>
+      <p> add notes that the trumpet can play </p>
+      <div id='trackerContainer'>
+      </div>
+      <div id='trackerBtns'>
+        <button id='addTrackerNote'>add note</button> 
+        <button id='playTracker'>play</button>
+      </div>
     </div>
   </body>
 

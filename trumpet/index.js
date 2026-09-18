@@ -39,6 +39,43 @@ let animationFrameReqId;
 let isPlaying = false;
 let cameraOrientation = 'side';
 
+const noteBufferMap = {};
+let readyToPlay = false;
+
+const notesToLoad = [
+  'c3',
+  'c4',
+  'cs4',
+  'cs6',
+  'd4',
+  'ds4',
+  'e4',
+  'f4',
+  'fs4',
+  'g3',
+  'g4',
+  'gs3',
+  'gs4',
+  'a4',
+  'bb3',
+  'bb4',
+  'b4',
+  'c5',
+  'cs5',
+  'd5',
+  'ds5',
+  'e5',
+  'f5',
+  'fs5',
+  'g5',
+  'gs5',
+  'a5',
+  'b5',
+  'as3', // TODO: as3 == bb3
+  'as4', // TODO: there's already bb4 so we shouldn't have to duplicate it and rename it to as4 - just have enharmonic mapping?
+  'as5', // TODO: I already have bb5 so we should have a map for enharmonics so we don't have to load/copy more data than needed
+];
+
 const noteToValveComboMap = {
   'a': '12',
   'ab': '23', // a flat
@@ -72,6 +109,86 @@ const valveToNoteComboMap = {
   '3': 'a',
 };
 
+
+// for tracker
+let trackerNotes = [];
+function createTrackerNote(){
+  const id = Date.now();
+  const trackerNote = {id}; // should have id, note and length
+  trackerNotes.push(trackerNote);
+  
+  const noteOptionsDropdown = document.createElement('select');
+  noteOptionsDropdown.id = `noteSelect_${id}`;
+  noteOptionsDropdown.addEventListener('change', (evt) => {
+    console.log(evt.target.value);
+    const note = trackerNotes.find(x => x.id === id);
+    if(note){
+      note.note = evt.target.value;
+      console.log(`updated note for ${id}`);
+    }
+  });
+  
+  const noteOptions = ['', ...notesToLoad]; // '' represents a rest
+  noteOptions.forEach(opt => {
+    const newOption = document.createElement('option');
+    newOption.textContent = opt;
+    noteOptionsDropdown.appendChild(newOption);
+  });
+  
+  const noteLengthInput = document.createElement('input');
+  noteLengthInput.id = `noteLength_${id}`;
+  noteLengthInput.type = 'number';
+  noteLengthInput.placeholder = 500;
+  noteLengthInput.value = 500; // 500 by default
+  trackerNote.length = 500;
+  noteLengthInput.addEventListener('change', (evt) => {
+    console.log(evt.target.value);
+    const note = trackerNotes.find(x => x.id === id);
+    if(note){
+      note.length = parseInt(evt.target.value);
+      console.log(`updated note length for ${id}`);
+    }
+  });
+  
+  const wrapper = document.createElement('div');
+  wrapper.id = `note_${id}`;
+  wrapper.style.border = '1px solid #ddd';
+  wrapper.style.width = '50%';
+  wrapper.style.margin = '3px auto';
+  wrapper.style.padding = '4px';
+  wrapper.appendChild(noteOptionsDropdown);
+  wrapper.appendChild(noteLengthInput);
+  
+  const deleteNoteBtn = document.createElement('button');
+  deleteNoteBtn.style.color = '#ff0000';
+  deleteNoteBtn.textContent = 'delete';
+  deleteNoteBtn.addEventListener('click', () => {
+    deleteTrackerNote(id);
+    
+    // remove from UI
+    wrapper.remove();
+  });
+  
+  wrapper.appendChild(deleteNoteBtn);
+  
+  return wrapper;
+}
+
+function deleteTrackerNote(noteId){
+  trackerNotes = trackerNotes.filter(x => x.id !== noteId);
+}
+
+document.getElementById('addTrackerNote').addEventListener('click', () => {
+  const newNote = createTrackerNote();
+  const tracker = document.getElementById('trackerContainer');
+  tracker.appendChild(newNote);
+});
+
+document.getElementById('playTracker').addEventListener('click', () => {
+  //console.log(trackerNotes);
+  play(trackerNotes);
+});
+
 function setValves(note){
   const valveCombo = noteToValveComboMap[note];
   
@@ -93,43 +210,9 @@ audioContext.suspend();
 const gainNode = new GainNode(audioContext);
 gainNode.connect(audioContext.destination);
 
-const noteBufferMap = {};
-let readyToPlay = false;
+
 function loadInNotes(){
   document.getElementById('status').textContent = 'loading in notes...';
-  const notesToLoad = [
-    'c3',
-    'c4',
-    'cs4',
-    'cs6',
-    'd4',
-    'ds4',
-    'e4',
-    'f4',
-    'fs4',
-    'g3',
-    'g4',
-    'gs3',
-    'gs4',
-    'a4',
-    'bb3',
-    'bb4',
-    'b4',
-    'c5',
-    'cs5',
-    'd5',
-    'ds5',
-    'e5',
-    'f5',
-    'fs5',
-    'g5',
-    'gs5',
-    'a5',
-    'b5',
-    'as3', // TODO: as3 == bb3
-    'as4', // TODO: there's already bb4 so we shouldn't have to duplicate it and rename it to as4 - just have enharmonic mapping?
-    'as5', // TODO: I already have bb5 so we should have a map for enharmonics so we don't have to load/copy more data than needed
-  ];
   let totalNotes = notesToLoad.length;
   notesToLoad.forEach(note => {
     const fileToFetch = 'notes/' + note + '.ogg';
