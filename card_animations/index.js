@@ -9,7 +9,7 @@ camera.position.set(0, 0, 0);
 //const keyboard = new THREEx.KeyboardState();
 //const raycaster = new THREE.Raycaster();
 //const mouse = new THREE.Vector2();
-//const clock = new THREE.Clock();
+const clock = new THREE.Clock();
 
 /* set up trackball control if needed
 const controls = new THREE.TrackballControls(camera, renderer.domElement);
@@ -49,14 +49,14 @@ scene.add(spotLight);
 //hemiLight.position.set(0, 10, 0);
 //scene.add(hemiLight);
 
-// add a plane and a sphere
+// add a plane
 const planeGeometry = new THREE.PlaneGeometry(25, 25);
 const planeMaterial = new THREE.MeshLambertMaterial({color: 0x05727a});
 const plane = new THREE.Mesh(planeGeometry, planeMaterial);
 plane.position.set(0, 0, -10);
 plane.receiveShadow = true;
 plane.castShadow = true;
-scene.add(plane);
+//scene.add(plane);
 
 function getModel(modelFilePath){
   return new Promise((resolve) => {
@@ -78,6 +78,58 @@ function getModel(modelFilePath){
   });
 }
 
+// https://github.com/syncopika/card-game-animations/blob/main/Assets/scripts/CardScript.cs
+class Card {
+  constructor(mesh, startPos){
+    this.cardMesh = mesh; // threejs object3d
+    this.isMoving = false;
+    this.speed = 8.0;
+    this.arcHeight = 0.7;
+    this.zRotationAngle = 0; // in radians
+    this.startPosition = startPos; // vector3
+    this.endPosition = null; // vector3
+    this.endRotation = (new THREE.Quaternion()).setFromEuler(new THREE.Euler(0, Math.PI, 0)); // 180 deg (so card is turned faced down at the end)
+    this.doFlip = true;
+  }
+  
+  move(){
+    const obj = this.cardMesh;
+    const startPosition = this.startPosition;
+    const endPosition = this.endPosition;
+    const arcHeight = this.arcHeight;
+    const doFlip = this.doFlip;
+    const speed = this.speed;
+    
+    if(this.isMoving){
+      if(obj.position.x < endPosition.x){
+        const xDist = Math.abs(endPosition.x - startPosition.x);
+        const yDist = Math.abs(endPosition.y - startPosition.y);
+        
+        // lerp each axis separately
+        const nextX = (new THREE.Vector3(obj.position.x, 0, 0)).lerp(new THREE.Vector3(endPosition.x, 0, 0), speed * clock.getDelta()).x; // TODO: probably can just do a scalar lerp here lol
+        const nextY = (new THREE.Vector3(0, obj.position.y, 0)).lerp(new THREE.Vector3(0, endPosition.y, 0), speed * clock.getDelta() * (yDist / xDist)).y;
+        const baseZ = lerpScalar(obj.position.z, endPosition.z, (nextX - startPosition.x) / xDist); // from lib/utils.js
+        const arc = arcHeight * (nextX - startPosition.x) * (nextX - endPosition.x) / (-0.25 * xDist * xDist);
+        
+        //console.log(`nextX: ${nextX}, nextY: ${nextY}, baseZ: ${baseZ}, arc: ${arc}`);
+      
+        obj.position.set(nextX, nextY, baseZ + arc);
+        
+        const xDistCovered = Math.abs(obj.position.x - startPosition.x);
+        const endRot = doFlip ? this.endRotation : (new THREE.Quaternion()).setFromEuler(new THREE.Euler(0, 0, (this.zRotationAngle * 180 / Math.PI)));
+        const endQuaternion = (new THREE.Quaternion()).slerp(endRot, xDistCovered / xDist);
+        
+        obj.quaternion.copy(endQuaternion);
+      }else{
+        obj.position.set(endPosition.x, endPosition.y, endPosition.z);
+        this.isMoving = false;
+      }
+    }
+  }
+};
+
+let deckIsMoving = false;
+
 const cardDeck = [];
 const deckCount = 8;
 
@@ -90,17 +142,47 @@ getModel('../models/card-template.gltf', 'card').then(obj => {
   // make a deck
   let startZPos = -10;
   for(let i = 0; i < deckCount; i++){
-    const newCard = cardModel.clone();
-    scene.add(newCard);
-    newCard.position.set(-5, 0, startZPos);
-    newCard.castShadow = true;
+    const newCardMesh = cardModel.clone();
+    
+    const newPos = new THREE.Vector3(-5, 0, startZPos);
+    scene.add(newCardMesh);
+    newCardMesh.position.copy(newPos);
+    newCardMesh.castShadow = true;
+    newCardMesh.rotateX(Math.PI / 2);
+    
+    const newCard = new Card(newCardMesh, newPos);
     cardDeck.push(newCard);
+    
+    const axesHelper = new THREE.AxesHelper(2);
+    //newCardMesh.add(axesHelper);
+    
     startZPos += 0.1;
   }
+  
+  // https://github.com/syncopika/card-game-animations/blob/main/Assets/scripts/CardAnimations.cs
+  // TODO: support different card placements
+  // this is just for testing things
+  for(let i = deckCount - 1; i >= 0; i--){
+    const newEndPos = new THREE.Vector3(5, 0, cardDeck[deckCount - 1 - i].cardMesh.position.z);
+    cardDeck[i].endPosition = newEndPos;
+  }
+  
+  //console.log(cardDeck);
 });
 
 function update(){
-  // move stuff around, etc.
+  if(deckIsMoving){
+    if(cardDeck.some(c => c.isMoving)){
+      cardDeck.forEach(c => c.move());
+    }else{
+      // reset
+      deckIsMoving = false;
+      console.log('done moving deck!');
+      //cardDeck.forEach(c => c.cardMesh.position.copy(c.startPosition));
+    }
+  }
+  
+  //cardDeck.forEach(c => c.cardMesh.rotateY(Math.PI / 300));
 }
 
 function keydown(evt){
@@ -125,3 +207,12 @@ function animate(){
 }
 
 animate();
+
+document.getElementById('flipCards').addEventListener('click', () => {
+  if(!deckIsMoving){
+    cardDeck.forEach(c => c.cardMesh.position.copy(c.startPosition)); // reset
+    console.log('moving deck!');
+    deckIsMoving = true;
+    cardDeck.forEach(c => c.isMoving = true);
+  }
+});
