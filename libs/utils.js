@@ -270,3 +270,7 @@ function removeUnneededAnimationTracks(animation){
     });
   }
 }
+
+function lerpScalar(start, end, alpha){
+  return start + ((end - start) * alpha);
+}
