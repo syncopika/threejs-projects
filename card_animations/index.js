@@ -174,7 +174,7 @@ function makeSplayed(numRows, rowLength, deck){
       card.zRotationAngle = newRotAngle;
       
       // also need to set the end rotation based on newRotAngle
-      const transformRotation = card.cardMesh.quaternion;
+      const transformRotation = (new THREE.Quaternion()).copy(card.cardMesh.quaternion);
       const yRotation = (new THREE.Quaternion()).setFromEuler(new THREE.Euler(0, Math.PI, 0));
       const zRotation = (new THREE.Quaternion()).setFromEuler(new THREE.Euler(0, 0, newRotAngle));
       
@@ -254,8 +254,8 @@ document.getElementById('flipCards').addEventListener('click', () => {
     cardDeck.forEach(c => c.reset());
     
     //rainbow();
-    //makeSplayed(2, 4, cardDeck);
-    makeRows(2, 4, cardDeck);
+    makeSplayed(2, 4, cardDeck);
+    //makeRows(2, 4, cardDeck);
     
     console.log('moving deck!');
     deckIsMoving = true;
