@@ -3,8 +3,7 @@ const container = document.getElementById('container');
 
 const fov = 60;
 const camera = new THREE.PerspectiveCamera(fov, container.clientWidth / container.clientHeight, 0.01, 1000);
-camera.position.set(0, 10, 0);
-camera.rotateX(-Math.PI / 2);
+camera.position.set(0, 0, 0);
 
 // optional stuff
 //const keyboard = new THREEx.KeyboardState();
@@ -35,7 +34,7 @@ scene.background = new THREE.Color(0xeeeeee);
 scene.add(camera);
 
 const spotLight = new THREE.SpotLight(0xffffff);
-spotLight.position.set(0, 70, -8);
+spotLight.position.set(0, 16, 10);
 spotLight.castShadow = true;
 spotLight.shadow.mapSize.width = 1024;
 spotLight.shadow.mapSize.height = 1024;
@@ -54,20 +53,10 @@ scene.add(spotLight);
 const planeGeometry = new THREE.PlaneGeometry(25, 25);
 const planeMaterial = new THREE.MeshLambertMaterial({color: 0x05727a});
 const plane = new THREE.Mesh(planeGeometry, planeMaterial);
-plane.rotateX(-Math.PI / 2);
+plane.position.set(0, 0, -10);
 plane.receiveShadow = true;
 plane.castShadow = true;
 scene.add(plane);
-
-const sphereGeometry = new THREE.SphereGeometry(0.9, 32, 16);
-const sphereMaterial = new THREE.MeshPhongMaterial();
-const sphere = new THREE.Mesh(sphereGeometry, sphereMaterial);
-sphere.receiveShadow = true;
-sphere.castShadow = true;
-sphere.position.x = 0;
-sphere.position.y = 4;
-sphere.position.z = 0;
-//scene.add(sphere);
 
 function getModel(modelFilePath){
   return new Promise((resolve) => {
@@ -99,16 +88,14 @@ getModel('../models/card-template.gltf', 'card').then(obj => {
   console.log(cardModel);
   
   // make a deck
-  let startYPos = -1;
-  for(let i = 1; i < deckCount; i++){
+  let startZPos = -10;
+  for(let i = 0; i < deckCount; i++){
     const newCard = cardModel.clone();
     scene.add(newCard);
+    newCard.position.set(-5, 0, startZPos);
     newCard.castShadow = true;
-    newCard.rotateZ(-Math.PI / 2);
-    newCard.translateY(startYPos);
-    newCard.translateX(3);
     cardDeck.push(newCard);
-    startYPos -= 0.1; // yes, we're subtracting and it's weird lol. TODO: I need figure out how to set things up more sensibly so rotations and translations are more intuitive.
+    startZPos += 0.1;
   }
 });
 
