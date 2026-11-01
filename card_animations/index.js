@@ -55,7 +55,7 @@ scene.add(spotLight);
 const planeGeometry = new THREE.PlaneGeometry(25, 25);
 const planeMaterial = new THREE.MeshLambertMaterial({color: 0x57927a});
 const plane = new THREE.Mesh(planeGeometry, planeMaterial);
-plane.position.set(0, 0, -10);
+plane.position.set(0, 0, -10.3);
 plane.receiveShadow = true;
 plane.castShadow = true;
 scene.add(plane);
@@ -83,14 +83,14 @@ function getModel(modelFilePath){
 // https://github.com/syncopika/card-game-animations/blob/main/Assets/scripts/CardScript.cs
 class Card {
   constructor(mesh, startPos){
-    this.cardMesh = mesh; // threejs object3d
+    this.cardMesh = mesh; // object3d
     this.isMoving = false;
-    this.speed = 5.0;
+    this.speed = 4.0;
     this.arcHeight = 0.8;
     this.zRotationAngle = 0; // in radians
     this.startPosition = startPos; // vector3
     this.endPosition = null; // vector3
-    this.endRotation = (new THREE.Quaternion()).setFromEuler(new THREE.Euler(0, Math.PI, 0)); // 180 deg (so card is turned faced down at the end)
+    this.endRotation = null; // quaternion
     this.doFlip = true;
     this.initialRotation = (new THREE.Quaternion()).copy(mesh.quaternion);
   }
@@ -120,11 +120,11 @@ class Card {
         
         const xDistCovered = Math.abs(obj.position.x - startPosition.x);
         
-        // TODO: I think there might be a bug with the final rotation - some of the arrangements seem to have the cards still with the same side up from their initial position?
-        const endRot = doFlip ? this.endRotation : (new THREE.Quaternion()).setFromEuler(new THREE.Euler(0, 0, (this.zRotationAngle * 180 / Math.PI)));
-        const endQuaternion = (new THREE.Quaternion()).slerp(endRot, xDistCovered / xDist);
+        obj.quaternion.slerp(this.endRotation, xDistCovered / xDist);
         
-        obj.quaternion.copy(endQuaternion);
+        //const endQuaternion = (new THREE.Quaternion()).slerp(endRot, xDistCovered / xDist);
+        // (new THREE.Quaternion().setFromEuler(new THREE.Euler(Math.PI / 2, Math.PI, 0))).slerp(endRot, xDistCovered / xDist); // this is kinda cool
+        //obj.quaternion.copy(endQuaternion);
       }else{
         obj.position.set(endPosition.x, endPosition.y, endPosition.z);
         this.isMoving = false;
@@ -137,7 +137,9 @@ class Card {
     const card = this.cardMesh;
     card.position.copy(this.startPosition);
     card.quaternion.copy(this.initialRotation);
-    this.endRotation = (new THREE.Quaternion()).setFromEuler(new THREE.Euler(0, Math.PI, 0));
+    // TODO: not sure I understand why atm (is it because of my model?) but setting the end rotation here to the identity matrix
+    // gets us the card flipped 180 about the y-axis. an end rotation with a 180 deg rotation about y gives us the same initial rotation. ¯\_(ツ)_/¯
+    this.endRotation = this.doFlip ? (new THREE.Quaternion()).setFromEuler(new THREE.Euler(0, 0, 0)) : (new THREE.Quaternion()).setFromEuler(new THREE.Euler(0, Math.PI, 0));
     this.zRotationAngle = 0;
     this.endPosition = null;
   }
@@ -185,15 +187,19 @@ function makeSplayed(numRows, rowLength, deck){
       const yRotation = (new THREE.Quaternion()).setFromEuler(new THREE.Euler(0, Math.PI, 0));
       const zRotation = (new THREE.Quaternion()).setFromEuler(new THREE.Euler(0, 0, newRotAngle));
       
-      // rotate about y, then z -> multiplication needs to be backwards!
-      card.endRotation = transformRotation.multiply(zRotation).multiply(yRotation);
+      card.endRotation = transformRotation.multiply(zRotation);
+      
+      if(card.doFlip){
+        // rotate about y, then z - note the multiplication needs to be backwards!
+        card.endRotation = card.endRotation.multiply(yRotation);
+      }
     }
   }
 }
 
 function makeCircle(deckPosition, deck){
-  const angleSlice = 360 / deck.length;
   let currAngle = 0;
+  const angleSlice = 360 / deck.length;
   const centerX = deckPosition.x + 6;
   const centerY = deckPosition.y;
   const radius = 4.5;
@@ -204,6 +210,17 @@ function makeCircle(deckPosition, deck){
     const y = radius * Math.sin(currAngle * Math.PI / 180);
     card.endPosition = new THREE.Vector3(centerX + x, centerY + y, -9.8);
     card.zRotationAngle = ((currAngle * Math.PI / 180) + Math.PI / 2);
+    
+    // make the card point towards the center of the circle
+    const yRotation = (new THREE.Quaternion()).setFromEuler(new THREE.Euler(0, Math.PI, 0)); // this makes it so that the card doesn't turn over when it's done moving
+    const zRotation = (new THREE.Quaternion()).setFromEuler(new THREE.Euler(0, 0, card.zRotationAngle));
+    
+    if(card.doFlip){
+      card.endRotation = zRotation; // when flipping, we want the y-axis rotation to be 0 here. see the TODO in Card's reset()
+    }else{
+      card.endRotation = zRotation.multiply(yRotation);
+    }
+    
     currAngle += angleSlice;
   }
 }
@@ -217,7 +234,7 @@ const deckCount = 8;
 let cardModel;
 getModel('../models/card-template.gltf', 'card').then(obj => {
   cardModel = obj.children[0]; // obj is the scene that holds the actual card mesh
-  console.log(cardModel);
+  cardModel.rotateX(Math.PI / 2);
   
   // make a deck
   let startZPos = -9.8;
@@ -228,7 +245,6 @@ getModel('../models/card-template.gltf', 'card').then(obj => {
     scene.add(newCardMesh);
     newCardMesh.position.copy(newPos);
     newCardMesh.castShadow = true;
-    newCardMesh.rotateX(Math.PI / 2);
     
     const newCard = new Card(newCardMesh, newPos);
     cardDeck.push(newCard);
@@ -250,7 +266,6 @@ async function update(){
         cardDeck[i].move(deltaTime);
       }
     }else{
-      // reset
       deckIsMoving = false;
       console.log('done moving deck!');
     }
@@ -268,7 +283,11 @@ animate();
 
 document.getElementById('flipCards').addEventListener('click', () => {
   if(!deckIsMoving){
-    cardDeck.forEach(c => c.reset());
+    const flipOn = document.getElementById('flipToggle').checked;
+    cardDeck.forEach(c => {
+      c.doFlip = flipOn;
+      c.reset();
+    });
     
     const selectedLayout = document.getElementById('cardLayoutSelect')?.value;
     
@@ -284,7 +303,6 @@ document.getElementById('flipCards').addEventListener('click', () => {
     
     console.log('moving deck!');
     deckIsMoving = true;
-    // move cards from top of deck to bottom
     for(let i = cardDeck.length - 1; i >= 0; i--){
       cardDeck[i].isMoving = true;
     }
