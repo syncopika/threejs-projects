@@ -5,20 +5,12 @@ const container = document.getElementById('container');
 
 const fov = 60;
 const camera = new THREE.PerspectiveCamera(fov, container.clientWidth / container.clientHeight, 0.01, 1000);
-camera.position.set(0, 0, 0);
+camera.position.set(0, 0, 0.5);
 
 // optional stuff
-//const keyboard = new THREEx.KeyboardState();
 //const raycaster = new THREE.Raycaster();
 //const mouse = new THREE.Vector2();
 const clock = new THREE.Clock();
-
-/* set up trackball control if needed
-const controls = new THREE.TrackballControls(camera, renderer.domElement);
-controls.rotateSpeed = 3.2;
-controls.zoomSpeed = 1.2;
-controls.panSpeed = 0.8;
-*/
 
 const loadingManager = new THREE.LoadingManager();
 setupLoadingManager(loadingManager);
@@ -30,6 +22,12 @@ renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 renderer.setSize(container.clientWidth, container.clientHeight);    
 container.appendChild(renderer.domElement);
+
+// set up trackball control
+const controls = new THREE.TrackballControls(camera, renderer.domElement);
+controls.rotateSpeed = 1.2;
+controls.zoomSpeed = 1.2;
+controls.panSpeed = 0.8;
 
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0xeeeeee);
@@ -139,7 +137,11 @@ class Card {
     card.quaternion.copy(this.initialRotation);
     // TODO: not sure I understand why atm (is it because of my model?) but setting the end rotation here to the identity matrix
     // gets us the card flipped 180 about the y-axis. an end rotation with a 180 deg rotation about y gives us the same initial rotation. ¯\_(ツ)_/¯
-    this.endRotation = this.doFlip ? (new THREE.Quaternion()).setFromEuler(new THREE.Euler(0, 0, 0)) : (new THREE.Quaternion()).setFromEuler(new THREE.Euler(0, Math.PI, 0));
+    if(this.doFlip){
+      this.endRotation = (new THREE.Quaternion()).setFromEuler(new THREE.Euler(0, 0, 0));
+    }else{
+      this.endRotation = (new THREE.Quaternion()).setFromEuler(new THREE.Euler(0, Math.PI, 0));
+    }
     this.zRotationAngle = 0;
     this.endPosition = null;
   }
@@ -270,10 +272,10 @@ async function update(){
       console.log('done moving deck!');
     }
   }
+  controls.update(); // update trackball control
 }
 
 function animate(){
-  //controls.update(); // update trackball control
   requestAnimationFrame(animate);
   renderer.render(scene, camera);
   update();
