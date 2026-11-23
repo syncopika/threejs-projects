@@ -172,9 +172,9 @@ function makeSplayed(numRows, rowLength, deck){
   const zDelta = 0.01;
   const zPos = -10;
   for(let i = 0; i < numRows; i++){
-    let newX =  -6;
     const newY = 3 - (i * 1.2);
     const rotAngle = Math.PI / 4;
+    let newX =  -6;
     let count = 0;
     for(let j = i * rowLength; j < Math.min(i * rowLength + rowLength, deck.length); j++){
       newX += 2.2;
@@ -195,6 +195,42 @@ function makeSplayed(numRows, rowLength, deck){
         // rotate about y, then z - note the multiplication needs to be backwards!
         card.endRotation = card.endRotation.multiply(yRotation);
       }
+    }
+  }
+}
+
+function makeSplayedSymmetrical(numRows, rowLength, deck){
+  const zDelta = 0.01; // how much to elevate about the z-axis for each card so they lay on top of each other properly when placed
+  const zPos = -10;
+
+  // cards should be angled kinda like: / -> | -> \ 
+  const startAngle = Math.PI / 6; // start angle
+  const arcAngle = Math.PI / 3; // we want the cards spread over a 60 deg arc
+  const angleSlice = arcAngle / (rowLength - 1); // the angle between each card
+
+  for(let i = 0; i < numRows; i++){
+    const newY = 3 - (i * 1.2);
+    let newX = -6;
+    let currAngle = startAngle;
+    for(let j = i * rowLength; j < Math.min(i * rowLength + rowLength, deck.length); j++){
+      newX += 2.2;
+      
+      const card = deck[deck.length - 1 - j];
+      card.endPosition = new THREE.Vector3(newX, newY, zPos - (i * zDelta));
+      card.zRotationAngle = currAngle;
+      
+      const transformRotation = (new THREE.Quaternion()).copy(card.cardMesh.quaternion);
+      const yRotation = (new THREE.Quaternion()).setFromEuler(new THREE.Euler(0, Math.PI, 0));
+      const zRotation = (new THREE.Quaternion()).setFromEuler(new THREE.Euler(0, 0, currAngle));
+      
+      card.endRotation = transformRotation.multiply(zRotation);
+      
+      if(card.doFlip){
+        // rotate about y, then z - note the multiplication needs to be backwards!
+        card.endRotation = card.endRotation.multiply(yRotation);
+      }
+      
+      currAngle -= angleSlice;
     }
   }
 }
@@ -301,6 +337,8 @@ document.getElementById('flipCards').addEventListener('click', () => {
       makeRows(2, 4, cardDeck);
     }else if(selectedLayout === 'circle'){
       makeCircle(new THREE.Vector3(-5, 0, -10), cardDeck);
+    }else if(selectedLayout === 'splayed symmetrical'){
+      makeSplayedSymmetrical(2, 4, cardDeck);
     }
     
     console.log('moving deck!');

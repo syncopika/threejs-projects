@@ -22,3 +22,9 @@ implementing some card physics :). based off a previous project I did with Unity
     
 "splayed" without card flip:    
 ![splayed without card flip](screenshots/01-11-2026_154056.gif)    
+    
+"splayed symmetrical" with card flip:    
+![splayed symmetrical with card flip](screenshots/23-11-2026_173336.gif)    
+    
+"splayed symmetrical" without card flip:    
+![splayed symmetrical without card flip](screenshots/23-11-2026_173625.gif)    
