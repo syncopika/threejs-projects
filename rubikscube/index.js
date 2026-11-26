@@ -85,8 +85,8 @@ renderer.domElement.addEventListener('pointerup', (evt) => {
   const yDiff = Math.abs(pointerUpCoord.y - lastPointerDownCoord.y);
   const isRight = pointerUpCoord.x < lastPointerDownCoord.x && yDiff < 5 && xDiff > yDiff;
   const isLeft = pointerUpCoord.x > lastPointerDownCoord.x && yDiff < 5 && xDiff > yDiff;
-  const isDown = pointerUpCoord.y < lastPointerDownCoord.y && xDiff < 2 && yDiff > xDiff;
-  const isUp = pointerUpCoord.y > lastPointerDownCoord.y && xDiff < 2 && yDiff > xDiff;
+  const isDown = pointerUpCoord.y < lastPointerDownCoord.y && xDiff < 5 && yDiff > xDiff;
+  const isUp = pointerUpCoord.y > lastPointerDownCoord.y && xDiff < 5 && yDiff > xDiff;
   
   // TODO: this is slightly tricky I think. the orientation/direction at which we should rotate I think depends
   // on how the cube is facing the camera?
@@ -418,7 +418,6 @@ function selectCubeGroup(specificCubeName=null, specificLayerDirection=null, ori
       console.log(selectedCube);
       console.log(`layer rotation direction: ${layerDirection}`);
       //sphere.position.copy(selectedCube.position);
-      pause = true;
       throw new Error('rotating group too small!');
     }
         
