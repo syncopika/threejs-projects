@@ -315,8 +315,6 @@ function selectCubeGroup(specificCubeName=null, specificLayerDirection=null, ori
         
     const layerDirection = specificLayerDirection ? specificLayerDirection : (Math.random() > 0.5 ? 'vert' : 'horz');
     
-    direction = Math.random() > 0.5 ? 1 : -1;
-    
     // depending on how the camera is facing when rotating a layer manually, 
     // we might be looking along the x axis or the z axis, which influences how we should rotate vertically
     const cameraForwardVec = new THREE.Vector3();
@@ -335,6 +333,9 @@ function selectCubeGroup(specificCubeName=null, specificLayerDirection=null, ori
       }else{
         direction = -1;
       }
+    }else{
+      // if cube layer is being rotated automatically (not via user input)
+      direction = Math.random() > 0.5 ? 1 : -1;
     }
         
     const cubeGroup = {};
@@ -373,10 +374,12 @@ function selectCubeGroup(specificCubeName=null, specificLayerDirection=null, ori
       }
       
       if(specificCubeName){
+        // rotating a layer based on user input
         if(xMagnitude > zMagnitude){
           // if we're facing the x-axis, collect the cubes along the x-axis
           collectCubes(selectedCube, new THREE.Vector3(1, 0, 0), cubeGroup);
         }else{
+          // otherwise do the z-axis
           collectCubes(selectedCube, new THREE.Vector3(0, 0, 1), cubeGroup);
         }
       }else{
@@ -389,18 +392,17 @@ function selectCubeGroup(specificCubeName=null, specificLayerDirection=null, ori
             
       // collect rest of cubes in layer
       Object.keys(cubeGroup).forEach(name => {
-        if(name !== selectedCube.name){
-          if(specificCubeName){
-            if(xMagnitude > zMagnitude){
-              collectCubes(selectedCube, new THREE.Vector3(1, 0, 0), cubeGroup);
-            }else{
-              collectCubes(selectedCube, new THREE.Vector3(0, 0, 1), cubeGroup);
-            }
-          }else{
+        if(specificCubeName){
+          // if we're rotating a layer based on user input
+          if(xMagnitude > zMagnitude){
             collectCubes(cubeGroup[name], new THREE.Vector3(1, 0, 0), cubeGroup);
+          }else{
+            collectCubes(cubeGroup[name], new THREE.Vector3(0, 0, 1), cubeGroup);
           }
-          collectCubes(cubeGroup[name], new THREE.Vector3(0, 1, 0), cubeGroup);
+        }else{
+          collectCubes(cubeGroup[name], new THREE.Vector3(1, 0, 0), cubeGroup);
         }
+        collectCubes(cubeGroup[name], new THREE.Vector3(0, 1, 0), cubeGroup);
       });
     }
         
@@ -408,16 +410,14 @@ function selectCubeGroup(specificCubeName=null, specificLayerDirection=null, ori
         
     Object.values(cubeGroup).forEach(c => {
       rotatingGroup.attach(c);
-      //c.material.wireframe = true;
     });
-        
-    //console.log(`rotatingGroup size: ${rotatingGroup.children.length}`);
         
     if(rotatingGroup.children.length < 8){
       console.log(rotatingGroup);
       console.log(selectedCube);
       console.log(`layer rotation direction: ${layerDirection}`);
-      //sphere.position.copy(selectedCube.position);
+      rotatingGroup.children.forEach(c => c.material.wireframe = true);
+      cubeIsRotating = false;
       throw new Error('rotating group too small!');
     }
         
@@ -429,8 +429,8 @@ function update(){
   if(pause) return;
     
   if(!cubeIsRotating && cubeScene && autoRotateLayer){
-    selectCubeGroup();
     cubeIsRotating = true;
+    selectCubeGroup();
   }
     
   if(cubeIsRotating){
